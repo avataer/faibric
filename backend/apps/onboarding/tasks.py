@@ -63,11 +63,12 @@ def build_app_from_session_task(self, session_token: str):
                 session.converted_to_tenant = tenant
                 session.save()
             
-            # Create project
+            # Create project - use clean name without special chars
+            clean_name = session.initial_request[:50].replace(':', '').replace('/', ' ')
             project = Project.objects.create(
                 tenant=session.converted_to_tenant,
                 user=session.converted_to_user,
-                name=f"App: {session.initial_request[:50]}",
+                name=clean_name,
                 description=session.initial_request,
                 user_prompt=session.initial_request,
                 status='generating',
