@@ -148,7 +148,37 @@ export default App;
         
         # Step 3: Deploy
         logger.info(f"Deploying project {project.id}")
-        deploy_app_task.delay(project.id)
+        
+        try:
+            # Run deployment synchronously to catch errors
+            from apps.deployment.render_deployer import RenderDeployer
+            deployer = RenderDeployer()
+            result = deployer.deploy_react_app(project)
+            
+            # Update project with deployment URL
+            project.deployment_url = result.get('url', '')
+            project.status = 'deployed'
+            project.save()
+            
+            # Update session
+            session.status = 'deployed'
+            session.save()
+            
+            SessionEvent.objects.create(
+                session=session,
+                event_type='deploy_completed',
+                event_data={'url': result.get('url', '')},
+            )
+            
+            logger.info(f"Deployed project {project.id} to {result.get('url')}")
+            
+        except Exception as deploy_error:
+            logger.error(f"Deployment failed for project {project.id}: {deploy_error}")
+            SessionEvent.objects.create(
+                session=session,
+                event_type='error',
+                event_data={'error': f'Deployment failed: {str(deploy_error)[:300]}'},
+            )
         
         return {
             'success': True,
