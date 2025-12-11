@@ -58,6 +58,12 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 # Frontend URL
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://faibric-frontend.onrender.com')
 
+# Render.com deployment for generated apps
+RENDER_API_KEY = os.environ.get('RENDER_API_KEY', '')
+RENDER_OWNER_ID = os.environ.get('RENDER_OWNER_ID', '')
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
+GITHUB_APPS_REPO = os.environ.get('GITHUB_APPS_REPO', 'avataer/faibric-apps')
+
 # Logging
 LOGGING = {
     'version': 1,

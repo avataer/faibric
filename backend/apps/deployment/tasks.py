@@ -1,10 +1,10 @@
 """
 Celery tasks for deployment
 """
+import os
 from celery import shared_task
 from django.utils import timezone
-from .react_deployer import ReactDeployer
-from .docker_manager import DomainManager
+from django.conf import settings
 
 
 def broadcast_deploy_message(project_id, content):
@@ -23,6 +23,16 @@ def broadcast_deploy_message(project_id, content):
     cache.set(messages_key, existing, timeout=3600)
 
 
+def use_render_deployer():
+    """Check if we should use Render deployer (cloud deployment)"""
+    # Use Render if RENDER_API_KEY is configured or running on Render
+    return bool(
+        os.environ.get('RENDER') or 
+        os.environ.get('RENDER_API_KEY') or
+        getattr(settings, 'RENDER_API_KEY', '')
+    )
+
+
 @shared_task(bind=True, max_retries=2)
 def deploy_app_task(self, project_id, use_v2=True):
     """
@@ -30,7 +40,7 @@ def deploy_app_task(self, project_id, use_v2=True):
     
     Args:
         project_id: Project to deploy
-        use_v2: Use V2 fast deployer (default True)
+        use_v2: Use V2 fast deployer (default True for Docker, ignored for Render)
     """
     from apps.projects.models import Project
     from django.core.cache import cache
@@ -42,41 +52,70 @@ def deploy_app_task(self, project_id, use_v2=True):
         
         broadcast_deploy_message(project_id, '🚀 Starting deployment...')
         
-        # Choose deployer
-        if use_v2:
-            from .v2.fast_deployer import FastReactDeployer
-            deployer = FastReactDeployer()
+        # Check if we should use Render or Docker
+        if use_render_deployer():
+            # Deploy to Render.com
+            from .render_deployer import RenderDeployer
+            deployer = RenderDeployer()
+            
+            broadcast_deploy_message(project_id, '☁️ Deploying to Render.com...')
+            
+            result = deployer.deploy_react_app(project)
+            deployment_url = result['url']
+            
+            broadcast_deploy_message(project_id, f'✅ Deployed at {deployment_url}')
+            
+            # Update project
+            project.deployment_url = deployment_url
+            project.subdomain = result.get('branch', '')
+            project.status = 'deployed'
+            project.deployed_at = timezone.now()
+            project.save()
+            
+            return {
+                'status': 'success',
+                'project_id': project_id,
+                'deployment_url': deployment_url
+            }
         else:
-            deployer = ReactDeployer()
-        
-        domain_mgr = DomainManager()
-        
-        broadcast_deploy_message(project_id, '🐳 Building React app...')
-        
-        # Deploy React app
-        container_id = deployer.deploy_react_app(project)
-        
-        broadcast_deploy_message(project_id, '🌐 Configuring routing...')
-        
-        # Assign subdomain
-        subdomain = domain_mgr.assign_subdomain(project)
-        deployment_url = domain_mgr.get_full_url(subdomain)
-        
-        broadcast_deploy_message(project_id, f'✅ Deployed at {deployment_url}')
-        
-        # Update project
-        project.container_id = container_id
-        project.subdomain = subdomain
-        project.deployment_url = deployment_url
-        project.status = 'deployed'
-        project.deployed_at = timezone.now()
-        project.save()
-        
-        return {
-            'status': 'success',
-            'project_id': project_id,
-            'deployment_url': deployment_url
-        }
+            # Use Docker deployer (local development)
+            from .react_deployer import ReactDeployer
+            from .docker_manager import DomainManager
+            
+            if use_v2:
+                from .v2.fast_deployer import FastReactDeployer
+                deployer = FastReactDeployer()
+            else:
+                deployer = ReactDeployer()
+            
+            domain_mgr = DomainManager()
+            
+            broadcast_deploy_message(project_id, '🐳 Building React app...')
+            
+            # Deploy React app
+            container_id = deployer.deploy_react_app(project)
+            
+            broadcast_deploy_message(project_id, '🌐 Configuring routing...')
+            
+            # Assign subdomain
+            subdomain = domain_mgr.assign_subdomain(project)
+            deployment_url = domain_mgr.get_full_url(subdomain)
+            
+            broadcast_deploy_message(project_id, f'✅ Deployed at {deployment_url}')
+            
+            # Update project
+            project.container_id = container_id
+            project.subdomain = subdomain
+            project.deployment_url = deployment_url
+            project.status = 'deployed'
+            project.deployed_at = timezone.now()
+            project.save()
+            
+            return {
+                'status': 'success',
+                'project_id': project_id,
+                'deployment_url': deployment_url
+            }
         
     except Exception as e:
         error_msg = str(e)[:200]
