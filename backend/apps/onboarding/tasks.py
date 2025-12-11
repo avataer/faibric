@@ -91,14 +91,33 @@ def build_app_from_session_task(self, session_token: str):
         
         SessionEvent.objects.create(
             session=session,
-            event_type='build_started',
-            event_data={'project_id': str(project.id)},
+            event_type='build_progress',
+            event_data={'progress': 5, 'message': '🚀 Starting build process...'},
+        )
+        
+        SessionEvent.objects.create(
+            session=session,
+            event_type='build_progress',
+            event_data={'progress': 10, 'message': '🤖 Analyzing your requirements...'},
         )
         
         generator = AIGeneratorV2()
+        
+        SessionEvent.objects.create(
+            session=session,
+            event_type='build_progress',
+            event_data={'progress': 20, 'message': '✨ Designing your app architecture...'},
+        )
+        
         result = generator.generate_app(
             user_prompt=project.user_prompt or project.description,
             project_id=project.id
+        )
+        
+        SessionEvent.objects.create(
+            session=session,
+            event_type='build_progress',
+            event_data={'progress': 50, 'message': '💻 Writing React components...'},
         )
         
         # Store the generated code
@@ -144,17 +163,36 @@ export default App;
         SessionEvent.objects.create(
             session=session,
             event_type='build_progress',
-            event_data={'progress': 100, 'message': 'Code generated successfully'},
+            event_data={'progress': 60, 'message': '✅ Code generation complete!'},
         )
         
         # Step 3: Deploy
         logger.info(f"Deploying project {project.id}")
         
+        SessionEvent.objects.create(
+            session=session,
+            event_type='build_progress',
+            event_data={'progress': 65, 'message': '📦 Preparing deployment package...'},
+        )
+        
         try:
             # Run deployment synchronously to catch errors
             from apps.deployment.render_deployer import RenderDeployer
             deployer = RenderDeployer()
+            
+            SessionEvent.objects.create(
+                session=session,
+                event_type='build_progress',
+                event_data={'progress': 75, 'message': '☁️ Uploading to cloud...'},
+            )
+            
             result = deployer.deploy_react_app(project)
+            
+            SessionEvent.objects.create(
+                session=session,
+                event_type='build_progress',
+                event_data={'progress': 90, 'message': '🔧 Configuring your app...'},
+            )
             
             # Update project with deployment URL
             project.deployment_url = result.get('url', '')

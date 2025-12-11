@@ -85,18 +85,45 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed }: BuildingSt
           }
         }
 
-        // Add status updates as system messages
+        // Add ALL build_progress events as system messages
         if (data.events && data.events.length > 0) {
-          const latestEvent = data.events[0]
-          if (latestEvent.event_type === 'build_progress' && latestEvent.event_data?.message) {
-            const msg = latestEvent.event_data.message
-            setMessages(prev => {
-              const exists = prev.some(m => m.content === msg)
+          // Process events in reverse order (oldest first) to maintain chronological order
+          const progressEvents = data.events
+            .filter((e: any) => e.event_type === 'build_progress' && e.event_data?.message)
+            .reverse()
+          
+          setMessages(prev => {
+            let updated = [...prev]
+            for (const event of progressEvents) {
+              const msg = event.event_data.message
+              const eventId = event.id || `event-${event.timestamp}`
+              const exists = updated.some(m => m.id === eventId || m.content === msg)
               if (!exists) {
-                return [...prev, {
-                  id: `status-${Date.now()}`,
+                updated.push({
+                  id: eventId,
                   role: 'system',
                   content: msg,
+                  timestamp: new Date(event.timestamp),
+                })
+              }
+            }
+            return updated
+          })
+        }
+        
+        // Also add error events
+        if (data.events) {
+          const errorEvents = data.events.filter((e: any) => e.event_type === 'error')
+          if (errorEvents.length > 0) {
+            const latestError = errorEvents[0]
+            setMessages(prev => {
+              const errorMsg = `⚠️ ${latestError.event_data?.error || 'An error occurred'}`
+              const exists = prev.some(m => m.content === errorMsg)
+              if (!exists) {
+                return [...prev, {
+                  id: `error-${Date.now()}`,
+                  role: 'system',
+                  content: errorMsg,
                   timestamp: new Date(),
                 }]
               }
@@ -109,8 +136,9 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed }: BuildingSt
       }
     }
 
+    // Poll immediately and then every 2 seconds for faster updates
     pollStatus()
-    const interval = setInterval(pollStatus, 3000)
+    const interval = setInterval(pollStatus, 2000)
     return () => clearInterval(interval)
   }, [sessionToken, deploymentUrl, onDeployed])
 
