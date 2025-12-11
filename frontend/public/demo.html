@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faibric Demo - All Pages</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif; background: #f5f5f5; }
+    
+    #login-screen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 1000;
+    }
+    #login-screen.hidden { display: none; }
+    #login-screen h1 { font-size: 24px; margin-bottom: 8px; }
+    #login-screen p { color: #666; margin-bottom: 24px; }
+    #login-screen .status { font-size: 14px; color: #2563eb; }
+    #login-screen .error { color: #dc2626; }
+    
+    .header {
+      background: #000;
+      color: #fff;
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .header .user { font-size: 13px; color: #999; }
+    .header .user strong { color: #fff; }
+    
+    .nav {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 24px;
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      position: sticky;
+      top: 56px;
+      z-index: 99;
+    }
+    .nav-item {
+      padding: 14px 20px;
+      font-size: 13px;
+      color: #666;
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+    }
+    .nav-item:hover { color: #000; }
+    .nav-item.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 500; }
+    
+    .page-container {
+      padding: 24px;
+    }
+    
+    .page-frame {
+      display: none;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .page-frame.active { display: block; }
+    
+    .frame-header {
+      background: #f9fafb;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .frame-header .title { font-weight: 600; font-size: 14px; }
+    .frame-header .url { font-size: 12px; color: #666; font-family: monospace; }
+    .frame-header a { color: #2563eb; text-decoration: none; }
+    .frame-header a:hover { text-decoration: underline; }
+    
+    iframe {
+      width: 100%;
+      height: calc(100vh - 200px);
+      min-height: 600px;
+      border: none;
+    }
+    
+    .refresh-btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-left: 12px;
+    }
+    .refresh-btn:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+
+<div id="login-screen">
+  <h1>Faibric Demo</h1>
+  <p>Loading demo user session...</p>
+  <div class="status" id="status">Logging in as sarah_demo...</div>
+</div>
+
+<div class="header">
+  <h1>Faibric Demo - All Pages</h1>
+  <div class="user">Logged in as <strong>sarah_demo</strong> (sarah@techstartup.io)</div>
+</div>
+
+<div class="nav" id="nav">
+  <div class="nav-item active" data-page="landing">Landing</div>
+  <div class="nav-item" data-page="login">Login</div>
+  <div class="nav-item" data-page="register">Register</div>
+  <div class="nav-item" data-page="dashboard">Dashboard</div>
+  <div class="nav-item" data-page="account">Account</div>
+  <div class="nav-item" data-page="admin">Admin</div>
+  <div class="nav-item" data-page="services">Services</div>
+  <div class="nav-item" data-page="builder">Panel Builder</div>
+</div>
+
+<div class="page-container">
+  <div class="page-frame active" id="frame-landing">
+    <div class="frame-header">
+      <span class="title">Landing Page - New User Flow</span>
+      <span class="url"><a href="/" target="_blank">localhost:5173/</a><button class="refresh-btn" onclick="refreshFrame('landing')">Refresh</button></span>
+    </div>
+    <iframe src="/" id="iframe-landing"></iframe>
+  </div>
+
+  <div class="page-frame" id="frame-login">
+    <div class="frame-header">
+      <span class="title">Login Page</span>
+      <span class="url"><a href="/login" target="_blank">localhost:5173/login</a><button class="refresh-btn" onclick="refreshFrame('login')">Refresh</button></span>
+    </div>
+    <iframe src="/login" id="iframe-login"></iframe>
+  </div>
+
+  <div class="page-frame" id="frame-register">
+    <div class="frame-header">
+      <span class="title">Register Page</span>
+      <span class="url"><a href="/register" target="_blank">localhost:5173/register</a><button class="refresh-btn" onclick="refreshFrame('register')">Refresh</button></span>
+    </div>
+    <iframe src="/register" id="iframe-register"></iframe>
+  </div>
+
+  <div class="page-frame" id="frame-dashboard">
+    <div class="frame-header">
+      <span class="title">Projects Dashboard</span>
+      <span class="url"><a href="/dashboard" target="_blank">localhost:5173/dashboard</a><button class="refresh-btn" onclick="refreshFrame('dashboard')">Refresh</button></span>
+    </div>
+    <iframe src="/dashboard" id="iframe-dashboard"></iframe>
+  </div>
+
+  <div class="page-frame" id="frame-account">
+    <div class="frame-header">
+      <span class="title">My Account - Credits, Subscription, Billing, Google Ads</span>
+      <span class="url"><a href="/account" target="_blank">localhost:5173/account</a><button class="refresh-btn" onclick="refreshFrame('account')">Refresh</button></span>
+    </div>
+    <iframe src="/account" id="iframe-account"></iframe>
+  </div>
+
+  <div class="page-frame" id="frame-admin">
+    <div class="frame-header">
+      <span class="title">Faibric Admin - Funnel, Sessions, Issues, Ads, Reports, LLM</span>
+      <span class="url"><a href="/admin" target="_blank">localhost:5173/admin</a><button class="refresh-btn" onclick="refreshFrame('admin')">Refresh</button></span>
+    </div>
+    <iframe src="/admin" id="iframe-admin"></iframe>
+  </div>
+
+  <div class="page-frame" id="frame-services">
+    <div class="frame-header">
+      <span class="title">External Services Status</span>
+      <span class="url"><a href="/admin/services" target="_blank">localhost:5173/admin/services</a><button class="refresh-btn" onclick="refreshFrame('services')">Refresh</button></span>
+    </div>
+    <iframe src="/admin/services" id="iframe-services"></iframe>
+  </div>
+
+  <div class="page-frame" id="frame-builder">
+    <div class="frame-header">
+      <span class="title">Admin Panel Builder</span>
+      <span class="url"><a href="/panel-builder" target="_blank">localhost:5173/panel-builder</a><button class="refresh-btn" onclick="refreshFrame('builder')">Refresh</button></span>
+    </div>
+    <iframe src="/panel-builder" id="iframe-builder"></iframe>
+  </div>
+</div>
+
+<script>
+  const API_URL = 'http://localhost:8000';
+  
+  // Login and set tokens
+  async function login() {
+    const status = document.getElementById('status');
+    
+    try {
+      // Try demo user first
+      let response = await fetch(`${API_URL}/api/auth/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'sarah_demo', password: 'demo123' })
+      });
+      
+      // If demo user fails, try batman1
+      if (!response.ok) {
+        status.textContent = 'Trying batman1...';
+        response = await fetch(`${API_URL}/api/auth/login/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'batman1', password: 'batman1' })
+        });
+      }
+      
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+      
+      const data = await response.json();
+      
+      // Store tokens
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+      
+      status.textContent = 'Logged in! Loading pages...';
+      
+      // Hide login screen and reload iframes
+      setTimeout(() => {
+        document.getElementById('login-screen').classList.add('hidden');
+        reloadAllFrames();
+      }, 500);
+      
+    } catch (error) {
+      status.textContent = 'Error: ' + error.message;
+      status.classList.add('error');
+      
+      // Still show pages even if login fails (will show demo data)
+      setTimeout(() => {
+        document.getElementById('login-screen').classList.add('hidden');
+      }, 2000);
+    }
+  }
+  
+  // Reload all iframes
+  function reloadAllFrames() {
+    document.querySelectorAll('iframe').forEach(iframe => {
+      iframe.src = iframe.src;
+    });
+  }
+  
+  // Refresh single frame
+  function refreshFrame(page) {
+    const iframe = document.getElementById('iframe-' + page);
+    if (iframe) {
+      iframe.src = iframe.src;
+    }
+  }
+  
+  // Tab navigation
+  document.getElementById('nav').addEventListener('click', (e) => {
+    if (e.target.classList.contains('nav-item')) {
+      // Update active tab
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      e.target.classList.add('active');
+      
+      // Show corresponding frame
+      const page = e.target.dataset.page;
+      document.querySelectorAll('.page-frame').forEach(frame => frame.classList.remove('active'));
+      document.getElementById('frame-' + page).classList.add('active');
+    }
+  });
+  
+  // Start login on page load
+  login();
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faibric Admin - Conversion Funnel & User Insights</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .header p { color: #8892b0; font-size: 18px; }
+        
+        .dashboard { max-width: 1400px; margin: 0 auto; }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover { background: rgba(255,255,255,0.1); }
+        .tab.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-color: transparent; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .funnel-container {
+            background: rgba(255,255,255,0.03);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .funnel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .funnel-step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+        
+        .funnel-step::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 30px;
+            color: #4a5568;
+        }
+        
+        .funnel-step:last-child::after { display: none; }
+        
+        .step-number {
+            font-size: 56px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .step-label { font-size: 14px; color: #8892b0; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .step-rate { font-size: 24px; color: #48bb78; margin-top: 8px; font-weight: 600; }
+        .step-rate.low { color: #f56565; }
+        .step-rate.medium { color: #ed8936; }
+        
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 40px; }
+        
+        .metric-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .metric-card h3 { font-size: 12px; color: #8892b0; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .metric-value { font-size: 36px; font-weight: 700; color: #fff; }
+        .metric-value.highlight { color: #48bb78; }
+        .metric-value.warning { color: #ed8936; }
+        .metric-sub { font-size: 14px; color: #8892b0; margin-top: 8px; }
+        
+        .session-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .session-table th, .session-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .session-table th {
+            color: #8892b0;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .session-table tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge.success { background: rgba(72, 187, 120, 0.2); color: #48bb78; }
+        .badge.warning { background: rgba(237, 137, 54, 0.2); color: #ed8936; }
+        .badge.info { background: rgba(102, 126, 234, 0.2); color: #667eea; }
+        .badge.neutral { background: rgba(255,255,255,0.1); color: #8892b0; }
+        
+        .input-preview {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #cbd5e0;
+        }
+        
+        .input-full {
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            border-left: 3px solid #667eea;
+        }
+        
+        .input-meta { font-size: 12px; color: #8892b0; margin-top: 8px; }
+        
+        .follow-up { margin-left: 24px; border-left-color: #764ba2; margin-top: 12px; }
+        
+        .breakdown { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        
+        .breakdown-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .breakdown-card h3 { font-size: 16px; color: #fff; margin-bottom: 20px; }
+        
+        .source-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .source-name { color: #8892b0; }
+        .source-count { font-weight: 600; color: #fff; }
+        
+        .alert {
+            background: linear-gradient(135deg, rgba(237, 137, 54, 0.1) 0%, rgba(245, 101, 101, 0.1) 100%);
+            border: 1px solid rgba(237, 137, 54, 0.3);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .timestamp { text-align: center; color: #4a5568; font-size: 14px; margin-top: 40px; }
+        
+        .expand-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 8px;
+        }
+        
+        .expand-btn:hover { text-decoration: underline; }
+        
+        .user-journey {
+            margin-top: 12px;
+            padding: 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .user-journey.visible { display: block; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>🚀 Faibric Admin Dashboard</h1>
+            <p>Conversion Funnel & User Insights • All data logged on your server</p>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('funnel')">📊 Funnel</div>
+            <div class="tab" onclick="showTab('inputs')">💬 User Inputs</div>
+            <div class="tab" onclick="showTab('sessions')">👤 Sessions</div>
+        </div>
+        
+        <!-- FUNNEL TAB -->
+        <div id="tab-funnel" class="tab-content active">
+            <div class="alert">
+                <span style="font-size: 24px;">⚠️</span>
+                <span><strong>4 users</strong> changed their email after initial submission — tracking for follow-up</span>
+            </div>
+            
+            <div class="funnel-container">
+                <div class="funnel">
+                    <div class="funnel-step">
+                        <div class="step-number">28</div>
+                        <div class="step-label">Visitors</div>
+                        <div class="step-rate">100%</div>
+                    </div>
+                    <div class="funnel-step">
+                        <div class="step-number">25</div>
+                        <div class="step-label">Gave Email</div>
+                        <div class="step-rate">89.3%</div>
+                    </div>
+                    <div class="funnel-step">
+                        <div class="step-number">15</div>
+                        <div class="step-label">Verified</div>
+                        <div class="step-rate medium">53.6%</div>
+                    </div>
+                    <div class="funnel-step">
+                        <div class="step-number">8</div>
+                        <div class="step-label">Projects</div>
+                        <div class="step-rate medium">28.6%</div>
+                    </div>
+                    <div class="funnel-step">
+                        <div class="step-number">8</div>
+                        <div class="step-label">Deployed</div>
+                        <div class="step-rate highlight">28.6%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Avg Session Duration</h3>
+                    <div class="metric-value">27.8</div>
+                    <div class="metric-sub">minutes</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Avg Inputs per Session</h3>
+                    <div class="metric-value">2.5</div>
+                    <div class="metric-sub">messages</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Total Characters Typed</h3>
+                    <div class="metric-value highlight">4,892</div>
+                    <div class="metric-sub">across all sessions</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Email Changes</h3>
+                    <div class="metric-value warning">4</div>
+                    <div class="metric-sub">users changed email</div>
+                </div>
+            </div>
+            
+            <div class="breakdown">
+                <div class="breakdown-card">
+                    <h3>📊 Traffic Sources</h3>
+                    <div class="source-item"><span class="source-name">🔵 Google</span><span class="source-count">14 (50%)</span></div>
+                    <div class="source-item"><span class="source-name">🐦 Twitter</span><span class="source-count">3 (11%)</span></div>
+                    <div class="source-item"><span class="source-name">🚀 Product Hunt</span><span class="source-count">2 (7%)</span></div>
+                    <div class="source-item"><span class="source-name">💼 LinkedIn</span><span class="source-count">2 (7%)</span></div>
+                    <div class="source-item"><span class="source-name">📸 Instagram</span><span class="source-count">2 (7%)</span></div>
+                </div>
+                <div class="breakdown-card">
+                    <h3>🎯 Top Campaigns</h3>
+                    <div class="source-item"><span class="source-name">saas_founders</span><span class="source-count">6 sessions</span></div>
+                    <div class="source-item"><span class="source-name">fintech</span><span class="source-count">3 sessions</span></div>
+                    <div class="source-item"><span class="source-name">developers</span><span class="source-count">3 sessions</span></div>
+                    <div class="source-item"><span class="source-name">launch_day</span><span class="source-count">2 sessions</span></div>
+                    <div class="source-item"><span class="source-name">enterprise</span><span class="source-count">2 sessions</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- INPUTS TAB -->
+        <div id="tab-inputs" class="tab-content">
+            <div class="funnel-container">
+                <h2 style="margin-bottom: 24px;">💬 What Users Are Asking For</h2>
+                <p style="color: #8892b0; margin-bottom: 24px;">All inputs are logged on Faibric's server for learning and improvement</p>
+                
+                <div class="input-full">
+                    <strong>Initial Request</strong>
+                    <p style="margin-top: 8px;">"I need a SaaS dashboard with user analytics, subscription management, and a beautiful admin panel. Should integrate with Stripe for billing."</p>
+                    <div class="input-meta">
+                        📧 founder@techstartup.com • 🕐 45 min session • 4 total inputs • 🎯 saas_founders
+                    </div>
+                    <div class="follow-up input-full">
+                        <strong>Follow-up 1:</strong> "Can you add a dark mode toggle?"
+                    </div>
+                    <div class="follow-up input-full">
+                        <strong>Follow-up 2:</strong> "Make the charts interactive please"
+                    </div>
+                    <div class="follow-up input-full">
+                        <strong>Follow-up 3:</strong> "Add export to CSV feature"
+                    </div>
+                </div>
+                
+                <div class="input-full" style="margin-top: 24px;">
+                    <strong>Initial Request</strong>
+                    <p style="margin-top: 8px;">"Payment processing dashboard with fraud detection, transaction monitoring, and compliance reports"</p>
+                    <div class="input-meta">
+                        📧 cto@fintech.io • 🕐 67 min session • 5 total inputs • 🎯 fintech
+                    </div>
+                    <div class="follow-up input-full">
+                        <strong>Follow-up 1:</strong> "Need real-time alerts for suspicious activity"
+                    </div>
+                    <div class="follow-up input-full">
+                        <strong>Follow-up 2:</strong> "Add multi-currency support"
+                    </div>
+                    <div class="follow-up input-full">
+                        <strong>Follow-up 3:</strong> "Include audit logs"
+                    </div>
+                    <div class="follow-up input-full">
+                        <strong>Follow-up 4:</strong> "Add role-based access control"
+                    </div>
+                </div>
+                
+                <div class="input-full" style="margin-top: 24px;">
+                    <strong>Initial Request</strong>
+                    <p style="margin-top: 8px;">"Build me an e-commerce platform with product catalog, shopping cart, checkout, and inventory management"</p>
+                    <div class="input-meta">
+                        📧 ceo@ecommerce.io • 🕐 38 min session • 3 total inputs • 🎯 launch_day
+                    </div>
+                    <div class="follow-up input-full">
+                        <strong>Follow-up 1:</strong> "Add PayPal alongside Stripe"
+                    </div>
+                    <div class="follow-up input-full">
+                        <strong>Follow-up 2:</strong> "Need product variants (size, color)"
+                    </div>
+                </div>
+                
+                <div class="input-full" style="margin-top: 24px; border-left-color: #ed8936;">
+                    <strong>⚠️ Abandoned After Request</strong>
+                    <p style="margin-top: 8px;">"todo app"</p>
+                    <div class="input-meta">
+                        📧 curious@gmail.com • 🕐 2 min session • 1 input only • Status: email_provided
+                    </div>
+                </div>
+                
+                <div class="input-full" style="margin-top: 24px; border-left-color: #f56565;">
+                    <strong>🚫 No Email Provided</strong>
+                    <p style="margin-top: 8px;">"Recipe sharing platform where users can upload recipes, share photos, and rate each other's dishes. Should have meal planning feature."</p>
+                    <div class="input-meta">
+                        🕐 12 min typing but left without email • 🎯 pinterest/food
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SESSIONS TAB -->
+        <div id="tab-sessions" class="tab-content">
+            <div class="funnel-container">
+                <h2 style="margin-bottom: 24px;">👤 Individual Sessions</h2>
+                <p style="color: #8892b0; margin-bottom: 24px;">Complete journey data for each user</p>
+                
+                <table class="session-table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Initial Request</th>
+                            <th>Duration</th>
+                            <th>Inputs</th>
+                            <th>Status</th>
+                            <th>Source</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>cto@fintech.io</strong></td>
+                            <td class="input-preview">Payment processing dashboard with fraud detection...</td>
+                            <td><strong>67 min</strong></td>
+                            <td>5</td>
+                            <td><span class="badge success">Deployed</span></td>
+                            <td>google/fintech</td>
+                            <td><button class="expand-btn" onclick="toggleJourney(1)">View →</button></td>
+                        </tr>
+                        <tr>
+                            <td><strong>founder@techstartup.com</strong></td>
+                            <td class="input-preview">SaaS dashboard with user analytics...</td>
+                            <td><strong>45 min</strong></td>
+                            <td>4</td>
+                            <td><span class="badge success">Deployed</span></td>
+                            <td>google/saas_founders</td>
+                            <td><button class="expand-btn" onclick="toggleJourney(2)">View →</button></td>
+                        </tr>
+                        <tr>
+                            <td><strong>ceo@ecommerce.io</strong></td>
+                            <td class="input-preview">E-commerce platform with product catalog...</td>
+                            <td><strong>38 min</strong></td>
+                            <td>3</td>
+                            <td><span class="badge success">Deployed</span></td>
+                            <td>producthunt/launch_day</td>
+                            <td><button class="expand-btn" onclick="toggleJourney(3)">View →</button></td>
+                        </tr>
+                        <tr>
+                            <td><strong>mobile@fitness.app</strong></td>
+                            <td class="input-preview">Fitness tracking app with workout plans...</td>
+                            <td><strong>28 min</strong></td>
+                            <td>2</td>
+                            <td><span class="badge success">Deployed</span></td>
+                            <td>instagram/fitness</td>
+                            <td><button class="expand-btn" onclick="toggleJourney(4)">View →</button></td>
+                        </tr>
+                        <tr>
+                            <td><strong>developer@agency.co</strong></td>
+                            <td class="input-preview">AI-powered code review tool...</td>
+                            <td><strong>22 min</strong></td>
+                            <td>3</td>
+                            <td><span class="badge info">Clicked Link</span></td>
+                            <td>twitter/developers</td>
+                            <td><button class="expand-btn" onclick="toggleJourney(5)">View →</button></td>
+                        </tr>
+                        <tr style="opacity: 0.7;">
+                            <td><strong>correct@company.com</strong></td>
+                            <td class="input-preview">Internal HR portal...</td>
+                            <td>8 min</td>
+                            <td>1</td>
+                            <td><span class="badge warning">⚠️ Email Changed</span></td>
+                            <td>linkedin/enterprise</td>
+                            <td></td>
+                        </tr>
+                        <tr style="opacity: 0.5;">
+                            <td><strong>curious@gmail.com</strong></td>
+                            <td class="input-preview">todo app</td>
+                            <td>2 min</td>
+                            <td>1</td>
+                            <td><span class="badge neutral">Email Only</span></td>
+                            <td>google/general</td>
+                            <td></td>
+                        </tr>
+                        <tr style="opacity: 0.5;">
+                            <td><em>No email</em></td>
+                            <td class="input-preview">Recipe sharing platform...</td>
+                            <td>12 min</td>
+                            <td>1</td>
+                            <td><span class="badge neutral">Abandoned</span></td>
+                            <td>pinterest/food</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="timestamp">
+            Last updated: November 27, 2025 at 3:05 PM PST • All data logged by Faibric Server (not third-party)
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function toggleJourney(id) {
+            const el = document.getElementById('journey-' + id);
+            if (el) el.classList.toggle('visible');
+        }
+    </script>
+</body>
+</html>

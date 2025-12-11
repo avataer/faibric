@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faibric - Complete Flow Preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif; background: #f0f0f0; }
+    
+    .page-section {
+      background: #fff;
+      margin: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .page-header {
+      background: #000;
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .page-header h2 { font-size: 16px; font-weight: 600; }
+    .page-header .url { font-size: 12px; color: #888; font-family: monospace; }
+    .page-content { padding: 24px; }
+    
+    /* Common styles */
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+    .card-title { font-size: 14px; font-weight: 600; color: #000; margin-bottom: 12px; }
+    .stat-value { font-size: 32px; font-weight: 700; color: #000; }
+    .stat-label { font-size: 13px; color: #666; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+    
+    .btn { padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-outline { background: #fff; color: #2563eb; border: 1px solid #2563eb; }
+    
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid #e5e7eb; margin-bottom: 20px; }
+    .tab { padding: 12px 20px; font-size: 14px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; }
+    .tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 500; }
+    
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { font-weight: 600; color: #000; background: #f9fafb; }
+    td { color: #374151; }
+    
+    .chip { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .chip-success { background: #dcfce7; color: #166534; }
+    .chip-info { background: #dbeafe; color: #1e40af; }
+    .chip-warning { background: #fef3c7; color: #92400e; }
+    .chip-error { background: #fee2e2; color: #991b1b; }
+    .chip-default { background: #f3f4f6; color: #374151; }
+    
+    .progress-bar { height: 12px; background: #e5e7eb; border-radius: 6px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #2563eb; border-radius: 6px; }
+    
+    .funnel { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; }
+    .funnel-step { text-align: center; flex: 1; }
+    .funnel-value { font-size: 36px; font-weight: 700; color: #2563eb; }
+    .funnel-label { font-size: 13px; color: #666; margin-top: 4px; }
+    .funnel-rate { font-size: 12px; color: #16a34a; }
+    .funnel-arrow { font-size: 24px; color: #ccc; }
+    
+    .sidebar { width: 200px; background: #fff; border-right: 1px solid #e5e7eb; padding: 20px; }
+    .sidebar-item { padding: 10px 12px; border-radius: 6px; margin-bottom: 4px; font-size: 14px; color: #374151; cursor: pointer; }
+    .sidebar-item.active { background: #f3f4f6; font-weight: 500; color: #000; }
+    
+    .layout { display: flex; }
+    .main-content { flex: 1; padding: 24px; background: #fff; }
+    
+    .input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+    .input:focus { outline: none; border-color: #2563eb; }
+    
+    .alert { padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
+    .alert-info { background: #dbeafe; color: #1e40af; }
+    .alert-warning { background: #fef3c7; color: #92400e; }
+    .alert-success { background: #dcfce7; color: #166534; }
+    
+    h1 { font-size: 24px; font-weight: 700; color: #000; margin-bottom: 8px; }
+    h3 { font-size: 18px; font-weight: 600; color: #000; margin-bottom: 16px; }
+    .subtitle { font-size: 14px; color: #666; margin-bottom: 24px; }
+    
+    .divider { height: 1px; background: #e5e7eb; margin: 24px 0; }
+    
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 36px; height: 36px; background: #2563eb; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<!-- ==================== SECTION 1: LANDING FLOW ==================== -->
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>1. Landing Page - Step 1: Describe Idea</h2>
+    <span class="url">/</span>
+  </div>
+  <div class="page-content" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 60px 24px;">
+    <h1 style="font-size: 36px; margin-bottom: 12px;">Faibric</h1>
+    <p style="font-size: 18px; color: #666; margin-bottom: 40px;">Describe what you want to build. We'll make it happen.</p>
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 13px;">
+      <span><span style="background:#2563eb;color:#fff;padding:4px 10px;border-radius:50%;margin-right:8px;">1</span> Describe Your Idea</span>
+      <span style="color:#999;">2 Create Account</span>
+      <span style="color:#999;">3 Build</span>
+      <span style="color:#999;">4 Deploy</span>
+    </div>
+    
+    <div class="card" style="text-align: left;">
+      <div class="card-title">What do you want to build?</div>
+      <p style="font-size: 13px; color: #666; margin-bottom: 16px;">Describe your app, website, or tool in plain English.</p>
+      <textarea class="input" rows="4" style="margin-bottom: 16px;">I need a SaaS dashboard with user analytics, subscription management, Stripe billing, and a team collaboration feature.</textarea>
+      <button class="btn btn-primary" style="width: 100%;">Start Building</button>
+    </div>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>2. Landing Page - Step 2: Enter Email</h2>
+    <span class="url">/</span>
+  </div>
+  <div class="page-content" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 60px 24px;">
+    <div class="card">
+      <div class="card-title" style="font-size: 18px;">Enter your email to create your account</div>
+      <p style="font-size: 13px; color: #666; margin-bottom: 16px;">We'll send you a magic link to access your project dashboard.</p>
+      <input type="email" class="input" value="sarah@techstartup.io" style="margin-bottom: 16px;">
+      <button class="btn btn-primary" style="width: 100%;">Send Magic Link</button>
+    </div>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>3. Landing Page - Step 3: Check Email</h2>
+    <span class="url">/</span>
+  </div>
+  <div class="page-content" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 60px 24px;">
+    <div class="card">
+      <div class="card-title" style="font-size: 18px;">Check your email</div>
+      <p style="font-size: 14px; color: #374151; margin-bottom: 8px;">We sent a magic link to <strong>sarah@techstartup.io</strong></p>
+      <p style="font-size: 13px; color: #666; margin-bottom: 16px;">Click the link in your email to access your project.</p>
+      <a href="#" style="color: #2563eb; font-size: 13px;">Wrong email? Click here to change it</a>
+    </div>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>4. Landing Page - Step 4: Building</h2>
+    <span class="url">/</span>
+  </div>
+  <div class="page-content" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 60px 24px;">
+    <div class="card">
+      <div class="card-title" style="font-size: 18px;">Building your project</div>
+      <p style="font-size: 13px; color: #666; margin-bottom: 20px;">This usually takes 2-5 minutes depending on complexity.</p>
+      <div class="progress-bar" style="margin-bottom: 8px;">
+        <div class="progress-fill" style="width: 67%;"></div>
+      </div>
+      <p style="font-size: 13px; color: #374151;">67% complete</p>
+    </div>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>5. Landing Page - Step 5: Deployed</h2>
+    <span class="url">/</span>
+  </div>
+  <div class="page-content" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 60px 24px;">
+    <div class="card">
+      <div style="font-size: 24px; font-weight: 600; color: #16a34a; margin-bottom: 12px;">Your project is ready</div>
+      <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Your app has been deployed and is live.</p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button class="btn btn-primary">Open Live App</button>
+        <button class="btn btn-outline">Go to Dashboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 2: LOGIN/REGISTER ==================== -->
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>6. Login Page</h2>
+    <span class="url">/login</span>
+  </div>
+  <div class="page-content" style="text-align: center; max-width: 400px; margin: 0 auto; padding: 60px 24px;">
+    <div class="card">
+      <h3>Login</h3>
+      <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Sign in to your Faibric account</p>
+      <input type="text" class="input" placeholder="Username" value="sarah_chen" style="margin-bottom: 12px;">
+      <input type="password" class="input" placeholder="Password" value="••••••••" style="margin-bottom: 16px;">
+      <button class="btn btn-primary" style="width: 100%; margin-bottom: 16px;">Sign In</button>
+      <a href="#" style="color: #2563eb; font-size: 13px;">Don't have an account? Sign Up</a>
+    </div>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>7. Register Page</h2>
+    <span class="url">/register</span>
+  </div>
+  <div class="page-content" style="text-align: center; max-width: 400px; margin: 0 auto; padding: 40px 24px;">
+    <div class="card">
+      <h3>Register</h3>
+      <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Create your Faibric account</p>
+      <input type="text" class="input" placeholder="Username" value="sarah_chen" style="margin-bottom: 12px;">
+      <input type="email" class="input" placeholder="Email" value="sarah@techstartup.io" style="margin-bottom: 12px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <input type="text" class="input" placeholder="First Name" value="Sarah">
+        <input type="text" class="input" placeholder="Last Name" value="Chen">
+      </div>
+      <input type="password" class="input" placeholder="Password" value="••••••••" style="margin-bottom: 12px;">
+      <input type="password" class="input" placeholder="Confirm Password" value="••••••••" style="margin-bottom: 16px;">
+      <button class="btn btn-primary" style="width: 100%;">Sign Up</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 3: CUSTOMER DASHBOARD ==================== -->
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>8. Customer Dashboard - Projects</h2>
+    <span class="url">/dashboard</span>
+  </div>
+  <div class="page-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <h1>My Projects</h1>
+      <button class="btn btn-primary">New Project</button>
+    </div>
+    
+    <div class="grid-3">
+      <div class="card">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">SaaS Dashboard</div>
+        <p style="font-size: 13px; color: #666; margin-bottom: 12px;">User analytics platform with Stripe billing</p>
+        <span class="chip chip-success">deployed</span>
+        <div style="margin-top: 12px;">
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; margin-right: 8px;">View Details</button>
+          <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Live</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">E-commerce Store</div>
+        <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Online shop with product catalog and checkout</p>
+        <span class="chip chip-success">deployed</span>
+        <div style="margin-top: 12px;">
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; margin-right: 8px;">View Details</button>
+          <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Live</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">HR Portal</div>
+        <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Employee management with leave tracking</p>
+        <span class="chip chip-info">generating</span>
+        <div style="margin-top: 12px;">
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">View Details</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>9. Customer Account - Usage History</h2>
+    <span class="url">/account</span>
+  </div>
+  <div class="page-content">
+    <h1>My Account</h1>
+    <p class="subtitle">Manage your credits, subscription, and billing</p>
+    
+    <div class="grid-4">
+      <div class="card"><div class="stat-value">847</div><div class="stat-label">Credits Remaining</div></div>
+      <div class="card"><div class="stat-value">153</div><div class="stat-label">Credits Used (MTD)</div></div>
+      <div class="card"><div class="stat-value" style="color:#2563eb;">Pro</div><div class="stat-label">Current Plan</div></div>
+      <div class="card"><div class="stat-value">$99.99</div><div class="stat-label">Monthly Cost</div></div>
+    </div>
+    
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+        <span style="font-weight: 500;">Monthly Credit Usage</span>
+        <span style="font-size: 13px; color: #666;">153 / 1000 credits</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width: 15.3%;"></div></div>
+      <p style="font-size: 12px; color: #666; margin-top: 8px;">Renews: Dec 28, 2025</p>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active">Usage History</div>
+      <div class="tab">Subscription</div>
+      <div class="tab">Billing</div>
+      <div class="tab">My Google Ads</div>
+    </div>
+    
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Project</th><th>Action</th><th>Tokens</th><th>Credits</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Nov 28, 2:34 PM</td><td><strong>SaaS Dashboard</strong></td><td>Generated dashboard with Stripe</td><td>45,000</td><td><span class="chip chip-info">5 credits</span></td></tr>
+        <tr><td>Nov 28, 1:15 PM</td><td><strong>SaaS Dashboard</strong></td><td>Added dark mode toggle</td><td>12,000</td><td><span class="chip chip-info">1 credit</span></td></tr>
+        <tr><td>Nov 27, 4:22 PM</td><td><strong>E-commerce Store</strong></td><td>Created product catalog</td><td>28,000</td><td><span class="chip chip-info">3 credits</span></td></tr>
+        <tr><td>Nov 27, 3:45 PM</td><td><strong>E-commerce Store</strong></td><td>Implemented checkout flow</td><td>35,000</td><td><span class="chip chip-info">4 credits</span></td></tr>
+        <tr><td>Nov 26, 11:30 AM</td><td><strong>HR Portal</strong></td><td>Chat: clarified requirements</td><td>2,000</td><td><span class="chip chip-info">1 credit</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>10. Customer Account - Subscription</h2>
+    <span class="url">/account (Subscription tab)</span>
+  </div>
+  <div class="page-content">
+    <h1>My Account</h1>
+    <p class="subtitle">Manage your credits, subscription, and billing</p>
+    
+    <div class="tabs">
+      <div class="tab">Usage History</div>
+      <div class="tab active">Subscription</div>
+      <div class="tab">Billing</div>
+      <div class="tab">My Google Ads</div>
+    </div>
+    
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Current Plan</div>
+        <div style="display: flex; gap: 24px; align-items: center;">
+          <div style="border: 2px solid #2563eb; border-radius: 8px; padding: 20px; text-align: center; min-width: 120px;">
+            <div style="font-size: 20px; font-weight: 700;">Pro</div>
+            <div style="font-size: 28px; color: #2563eb; font-weight: 700;">$99.99</div>
+            <div style="font-size: 12px; color: #666;">/month</div>
+          </div>
+          <div>
+            <p style="margin-bottom: 8px;"><strong>1000</strong> credits per month</p>
+            <span class="chip chip-success">Active</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title">Plan Features:</div>
+        <ul style="font-size: 13px; color: #374151; margin-left: 20px;">
+          <li>Unlimited projects</li>
+          <li>Priority support</li>
+          <li>Custom domains</li>
+          <li>Team collaboration</li>
+        </ul>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title">Upgrade Plan</div>
+          <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Get more credits and features</p>
+          <button class="btn btn-outline" style="width: 100%; margin-bottom: 8px;">Basic - $19.99/mo</button>
+          <button class="btn btn-primary" style="width: 100%;">Pro - $99.99/mo</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Buy Credits</div>
+          <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Need more credits right now?</p>
+          <button class="btn" style="width: 100%; background: #16a34a; color: #fff;">Buy 500 Credits - $49.99</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>11. Customer Account - Billing History</h2>
+    <span class="url">/account (Billing tab)</span>
+  </div>
+  <div class="page-content">
+    <div class="tabs">
+      <div class="tab">Usage History</div>
+      <div class="tab">Subscription</div>
+      <div class="tab active">Billing</div>
+      <div class="tab">My Google Ads</div>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+      <h3>Billing History</h3>
+      <button class="btn btn-outline">Payment Methods</button>
+    </div>
+    
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th><th>Invoice</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Nov 28, 2025</td><td>Pro Plan - Monthly</td><td><strong>$99.99</strong></td><td><span class="chip chip-success">paid</span></td><td><button class="btn btn-outline" style="padding:4px 8px;font-size:12px;">Download</button></td></tr>
+        <tr><td>Oct 28, 2025</td><td>Pro Plan - Monthly</td><td><strong>$99.99</strong></td><td><span class="chip chip-success">paid</span></td><td><button class="btn btn-outline" style="padding:4px 8px;font-size:12px;">Download</button></td></tr>
+        <tr><td>Oct 15, 2025</td><td>Credit Top-up (500)</td><td><strong>$49.99</strong></td><td><span class="chip chip-success">paid</span></td><td><button class="btn btn-outline" style="padding:4px 8px;font-size:12px;">Download</button></td></tr>
+        <tr><td>Sep 28, 2025</td><td>Pro Plan - Monthly</td><td><strong>$99.99</strong></td><td><span class="chip chip-success">paid</span></td><td><button class="btn btn-outline" style="padding:4px 8px;font-size:12px;">Download</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>12. Customer Account - Google Ads</h2>
+    <span class="url">/account (Google Ads tab)</span>
+  </div>
+  <div class="page-content">
+    <div class="tabs">
+      <div class="tab">Usage History</div>
+      <div class="tab">Subscription</div>
+      <div class="tab">Billing</div>
+      <div class="tab active">My Google Ads</div>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+      <h3>My Google Ads Campaigns</h3>
+      <button class="btn btn-primary">Create Campaign</button>
+    </div>
+    
+    <table>
+      <thead>
+        <tr><th>Campaign</th><th>Status</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Spend</th><th>Conversions</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>SaaS Dashboard Launch</strong></td><td><span class="chip chip-success">active</span></td><td>12,450</td><td>892</td><td>7.16%</td><td>$445.00</td><td>67</td></tr>
+        <tr><td><strong>E-commerce Promo</strong></td><td><span class="chip chip-success">active</span></td><td>8,230</td><td>534</td><td>6.49%</td><td>$267.00</td><td>42</td></tr>
+        <tr><td><strong>Black Friday Sale</strong></td><td><span class="chip chip-default">paused</span></td><td>15,670</td><td>1,245</td><td>7.94%</td><td>$622.50</td><td>156</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== SECTION 4: ADMIN PANEL BUILDER ==================== -->
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>13. Admin Panel Builder</h2>
+    <span class="url">/panel-builder</span>
+  </div>
+  <div class="page-content">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
+      <div>
+        <h1>Admin Panel Builder</h1>
+        <p class="subtitle" style="margin-bottom:0;">Build custom dashboards with drag-and-drop widgets</p>
+      </div>
+      <button class="btn btn-primary">New Panel</button>
+    </div>
+    
+    <div class="grid-2" style="grid-template-columns: 250px 1fr;">
+      <div class="card">
+        <div class="card-title">Your Panels</div>
+        <div class="sidebar-item active">Sales Dashboard</div>
+        <div class="sidebar-item">Customer Analytics</div>
+        <div class="sidebar-item">Inventory Tracker</div>
+        <div class="sidebar-item">Support Metrics</div>
+      </div>
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+          <div>
+            <div style="font-size: 18px; font-weight: 600;">Sales Dashboard</div>
+            <span class="chip chip-success">Published</span>
+          </div>
+          <div>
+            <button class="btn btn-outline" style="margin-right: 8px;">Preview</button>
+            <button class="btn btn-primary">Save</button>
+          </div>
+        </div>
+        <div class="tabs">
+          <div class="tab active">Layout</div>
+          <div class="tab">Widgets</div>
+          <div class="tab">Settings</div>
+          <div class="tab">Code</div>
+        </div>
+        <div class="grid-2">
+          <div style="border: 2px dashed #e5e7eb; padding: 16px; border-radius: 8px;">
+            <div style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">Revenue Chart <span class="chip chip-default" style="font-size:10px;">line_chart</span></div>
+            <div style="background: #f9fafb; height: 80px; border-radius: 4px;"></div>
+          </div>
+          <div style="border: 2px dashed #e5e7eb; padding: 16px; border-radius: 8px;">
+            <div style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">Sales by Region <span class="chip chip-default" style="font-size:10px;">pie_chart</span></div>
+            <div style="background: #f9fafb; height: 80px; border-radius: 4px;"></div>
+          </div>
+          <div style="border: 2px dashed #e5e7eb; padding: 16px; border-radius: 8px;">
+            <div style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">Total Revenue <span class="chip chip-default" style="font-size:10px;">stat_card</span></div>
+            <div style="background: #f9fafb; height: 80px; border-radius: 4px;"></div>
+          </div>
+          <div style="border: 2px dashed #e5e7eb; padding: 16px; border-radius: 8px;">
+            <div style="font-size: 13px; font-weight: 500; margin-bottom: 8px;">Recent Orders <span class="chip chip-default" style="font-size:10px;">table</span></div>
+            <div style="background: #f9fafb; height: 80px; border-radius: 4px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 5: FAIBRIC ADMIN ==================== -->
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>14. Faibric Admin - Conversion Funnel</h2>
+    <span class="url">/admin</span>
+  </div>
+  <div class="page-content">
+    <h1>Faibric Admin Dashboard</h1>
+    <p class="subtitle">Platform analytics, funnels, and operations</p>
+    
+    <div class="grid-4">
+      <div class="card"><div class="stat-value">1,247</div><div class="stat-label">Total Sessions</div></div>
+      <div class="card"><div class="stat-value">534</div><div class="stat-label">Conversions</div></div>
+      <div class="card"><div class="stat-value">12,847</div><div class="stat-label">Credits Used</div></div>
+      <div class="card"><div class="stat-value">3</div><div class="stat-label">Issues to Review</div></div>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active">Conversion Funnel</div>
+      <div class="tab">User Sessions</div>
+      <div class="tab">Quality Issues (3)</div>
+      <div class="tab">Google Ads</div>
+      <div class="tab">Daily Reports</div>
+      <div class="tab">LLM Usage</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">Conversion Funnel</div>
+      <div class="funnel">
+        <div class="funnel-step">
+          <div class="funnel-value">1,247</div>
+          <div class="funnel-label">Visitors</div>
+          <div class="funnel-rate">100%</div>
+        </div>
+        <div class="funnel-arrow">→</div>
+        <div class="funnel-step">
+          <div class="funnel-value">823</div>
+          <div class="funnel-label">Email Given</div>
+          <div class="funnel-rate">66.0%</div>
+        </div>
+        <div class="funnel-arrow">→</div>
+        <div class="funnel-step">
+          <div class="funnel-value">687</div>
+          <div class="funnel-label">Verified</div>
+          <div class="funnel-rate">55.1%</div>
+        </div>
+        <div class="funnel-arrow">→</div>
+        <div class="funnel-step">
+          <div class="funnel-value">534</div>
+          <div class="funnel-label">Deployed</div>
+          <div class="funnel-rate">42.8%</div>
+        </div>
+      </div>
+      <p style="font-size: 13px; color: #666;">Email Changes: <strong>47</strong></p>
+    </div>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>15. Faibric Admin - User Sessions</h2>
+    <span class="url">/admin (Sessions tab)</span>
+  </div>
+  <div class="page-content">
+    <div class="tabs">
+      <div class="tab">Conversion Funnel</div>
+      <div class="tab active">User Sessions</div>
+      <div class="tab">Quality Issues (3)</div>
+      <div class="tab">Google Ads</div>
+      <div class="tab">Daily Reports</div>
+      <div class="tab">LLM Usage</div>
+    </div>
+    
+    <table>
+      <thead>
+        <tr><th>Email</th><th>Request</th><th>Duration</th><th>Inputs</th><th>Status</th><th>Source</th><th>Date</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>cto@fintech.io</strong></td><td>Payment dashboard with fraud detection</td><td>67 min</td><td>5</td><td><span class="chip chip-success">deployed</span></td><td>google</td><td>Nov 28</td></tr>
+        <tr><td><strong>founder@startup.com</strong></td><td>SaaS dashboard with analytics</td><td>45 min</td><td>4</td><td><span class="chip chip-success">deployed</span></td><td>twitter</td><td>Nov 28</td></tr>
+        <tr><td><strong>ceo@ecommerce.io</strong></td><td>E-commerce platform with checkout</td><td>38 min</td><td>3</td><td><span class="chip chip-success">deployed</span></td><td>producthunt</td><td>Nov 28</td></tr>
+        <tr><td><strong>dev@agency.co</strong></td><td>AI code review tool with GitHub</td><td>22 min</td><td>3</td><td><span class="chip chip-info">verified</span></td><td>linkedin</td><td>Nov 27</td></tr>
+        <tr><td><strong>pm@enterprise.com</strong></td><td>Project management with Gantt charts</td><td>55 min</td><td>4</td><td><span class="chip chip-success">deployed</span></td><td>google</td><td>Nov 27</td></tr>
+        <tr><td><strong>designer@studio.io</strong></td><td>Portfolio website with CMS</td><td>18 min</td><td>2</td><td><span class="chip chip-success">deployed</span></td><td>instagram</td><td>Nov 27</td></tr>
+        <tr><td><strong>ops@logistics.co</strong></td><td>Fleet tracking with real-time GPS</td><td>32 min</td><td>3</td><td><span class="chip chip-info">building</span></td><td>google</td><td>Nov 26</td></tr>
+        <tr><td><strong>hr@corp.com</strong></td><td>Employee onboarding portal</td><td>12 min</td><td>1</td><td><span class="chip chip-warning">email_sent</span></td><td>linkedin</td><td>Nov 26</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>16. Faibric Admin - Quality Issues</h2>
+    <span class="url">/admin (Quality Issues tab)</span>
+  </div>
+  <div class="page-content">
+    <div class="tabs">
+      <div class="tab">Conversion Funnel</div>
+      <div class="tab">User Sessions</div>
+      <div class="tab active">Quality Issues (3)</div>
+      <div class="tab">Google Ads</div>
+      <div class="tab">Daily Reports</div>
+      <div class="tab">LLM Usage</div>
+    </div>
+    
+    <h3>Quality Issues Requiring Review</h3>
+    
+    <table>
+      <thead>
+        <tr><th>Customer</th><th>Request</th><th>Issue</th><th>Rating</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>user@example.com</td><td>Build complex trading bot with ML predictions</td><td><span class="chip chip-error">low_rating</span></td><td>1/5</td><td>pending</td><td><button class="btn btn-primary" style="padding:6px 12px;font-size:12px;">Fix with Opus 4.5</button></td></tr>
+        <tr><td>dev@startup.io</td><td>Real-time collaboration tool like Figma</td><td><span class="chip chip-error">build_error</span></td><td>-</td><td>pending</td><td><button class="btn btn-primary" style="padding:6px 12px;font-size:12px;">Fix with Opus 4.5</button></td></tr>
+        <tr><td>pm@agency.co</td><td>Gantt chart dashboard with dependencies</td><td><span class="chip chip-warning">user_rejected</span></td><td>2/5</td><td>pending</td><td><button class="btn btn-primary" style="padding:6px 12px;font-size:12px;">Fix with Opus 4.5</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>17. Faibric Admin - Google Ads</h2>
+    <span class="url">/admin (Google Ads tab)</span>
+  </div>
+  <div class="page-content">
+    <div class="tabs">
+      <div class="tab">Conversion Funnel</div>
+      <div class="tab">User Sessions</div>
+      <div class="tab">Quality Issues (3)</div>
+      <div class="tab active">Google Ads</div>
+      <div class="tab">Daily Reports</div>
+      <div class="tab">LLM Usage</div>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+      <h3>Google Ads Campaigns</h3>
+      <button class="btn btn-primary">New Campaign</button>
+    </div>
+    
+    <table>
+      <thead>
+        <tr><th>Campaign</th><th>Status</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Spend</th><th>Conversions</th><th>CPA</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Faibric - SaaS Founders</strong></td><td><span class="chip chip-success">active</span></td><td>82,340</td><td>6,540</td><td>7.94%</td><td>$3,270.00</td><td>1,450</td><td>$2.26</td></tr>
+        <tr><td><strong>Faibric - Fintech Launch</strong></td><td><span class="chip chip-success">active</span></td><td>61,230</td><td>5,120</td><td>8.36%</td><td>$2,560.00</td><td>980</td><td>$2.61</td></tr>
+        <tr><td><strong>Faibric - Developers</strong></td><td><span class="chip chip-success">active</span></td><td>58,900</td><td>4,230</td><td>7.18%</td><td>$2,115.00</td><td>670</td><td>$3.16</td></tr>
+        <tr><td><strong>Faibric - Enterprise</strong></td><td><span class="chip chip-default">paused</span></td><td>42,530</td><td>3,030</td><td>7.12%</td><td>$6,240.00</td><td>470</td><td>$13.28</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>18. Faibric Admin - Daily Reports</h2>
+    <span class="url">/admin (Daily Reports tab)</span>
+  </div>
+  <div class="page-content">
+    <div class="tabs">
+      <div class="tab">Conversion Funnel</div>
+      <div class="tab">User Sessions</div>
+      <div class="tab">Quality Issues (3)</div>
+      <div class="tab">Google Ads</div>
+      <div class="tab active">Daily Reports</div>
+      <div class="tab">LLM Usage</div>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+      <h3>Daily Reports</h3>
+      <button class="btn btn-primary">Generate Today's Report</button>
+    </div>
+    
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Sessions</th><th>Converted</th><th>Conv. Rate</th><th>Revenue</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Nov 28, 2025</strong></td><td>156</td><td>67</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:60px;height:8px;"><div class="progress-fill" style="width:43%;"></div></div> 43.0%</div></td><td>$6,693.33</td><td><button class="btn btn-outline" style="padding:4px 8px;font-size:12px;">View Details</button></td></tr>
+        <tr><td><strong>Nov 27, 2025</strong></td><td>142</td><td>58</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:60px;height:8px;"><div class="progress-fill" style="width:41%;"></div></div> 40.8%</div></td><td>$5,794.42</td><td><button class="btn btn-outline" style="padding:4px 8px;font-size:12px;">View Details</button></td></tr>
+        <tr><td><strong>Nov 26, 2025</strong></td><td>168</td><td>72</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:60px;height:8px;"><div class="progress-fill" style="width:43%;"></div></div> 42.9%</div></td><td>$7,193.28</td><td><button class="btn btn-outline" style="padding:4px 8px;font-size:12px;">View Details</button></td></tr>
+        <tr><td><strong>Nov 25, 2025</strong></td><td>134</td><td>52</td><td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:60px;height:8px;"><div class="progress-fill" style="width:39%;"></div></div> 38.8%</div></td><td>$5,194.48</td><td><button class="btn btn-outline" style="padding:4px 8px;font-size:12px;">View Details</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>19. Faibric Admin - LLM Usage</h2>
+    <span class="url">/admin (LLM Usage tab)</span>
+  </div>
+  <div class="page-content">
+    <div class="tabs">
+      <div class="tab">Conversion Funnel</div>
+      <div class="tab">User Sessions</div>
+      <div class="tab">Quality Issues (3)</div>
+      <div class="tab">Google Ads</div>
+      <div class="tab">Daily Reports</div>
+      <div class="tab active">LLM Usage</div>
+    </div>
+    
+    <h3>LLM Usage and Credits</h3>
+    
+    <div class="grid-3" style="margin-top: 16px;">
+      <div class="card" style="text-align:center;"><div class="stat-value" style="color:#2563eb;">12,847</div><div class="stat-label">Total Credits Used (MTD)</div></div>
+      <div class="card" style="text-align:center;"><div class="stat-value">4.2M</div><div class="stat-label">Tokens Generated</div></div>
+      <div class="card" style="text-align:center;"><div class="stat-value" style="color:#16a34a;">$1,284.70</div><div class="stat-label">LLM API Cost</div></div>
+    </div>
+    
+    <h3 style="margin-top: 24px;">Usage by Model</h3>
+    <table>
+      <thead>
+        <tr><th>Model</th><th>Purpose</th><th>Requests</th><th>Tokens</th><th>Cost</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Claude Opus 4.5</strong></td><td>Code Generation</td><td>2,450</td><td>2.8M</td><td>$890.00</td></tr>
+        <tr><td><strong>Claude Sonnet</strong></td><td>Chat/Clarification</td><td>8,120</td><td>1.1M</td><td>$275.00</td></tr>
+        <tr><td><strong>Claude Haiku</strong></td><td>Summarization</td><td>15,230</td><td>320K</td><td>$119.70</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="page-section">
+  <div class="page-header">
+    <h2>20. External Services Status</h2>
+    <span class="url">/admin/services</span>
+  </div>
+  <div class="page-content">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 24px;">
+      <div>
+        <h1>External Services Status</h1>
+        <p class="subtitle" style="margin-bottom:0;">API keys and mock mode status</p>
+      </div>
+      <div>
+        <button class="btn btn-outline" style="margin-right: 8px;">Refresh</button>
+        <button class="btn btn-primary">Run All Tests</button>
+      </div>
+    </div>
+    
+    <div class="grid-3">
+      <div class="card" style="text-align:center;"><div class="stat-value">7</div><div class="stat-label">Total Services</div></div>
+      <div class="card" style="text-align:center;"><div class="stat-value" style="color:#d97706;">6</div><div class="stat-label">Mock Mode</div></div>
+      <div class="card" style="text-align:center;"><div class="stat-value" style="color:#16a34a;">1</div><div class="stat-label">Live Mode</div></div>
+    </div>
+    
+    <div class="alert alert-info">
+      <strong>6 service(s) running in mock mode.</strong> The system returns realistic fake data for testing. Add API keys to enable live mode.
+    </div>
+    
+    <table>
+      <thead>
+        <tr><th>Service</th><th>Provider</th><th>Mode</th><th>Required Keys</th><th>Test Result</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>LLM</strong></td><td>Anthropic/OpenAI</td><td><span class="chip chip-success">Live</span></td><td><code style="font-size:11px;">ANTHROPIC_API_KEY</code></td><td><span class="chip chip-success">Live OK</span></td></tr>
+        <tr><td><strong>Stripe</strong></td><td>Stripe</td><td><span class="chip chip-warning">Mock Mode</span></td><td><code style="font-size:11px;">STRIPE_SECRET_KEY</code></td><td><span class="chip chip-success">Mock OK</span></td></tr>
+        <tr><td><strong>PayPal</strong></td><td>PayPal</td><td><span class="chip chip-warning">Mock Mode</span></td><td><code style="font-size:11px;">PAYPAL_CLIENT_ID</code></td><td><span class="chip chip-success">Mock OK</span></td></tr>
+        <tr><td><strong>Google Ads</strong></td><td>Google Ads</td><td><span class="chip chip-warning">Mock Mode</span></td><td><code style="font-size:11px;">GOOGLE_ADS_DEVELOPER_TOKEN</code></td><td><span class="chip chip-success">Mock OK</span></td></tr>
+        <tr><td><strong>Email</strong></td><td>SendGrid</td><td><span class="chip chip-warning">Mock Mode</span></td><td><code style="font-size:11px;">SENDGRID_API_KEY</code></td><td><span class="chip chip-success">Mock OK</span></td></tr>
+        <tr><td><strong>SerpAPI</strong></td><td>SerpAPI</td><td><span class="chip chip-warning">Mock Mode</span></td><td><code style="font-size:11px;">SERPAPI_KEY</code></td><td><span class="chip chip-success">Mock OK</span></td></tr>
+        <tr><td><strong>Analytics</strong></td><td>Mixpanel</td><td><span class="chip chip-warning">Mock Mode</span></td><td><code style="font-size:11px;">MIXPANEL_TOKEN</code></td><td><span class="chip chip-success">Mock OK</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div style="text-align: center; padding: 40px; color: #666; font-size: 13px;">
+  Faibric - Complete User Flow Preview | 20 Pages | Demo Data for Sarah Chen (sarah@techstartup.io)
+</div>
+
+</body>
+</html>
+

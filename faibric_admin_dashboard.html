@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faibric Admin - Complete Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(255,255,255,0.02);
+            --border: rgba(255,255,255,0.06);
+            --text: #fff;
+            --text-muted: #6b7280;
+            --accent: #667eea;
+            --accent-2: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: rgba(0,0,0,0.4);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        
+        .logo {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .logo span { font-size: 12px; color: var(--text-muted); }
+        
+        .nav-section {
+            padding: 0 12px;
+            margin-bottom: 24px;
+        }
+        
+        .nav-section-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 12px;
+            margin-bottom: 8px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+        
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+        .nav-item.active { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color: white; }
+        
+        .nav-item .badge {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+        }
+        
+        .page-header {
+            margin-bottom: 32px;
+        }
+        
+        .page-header h2 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .page-header p { color: var(--text-muted); }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .stat-card .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 8px 0;
+        }
+        
+        .stat-card .change {
+            font-size: 12px;
+            color: var(--success);
+        }
+        
+        .stat-card .change.negative { color: var(--danger); }
+        
+        /* Section Cards */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .section-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { background: rgba(255,255,255,0.05); }
+        .btn.primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); border: none; }
+        
+        /* Tables */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th, .table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .table th {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+        
+        .table tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .badge.success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .badge.danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .badge.info { background: rgba(102, 126, 234, 0.15); color: var(--accent); }
+        .badge.neutral { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+        
+        /* Funnel */
+        .funnel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 20px 0;
+        }
+        
+        .funnel-step {
+            flex: 1;
+            text-align: center;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .funnel-step::after {
+            content: '→';
+            position: absolute;
+            right: -16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+        
+        .funnel-step:last-child::after { display: none; }
+        
+        .funnel-step .number { font-size: 24px; font-weight: 700; }
+        .funnel-step .label { font-size: 11px; opacity: 0.8; text-transform: uppercase; }
+        .funnel-step .rate { font-size: 14px; margin-top: 4px; }
+        
+        /* Metrics Row */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        
+        .metric {
+            padding: 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        
+        .metric .label { font-size: 12px; color: var(--text-muted); }
+        .metric .value { font-size: 24px; font-weight: 600; margin-top: 4px; }
+        
+        /* Charts placeholder */
+        .chart-placeholder {
+            height: 200px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+        
+        /* Input cards */
+        .input-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 3px solid var(--accent);
+        }
+        
+        .input-card.flagged { border-left-color: var(--danger); }
+        .input-card.fixed { border-left-color: var(--success); }
+        
+        .input-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .input-email { font-weight: 600; }
+        .input-meta { font-size: 12px; color: var(--text-muted); }
+        .input-text { color: #cbd5e0; line-height: 1.5; }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        
+        /* Page visibility */
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        /* Grid layouts */
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        
+        /* Progress bar */
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            border-radius: 4px;
+        }
+        
+        /* Alert banner */
+        .alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .alert.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        
+        .alert.danger {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>🚀 Faibric</h1>
+                <span>Admin Dashboard</span>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Overview</div>
+                <div class="nav-item active" onclick="showPage('dashboard')">📊 Dashboard</div>
+                <div class="nav-item" onclick="showPage('funnel')">🔄 Conversion Funnel</div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Customer Insights</div>
+                <div class="nav-item" onclick="showPage('inputs')">💬 User Inputs</div>
+                <div class="nav-item" onclick="showPage('sessions')">👤 Sessions</div>
+                <div class="nav-item" onclick="showPage('qa')">
+                    🔧 Quality Assurance
+                    <span class="badge">3</span>
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Billing & Usage</div>
+                <div class="nav-item" onclick="showPage('credits')">💳 Credits & LLM Usage</div>
+                <div class="nav-item" onclick="showPage('subscriptions')">📦 Subscriptions</div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Marketing</div>
+                <div class="nav-item" onclick="showPage('ads')">📣 Google Ads</div>
+                <div class="nav-item" onclick="showPage('campaigns')">🎯 Campaigns</div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Reports</div>
+                <div class="nav-item" onclick="showPage('daily')">📅 Daily Reports</div>
+                <div class="nav-item" onclick="showPage('analytics')">📈 Analytics</div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main">
+            <!-- DASHBOARD PAGE -->
+            <div id="page-dashboard" class="page active">
+                <div class="page-header">
+                    <h2>Dashboard Overview</h2>
+                    <p>November 27, 2025 • Last updated 2 minutes ago</p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">Total Sessions</div>
+                        <div class="value">1,247</div>
+                        <div class="change">↑ 23% from last week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Conversion Rate</div>
+                        <div class="value">28.6%</div>
+                        <div class="change">↑ 4.2% from last week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">LLM Credits Used</div>
+                        <div class="value">42,890</div>
+                        <div class="change">12,340 tokens today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Active Subscriptions</div>
+                        <div class="value">89</div>
+                        <div class="change">↑ 12 this month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Revenue (MTD)</div>
+                        <div class="value">$4,291</div>
+                        <div class="change">↑ 31% from last month</div>
+                    </div>
+                </div>
+                
+                <div class="alert warning">
+                    <span>⚠️</span>
+                    <span><strong>3 issues flagged</strong> - Low quality results that need your attention</span>
+                    <button class="btn" onclick="showPage('qa')" style="margin-left: auto;">Review Now →</button>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="section">
+                        <div class="section-header">
+                            <div class="section-title">Conversion Funnel (Today)</div>
+                        </div>
+                        <div class="funnel">
+                            <div class="funnel-step">
+                                <div class="number">156</div>
+                                <div class="label">Visitors</div>
+                            </div>
+                            <div class="funnel-step">
+                                <div class="number">128</div>
+                                <div class="label">Email</div>
+                            </div>
+                            <div class="funnel-step">
+                                <div class="number">67</div>
+                                <div class="label">Verified</div>
+                            </div>
+                            <div class="funnel-step">
+                                <div class="number">45</div>
+                                <div class="label">Deployed</div>
+                            </div>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric">
+                                <div class="label">Email Rate</div>
+                                <div class="value">82%</div>
+                            </div>
+                            <div class="metric">
+                                <div class="label">Verify Rate</div>
+                                <div class="value">52%</div>
+                            </div>
+                            <div class="metric">
+                                <div class="label">Deploy Rate</div>
+                                <div class="value">29%</div>
+                            </div>
+                            <div class="metric">
+                                <div class="label">Email Changes</div>
+                                <div class="value" style="color: var(--warning);">7</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-header">
+                            <div class="section-title">Google Ads Performance</div>
+                            <button class="btn" onclick="showPage('ads')">View All →</button>
+                        </div>
+                        <div class="metrics-row">
+                            <div class="metric">
+                                <div class="label">Impressions</div>
+                                <div class="value">24.5K</div>
+                            </div>
+                            <div class="metric">
+                                <div class="label">Clicks</div>
+                                <div class="value">1,892</div>
+                            </div>
+                            <div class="metric">
+                                <div class="label">CTR</div>
+                                <div class="value">7.7%</div>
+                            </div>
+                            <div class="metric">
+                                <div class="label">Spend</div>
+                                <div class="value">$892</div>
+                            </div>
+                        </div>
+                        <table class="table" style="margin-top: 16px; font-size: 13px;">
+                            <thead>
+                                <tr><th>Campaign</th><th>Clicks</th><th>CTR</th><th>Conv.</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>SaaS Founders</td><td>654</td><td style="color: var(--success);">7.94%</td><td>145</td></tr>
+                                <tr><td>Fintech Launch</td><td>512</td><td style="color: var(--success);">8.36%</td><td>98</td></tr>
+                                <tr><td>Developers</td><td>423</td><td>7.18%</td><td>67</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">Recent User Inputs (Learning Data)</div>
+                        <button class="btn">View All →</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Input</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>cto@fintech.io</strong></td>
+                                <td>Payment processing dashboard with fraud detection...</td>
+                                <td>67 min</td>
+                                <td><span class="badge success">Deployed</span></td>
+                                <td>google/fintech</td>
+                            </tr>
+                            <tr>
+                                <td><strong>founder@startup.com</strong></td>
+                                <td>SaaS dashboard with analytics and Stripe billing...</td>
+                                <td>45 min</td>
+                                <td><span class="badge success">Deployed</span></td>
+                                <td>twitter/launch</td>
+                            </tr>
+                            <tr>
+                                <td><strong>dev@agency.co</strong></td>
+                                <td>AI code review tool with GitHub integration...</td>
+                                <td>22 min</td>
+                                <td><span class="badge warning">In Progress</span></td>
+                                <td>producthunt</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- FUNNEL PAGE -->
+            <div id="page-funnel" class="page">
+                <div class="page-header">
+                    <h2>🔄 Conversion Funnel</h2>
+                    <p>Track user journey from landing to deployment</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">Onboarding Flow</div>
+                        <div class="section-actions">
+                            <button class="btn">Today</button>
+                            <button class="btn">7 Days</button>
+                            <button class="btn primary">30 Days</button>
+                        </div>
+                    </div>
+                    
+                    <div class="funnel" style="margin: 32px 0;">
+                        <div class="funnel-step">
+                            <div class="number">1,247</div>
+                            <div class="label">Visitors</div>
+                            <div class="rate">100%</div>
+                        </div>
+                        <div class="funnel-step">
+                            <div class="number">1,089</div>
+                            <div class="label">Gave Email</div>
+                            <div class="rate">87.3%</div>
+                        </div>
+                        <div class="funnel-step">
+                            <div class="number">612</div>
+                            <div class="label">Verified</div>
+                            <div class="rate">49.1%</div>
+                        </div>
+                        <div class="funnel-step">
+                            <div class="number">445</div>
+                            <div class="label">Project</div>
+                            <div class="rate">35.7%</div>
+                        </div>
+                        <div class="funnel-step">
+                            <div class="number">357</div>
+                            <div class="label">Deployed</div>
+                            <div class="rate">28.6%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-3">
+                        <div class="metric">
+                            <div class="label">Avg Session Duration</div>
+                            <div class="value">27.8 min</div>
+                        </div>
+                        <div class="metric">
+                            <div class="label">Avg Inputs per Session</div>
+                            <div class="value">2.5</div>
+                        </div>
+                        <div class="metric">
+                            <div class="label">Email Change Rate</div>
+                            <div class="value" style="color: var(--warning);">4.2%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="section">
+                        <div class="section-title">By Traffic Source</div>
+                        <table class="table" style="margin-top: 16px;">
+                            <thead><tr><th>Source</th><th>Sessions</th><th>Conv. Rate</th></tr></thead>
+                            <tbody>
+                                <tr><td>🔵 Google Ads</td><td>542</td><td><span class="badge success">32.4%</span></td></tr>
+                                <tr><td>🐦 Twitter</td><td>234</td><td><span class="badge success">29.1%</span></td></tr>
+                                <tr><td>🚀 Product Hunt</td><td>189</td><td><span class="badge warning">24.7%</span></td></tr>
+                                <tr><td>💼 LinkedIn</td><td>156</td><td><span class="badge warning">21.3%</span></td></tr>
+                                <tr><td>📧 Direct</td><td>126</td><td><span class="badge success">35.2%</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="section">
+                        <div class="section-title">By Campaign</div>
+                        <table class="table" style="margin-top: 16px;">
+                            <thead><tr><th>Campaign</th><th>Sessions</th><th>Conv. Rate</th></tr></thead>
+                            <tbody>
+                                <tr><td>saas_founders</td><td>312</td><td><span class="badge success">38.2%</span></td></tr>
+                                <tr><td>fintech_launch</td><td>198</td><td><span class="badge success">35.6%</span></td></tr>
+                                <tr><td>developers</td><td>167</td><td><span class="badge warning">27.4%</span></td></tr>
+                                <tr><td>agencies</td><td>145</td><td><span class="badge warning">22.1%</span></td></tr>
+                                <tr><td>enterprise</td><td>89</td><td><span class="badge danger">18.5%</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- USER INPUTS PAGE -->
+            <div id="page-inputs" class="page">
+                <div class="page-header">
+                    <h2>💬 User Inputs (Learning Data)</h2>
+                    <p>Everything users type - logged for AI training and improvement</p>
+                </div>
+                
+                <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="stat-card">
+                        <div class="label">Total Inputs</div>
+                        <div class="value">8,934</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Today</div>
+                        <div class="value">234</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Avg per Session</div>
+                        <div class="value">2.5</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Total Characters</div>
+                        <div class="value">1.2M</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">All User Requests (Most Recent)</div>
+                        <div class="section-actions">
+                            <button class="btn">Export CSV</button>
+                            <button class="btn primary">Train Model</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-card">
+                        <div class="input-header">
+                            <span class="input-email">cto@fintech.io</span>
+                            <span class="input-meta">67 min session • 5 inputs • google/fintech</span>
+                        </div>
+                        <div class="input-text">
+                            <strong>Initial:</strong> "Payment processing dashboard with fraud detection, transaction monitoring, and compliance reports"
+                        </div>
+                        <div class="input-text" style="margin-top: 8px; margin-left: 20px; border-left: 2px solid var(--accent-2); padding-left: 12px;">
+                            <strong>Follow-up 1:</strong> "Need real-time alerts for suspicious activity"<br>
+                            <strong>Follow-up 2:</strong> "Add multi-currency support"<br>
+                            <strong>Follow-up 3:</strong> "Include audit logs"<br>
+                            <strong>Follow-up 4:</strong> "Add role-based access control"
+                        </div>
+                        <div class="input-meta" style="margin-top: 8px;">✅ Deployed successfully • Satisfaction: ⭐⭐⭐⭐⭐</div>
+                    </div>
+                    
+                    <div class="input-card">
+                        <div class="input-header">
+                            <span class="input-email">founder@techstartup.com</span>
+                            <span class="input-meta">45 min session • 4 inputs • google/saas_founders</span>
+                        </div>
+                        <div class="input-text">
+                            <strong>Initial:</strong> "I need a SaaS dashboard with user analytics, subscription management, and a beautiful admin panel. Should integrate with Stripe for billing."
+                        </div>
+                        <div class="input-text" style="margin-top: 8px; margin-left: 20px; border-left: 2px solid var(--accent-2); padding-left: 12px;">
+                            <strong>Follow-up 1:</strong> "Can you add a dark mode toggle?"<br>
+                            <strong>Follow-up 2:</strong> "Make the charts interactive please"<br>
+                            <strong>Follow-up 3:</strong> "Add export to CSV feature"
+                        </div>
+                        <div class="input-meta" style="margin-top: 8px;">✅ Deployed successfully • Satisfaction: ⭐⭐⭐⭐⭐</div>
+                    </div>
+                    
+                    <div class="input-card flagged">
+                        <div class="input-header">
+                            <span class="input-email">user@example.com</span>
+                            <span class="input-meta">12 min session • 2 inputs • twitter/developers</span>
+                        </div>
+                        <div class="input-text">
+                            <strong>Initial:</strong> "Build me a complex trading bot with ML predictions"
+                        </div>
+                        <div class="input-meta" style="margin-top: 8px; color: var(--danger);">⚠️ Flagged - Result quality low • Needs review</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SESSIONS PAGE -->
+            <div id="page-sessions" class="page">
+                <div class="page-header">
+                    <h2>👤 User Sessions</h2>
+                    <p>Individual user journeys with full tracking</p>
+                </div>
+                
+                <div class="section">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Initial Request</th>
+                                <th>Duration</th>
+                                <th>Inputs</th>
+                                <th>Status</th>
+                                <th>Source</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>cto@fintech.io</strong></td>
+                                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;">Payment processing dashboard with fraud detection...</td>
+                                <td><strong>67 min</strong></td>
+                                <td>5</td>
+                                <td><span class="badge success">Deployed</span></td>
+                                <td>google/fintech</td>
+                                <td><button class="btn">View →</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>founder@techstartup.com</strong></td>
+                                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;">SaaS dashboard with user analytics...</td>
+                                <td><strong>45 min</strong></td>
+                                <td>4</td>
+                                <td><span class="badge success">Deployed</span></td>
+                                <td>google/saas_founders</td>
+                                <td><button class="btn">View →</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>ceo@ecommerce.io</strong></td>
+                                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;">E-commerce platform with product catalog...</td>
+                                <td><strong>38 min</strong></td>
+                                <td>3</td>
+                                <td><span class="badge success">Deployed</span></td>
+                                <td>producthunt/launch</td>
+                                <td><button class="btn">View →</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>developer@agency.co</strong></td>
+                                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;">AI-powered code review tool...</td>
+                                <td><strong>22 min</strong></td>
+                                <td>3</td>
+                                <td><span class="badge info">Building</span></td>
+                                <td>twitter/developers</td>
+                                <td><button class="btn">View →</button></td>
+                            </tr>
+                            <tr>
+                                <td><strong>correct@company.com</strong></td>
+                                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;">Internal HR portal...</td>
+                                <td>8 min</td>
+                                <td>1</td>
+                                <td><span class="badge warning">Email Changed</span></td>
+                                <td>linkedin/enterprise</td>
+                                <td><button class="btn">View →</button></td>
+                            </tr>
+                            <tr style="opacity: 0.6;">
+                                <td><em>No email</em></td>
+                                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;">Recipe sharing platform...</td>
+                                <td>12 min</td>
+                                <td>1</td>
+                                <td><span class="badge neutral">Abandoned</span></td>
+                                <td>pinterest/food</td>
+                                <td><button class="btn">View →</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- QA PAGE -->
+            <div id="page-qa" class="page">
+                <div class="page-header">
+                    <h2>🔧 Quality Assurance</h2>
+                    <p>Review flagged issues and fix with Claude Opus 4.5</p>
+                </div>
+                
+                <div class="alert danger">
+                    <span>🚨</span>
+                    <span><strong>3 issues</strong> require immediate attention</span>
+                </div>
+                
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">Flagged Issues</div>
+                    </div>
+                    
+                    <div class="input-card flagged">
+                        <div class="input-header">
+                            <span class="input-email">user@example.com</span>
+                            <span class="badge danger">Low Rating</span>
+                        </div>
+                        <div class="input-text">
+                            <strong>Request:</strong> "Build me a complex trading bot with ML predictions"
+                        </div>
+                        <div class="input-text" style="margin-top: 8px; color: var(--text-muted);">
+                            <strong>Issue:</strong> User rated result 1/5 - "The ML model doesn't work correctly"
+                        </div>
+                        <div style="margin-top: 16px; display: flex; gap: 8px;">
+                            <button class="btn primary">🤖 Regenerate with Opus 4.5</button>
+                            <button class="btn">📧 Contact User</button>
+                            <button class="btn">👀 View Output</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-card flagged">
+                        <div class="input-header">
+                            <span class="input-email">dev@startup.io</span>
+                            <span class="badge danger">Error</span>
+                        </div>
+                        <div class="input-text">
+                            <strong>Request:</strong> "Real-time collaboration tool like Figma"
+                        </div>
+                        <div class="input-text" style="margin-top: 8px; color: var(--text-muted);">
+                            <strong>Issue:</strong> Build failed - WebSocket configuration error
+                        </div>
+                        <div style="margin-top: 16px; display: flex; gap: 8px;">
+                            <button class="btn primary">🤖 Regenerate with Opus 4.5</button>
+                            <button class="btn">📧 Contact User</button>
+                            <button class="btn">🔍 View Logs</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-card fixed">
+                        <div class="input-header">
+                            <span class="input-email">pm@agency.co</span>
+                            <span class="badge success">Fixed</span>
+                        </div>
+                        <div class="input-text">
+                            <strong>Request:</strong> "Project management dashboard with Gantt charts"
+                        </div>
+                        <div class="input-text" style="margin-top: 8px; color: var(--success);">
+                            <strong>Resolution:</strong> Regenerated with Opus 4.5 - User notified via email ✓
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CREDITS PAGE -->
+            <div id="page-credits" class="page">
+                <div class="page-header">
+                    <h2>💳 Credits & LLM Usage</h2>
+                    <p>Track token usage and credit consumption</p>
+                </div>
+                
+                <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="stat-card">
+                        <div class="label">Total Credits Used (MTD)</div>
+                        <div class="value">42,890</div>
+                        <div class="change">↑ 18% from last month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Tokens Generated</div>
+                        <div class="value">2.4M</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Cost to Faibric</div>
+                        <div class="value">$892</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Revenue from Credits</div>
+                        <div class="value" style="color: var(--success);">$2,140</div>
+                    </div>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="section">
+                        <div class="section-title">Usage by Model</div>
+                        <table class="table" style="margin-top: 16px;">
+                            <thead><tr><th>Model</th><th>Requests</th><th>Tokens</th><th>Cost</th></tr></thead>
+                            <tbody>
+                                <tr><td>Claude Opus 4.5 (Code)</td><td>12,456</td><td>1.8M</td><td>$654</td></tr>
+                                <tr><td>Claude Sonnet (Chat)</td><td>8,234</td><td>420K</td><td>$126</td></tr>
+                                <tr><td>Claude Haiku (Summary)</td><td>15,890</td><td>180K</td><td>$45</td></tr>
+                                <tr><td>OpenAI Embeddings</td><td>5,678</td><td>89K</td><td>$67</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="section">
+                        <div class="section-title">Top Users by Usage</div>
+                        <table class="table" style="margin-top: 16px;">
+                            <thead><tr><th>User</th><th>Credits</th><th>Plan</th></tr></thead>
+                            <tbody>
+                                <tr><td>cto@fintech.io</td><td>2,456</td><td><span class="badge info">Pro $99</span></td></tr>
+                                <tr><td>founder@startup.com</td><td>1,892</td><td><span class="badge info">Pro $99</span></td></tr>
+                                <tr><td>dev@agency.co</td><td>1,234</td><td><span class="badge neutral">Basic $19</span></td></tr>
+                                <tr><td>user@example.com</td><td>456</td><td><span class="badge neutral">Free</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SUBSCRIPTIONS PAGE -->
+            <div id="page-subscriptions" class="page">
+                <div class="page-header">
+                    <h2>📦 Subscriptions</h2>
+                    <p>Manage subscription tiers and revenue</p>
+                </div>
+                
+                <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="stat-card">
+                        <div class="label">Free Tier</div>
+                        <div class="value">234</div>
+                        <div class="change">users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Basic ($19.99/mo)</div>
+                        <div class="value">67</div>
+                        <div class="change">$1,339/mo</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Pro ($99.99/mo)</div>
+                        <div class="value">22</div>
+                        <div class="change">$2,199/mo</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">MRR</div>
+                        <div class="value" style="color: var(--success);">$3,538</div>
+                        <div class="change">↑ 24% from last month</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Recent Subscription Activity</div>
+                    <table class="table" style="margin-top: 16px;">
+                        <thead><tr><th>User</th><th>Action</th><th>Plan</th><th>Date</th></tr></thead>
+                        <tbody>
+                            <tr><td>cto@fintech.io</td><td><span class="badge success">Upgraded</span></td><td>Basic → Pro</td><td>2 hours ago</td></tr>
+                            <tr><td>founder@startup.com</td><td><span class="badge success">New</span></td><td>Pro</td><td>5 hours ago</td></tr>
+                            <tr><td>dev@agency.co</td><td><span class="badge info">Renewed</span></td><td>Basic</td><td>1 day ago</td></tr>
+                            <tr><td>user@example.com</td><td><span class="badge warning">Downgraded</span></td><td>Basic → Free</td><td>2 days ago</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- GOOGLE ADS PAGE -->
+            <div id="page-ads" class="page">
+                <div class="page-header">
+                    <h2>📣 Google Ads</h2>
+                    <p>Faibric's own advertising campaigns</p>
+                </div>
+                
+                <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr);">
+                    <div class="stat-card">
+                        <div class="label">Impressions</div>
+                        <div class="value">24.5K</div>
+                        <div class="change">↑ 12% this week</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Clicks</div>
+                        <div class="value">1,892</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">CTR</div>
+                        <div class="value">7.72%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Spend</div>
+                        <div class="value">$892</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">CPA</div>
+                        <div class="value" style="color: var(--success);">$2.49</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">Campaign Performance</div>
+                        <button class="btn primary">+ New Campaign</button>
+                    </div>
+                    <table class="table" style="margin-top: 16px;">
+                        <thead><tr><th>Campaign</th><th>Status</th><th>Impr.</th><th>Clicks</th><th>CTR</th><th>Spend</th><th>Conv.</th><th>CPA</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>SaaS Founders</strong></td>
+                                <td><span class="badge success">Active</span></td>
+                                <td>8,234</td>
+                                <td>654</td>
+                                <td>7.94%</td>
+                                <td>$327</td>
+                                <td>145</td>
+                                <td>$2.26</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Fintech Launch</strong></td>
+                                <td><span class="badge success">Active</span></td>
+                                <td>6,123</td>
+                                <td>512</td>
+                                <td>8.36%</td>
+                                <td>$256</td>
+                                <td>98</td>
+                                <td>$2.61</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Developers</strong></td>
+                                <td><span class="badge success">Active</span></td>
+                                <td>5,890</td>
+                                <td>423</td>
+                                <td>7.18%</td>
+                                <td>$212</td>
+                                <td>67</td>
+                                <td>$3.16</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Enterprise</strong></td>
+                                <td><span class="badge warning">Paused</span></td>
+                                <td>4,253</td>
+                                <td>303</td>
+                                <td>7.12%</td>
+                                <td>$97</td>
+                                <td>47</td>
+                                <td>$2.06</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Daily Performance (Last 7 Days)</div>
+                    <table class="table" style="margin-top: 16px;">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Impressions</th>
+                                <th>Clicks</th>
+                                <th>CTR</th>
+                                <th>Spend</th>
+                                <th>Conversions</th>
+                                <th>CPA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Nov 27</strong></td>
+                                <td>3,892</td>
+                                <td>298</td>
+                                <td>7.66%</td>
+                                <td>$149</td>
+                                <td>56</td>
+                                <td style="color: var(--success);">$2.66</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 26</td>
+                                <td>3,654</td>
+                                <td>276</td>
+                                <td>7.55%</td>
+                                <td>$138</td>
+                                <td>51</td>
+                                <td style="color: var(--success);">$2.71</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 25</td>
+                                <td>3,789</td>
+                                <td>312</td>
+                                <td>8.23%</td>
+                                <td>$156</td>
+                                <td>62</td>
+                                <td style="color: var(--success);">$2.52</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 24</td>
+                                <td>3,456</td>
+                                <td>267</td>
+                                <td>7.73%</td>
+                                <td>$134</td>
+                                <td>48</td>
+                                <td>$2.79</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 23</td>
+                                <td>3,234</td>
+                                <td>245</td>
+                                <td>7.58%</td>
+                                <td>$123</td>
+                                <td>43</td>
+                                <td>$2.86</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 22</td>
+                                <td>3,123</td>
+                                <td>234</td>
+                                <td>7.49%</td>
+                                <td>$117</td>
+                                <td>41</td>
+                                <td>$2.85</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 21</td>
+                                <td>3,352</td>
+                                <td>260</td>
+                                <td>7.76%</td>
+                                <td>$130</td>
+                                <td>56</td>
+                                <td style="color: var(--success);">$2.32</td>
+                            </tr>
+                        </tbody>
+                        <tfoot style="border-top: 2px solid var(--border);">
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td><strong>24,500</strong></td>
+                                <td><strong>1,892</strong></td>
+                                <td><strong>7.72%</strong></td>
+                                <td><strong>$947</strong></td>
+                                <td><strong>357</strong></td>
+                                <td><strong style="color: var(--success);">$2.65</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Keyword Performance</div>
+                    <table class="table" style="margin-top: 16px;">
+                        <thead>
+                            <tr>
+                                <th>Keyword</th>
+                                <th>Match Type</th>
+                                <th>Impr.</th>
+                                <th>Clicks</th>
+                                <th>CTR</th>
+                                <th>Avg CPC</th>
+                                <th>Conv.</th>
+                                <th>Quality Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>saas builder</strong></td>
+                                <td><span class="badge info">Phrase</span></td>
+                                <td>2,456</td>
+                                <td>234</td>
+                                <td>9.53%</td>
+                                <td>$0.48</td>
+                                <td>52</td>
+                                <td><span style="color: var(--success);">9/10</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>ai app builder</strong></td>
+                                <td><span class="badge info">Phrase</span></td>
+                                <td>2,123</td>
+                                <td>189</td>
+                                <td>8.90%</td>
+                                <td>$0.52</td>
+                                <td>41</td>
+                                <td><span style="color: var(--success);">8/10</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>build saas app</strong></td>
+                                <td><span class="badge neutral">Broad</span></td>
+                                <td>1,890</td>
+                                <td>145</td>
+                                <td>7.67%</td>
+                                <td>$0.45</td>
+                                <td>28</td>
+                                <td><span style="color: var(--success);">8/10</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>no code saas</strong></td>
+                                <td><span class="badge info">Phrase</span></td>
+                                <td>1,654</td>
+                                <td>134</td>
+                                <td>8.10%</td>
+                                <td>$0.55</td>
+                                <td>24</td>
+                                <td>7/10</td>
+                            </tr>
+                            <tr>
+                                <td><strong>stripe integration template</strong></td>
+                                <td><span class="badge success">Exact</span></td>
+                                <td>987</td>
+                                <td>98</td>
+                                <td>9.93%</td>
+                                <td>$0.62</td>
+                                <td>23</td>
+                                <td><span style="color: var(--success);">9/10</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>payment dashboard</strong></td>
+                                <td><span class="badge info">Phrase</span></td>
+                                <td>1,234</td>
+                                <td>89</td>
+                                <td>7.21%</td>
+                                <td>$0.58</td>
+                                <td>18</td>
+                                <td>7/10</td>
+                            </tr>
+                            <tr style="opacity: 0.6;">
+                                <td><strong>low code platform</strong></td>
+                                <td><span class="badge neutral">Broad</span></td>
+                                <td>2,345</td>
+                                <td>67</td>
+                                <td style="color: var(--danger);">2.86%</td>
+                                <td>$0.89</td>
+                                <td>5</td>
+                                <td><span style="color: var(--danger);">4/10</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 12px; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                        <span style="color: var(--danger);">⚠️ Recommendation:</span> Pause "low code platform" keyword - low CTR and quality score driving up costs.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CAMPAIGNS PAGE -->
+            <div id="page-campaigns" class="page">
+                <div class="page-header">
+                    <h2>🎯 Campaign Details</h2>
+                    <p>Full campaign information with ad copy, targeting, and performance</p>
+                </div>
+                
+                <!-- Campaign 1: SaaS Founders -->
+                <div class="section" id="campaign-saas">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">Campaign: SaaS Founders</div>
+                            <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">ID: camp_saas_001 • Created: Nov 1, 2025</div>
+                        </div>
+                        <div class="section-actions">
+                            <span class="badge success">Active</span>
+                            <button class="btn">Edit</button>
+                            <button class="btn">Pause</button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2" style="margin-top: 20px;">
+                        <div>
+                            <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Ad Copy</h4>
+                            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border: 1px solid var(--border);">
+                                <div style="color: var(--accent); font-size: 11px; margin-bottom: 8px;">HEADLINE 1</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">Build Your SaaS in Minutes | AI-Powered</div>
+                                <div style="color: var(--accent); font-size: 11px; margin: 16px 0 8px;">HEADLINE 2</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">No Code Required - Just Describe It</div>
+                                <div style="color: var(--accent); font-size: 11px; margin: 16px 0 8px;">HEADLINE 3</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">From Idea to Deploy in 10 Minutes</div>
+                                <div style="color: var(--text-muted); font-size: 11px; margin: 20px 0 8px;">DESCRIPTION 1</div>
+                                <div style="color: #cbd5e0; line-height: 1.5;">Describe your SaaS idea in plain English. Our AI builds it instantly with authentication, billing, dashboards & more. Try free today.</div>
+                                <div style="color: var(--text-muted); font-size: 11px; margin: 16px 0 8px;">DESCRIPTION 2</div>
+                                <div style="color: #cbd5e0; line-height: 1.5;">Stop spending months on development. Faibric builds production-ready apps with Stripe, user auth, and admin panels. Launch today.</div>
+                                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                                    <span style="color: var(--success); font-size: 13px;">faibric.com</span>
+                                    <span style="color: var(--text-muted); font-size: 13px;"> • Ad</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Targeting</h4>
+                            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border: 1px solid var(--border);">
+                                <div style="margin-bottom: 16px;">
+                                    <div style="color: var(--text-muted); font-size: 12px;">Keywords</div>
+                                    <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;">
+                                        <span class="badge info">saas builder</span>
+                                        <span class="badge info">build saas app</span>
+                                        <span class="badge info">no code saas</span>
+                                        <span class="badge info">ai app builder</span>
+                                        <span class="badge info">saas dashboard template</span>
+                                        <span class="badge info">stripe integration</span>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <div style="color: var(--text-muted); font-size: 12px;">Audience</div>
+                                    <div style="margin-top: 8px; color: #cbd5e0;">
+                                        Startup Founders, CTOs, Technical Co-founders, Indie Hackers
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <div style="color: var(--text-muted); font-size: 12px;">Locations</div>
+                                    <div style="margin-top: 8px; color: #cbd5e0;">
+                                        United States, United Kingdom, Canada, Australia, Germany
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">Bid Strategy</div>
+                                    <div style="margin-top: 8px; color: #cbd5e0;">
+                                        Maximize Conversions • Target CPA: $3.00 • Daily Budget: $75
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 12px;">Performance Metrics</h4>
+                    <div class="stats-grid" style="grid-template-columns: repeat(8, 1fr);">
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Impressions</div>
+                            <div class="value" style="font-size: 24px;">8,234</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Clicks</div>
+                            <div class="value" style="font-size: 24px;">654</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">CTR</div>
+                            <div class="value" style="font-size: 24px; color: var(--success);">7.94%</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Avg CPC</div>
+                            <div class="value" style="font-size: 24px;">$0.50</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Spend</div>
+                            <div class="value" style="font-size: 24px;">$327</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Conversions</div>
+                            <div class="value" style="font-size: 24px;">145</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Conv. Rate</div>
+                            <div class="value" style="font-size: 24px; color: var(--success);">22.2%</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">CPA</div>
+                            <div class="value" style="font-size: 24px; color: var(--success);">$2.26</div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 12px;">Funnel Attribution</h4>
+                    <div class="funnel" style="margin: 0;">
+                        <div class="funnel-step"><div class="number">654</div><div class="label">Clicks</div></div>
+                        <div class="funnel-step"><div class="number">589</div><div class="label">Sessions</div></div>
+                        <div class="funnel-step"><div class="number">512</div><div class="label">Email</div></div>
+                        <div class="funnel-step"><div class="number">287</div><div class="label">Verified</div></div>
+                        <div class="funnel-step"><div class="number">145</div><div class="label">Deployed</div></div>
+                    </div>
+                </div>
+                
+                <!-- Campaign 2: Fintech -->
+                <div class="section" id="campaign-fintech">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">Campaign: Fintech Launch</div>
+                            <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">ID: camp_fin_002 • Created: Nov 8, 2025</div>
+                        </div>
+                        <div class="section-actions">
+                            <span class="badge success">Active</span>
+                            <button class="btn">Edit</button>
+                            <button class="btn">Pause</button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2" style="margin-top: 20px;">
+                        <div>
+                            <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Ad Copy</h4>
+                            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border: 1px solid var(--border);">
+                                <div style="color: var(--accent); font-size: 11px; margin-bottom: 8px;">HEADLINE 1</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">Build Fintech Apps Fast | AI Builder</div>
+                                <div style="color: var(--accent); font-size: 11px; margin: 16px 0 8px;">HEADLINE 2</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">Payment Dashboards in Minutes</div>
+                                <div style="color: var(--accent); font-size: 11px; margin: 16px 0 8px;">HEADLINE 3</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">Stripe + Plaid Integration Built-In</div>
+                                <div style="color: var(--text-muted); font-size: 11px; margin: 20px 0 8px;">DESCRIPTION 1</div>
+                                <div style="color: #cbd5e0; line-height: 1.5;">Build payment processing dashboards, fraud detection systems, and financial analytics. AI generates production code. Deploy in minutes.</div>
+                                <div style="color: var(--text-muted); font-size: 11px; margin: 16px 0 8px;">DESCRIPTION 2</div>
+                                <div style="color: #cbd5e0; line-height: 1.5;">Complete fintech stack: transaction monitoring, compliance reports, multi-currency support. No coding required. Start free.</div>
+                                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                                    <span style="color: var(--success); font-size: 13px;">faibric.com/fintech</span>
+                                    <span style="color: var(--text-muted); font-size: 13px;"> • Ad</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Targeting</h4>
+                            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border: 1px solid var(--border);">
+                                <div style="margin-bottom: 16px;">
+                                    <div style="color: var(--text-muted); font-size: 12px;">Keywords</div>
+                                    <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;">
+                                        <span class="badge info">fintech app builder</span>
+                                        <span class="badge info">payment dashboard</span>
+                                        <span class="badge info">stripe dashboard template</span>
+                                        <span class="badge info">plaid integration</span>
+                                        <span class="badge info">transaction monitoring</span>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <div style="color: var(--text-muted); font-size: 12px;">Audience</div>
+                                    <div style="margin-top: 8px; color: #cbd5e0;">
+                                        Fintech Founders, Payment Engineers, Banking Tech Leads
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <div style="color: var(--text-muted); font-size: 12px;">Locations</div>
+                                    <div style="margin-top: 8px; color: #cbd5e0;">
+                                        United States, United Kingdom, Singapore, Germany
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">Bid Strategy</div>
+                                    <div style="margin-top: 8px; color: #cbd5e0;">
+                                        Maximize Conversions • Target CPA: $3.50 • Daily Budget: $60
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 12px;">Performance Metrics</h4>
+                    <div class="stats-grid" style="grid-template-columns: repeat(8, 1fr);">
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Impressions</div>
+                            <div class="value" style="font-size: 24px;">6,123</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Clicks</div>
+                            <div class="value" style="font-size: 24px;">512</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">CTR</div>
+                            <div class="value" style="font-size: 24px; color: var(--success);">8.36%</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Avg CPC</div>
+                            <div class="value" style="font-size: 24px;">$0.50</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Spend</div>
+                            <div class="value" style="font-size: 24px;">$256</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Conversions</div>
+                            <div class="value" style="font-size: 24px;">98</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Conv. Rate</div>
+                            <div class="value" style="font-size: 24px; color: var(--success);">19.1%</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">CPA</div>
+                            <div class="value" style="font-size: 24px; color: var(--success);">$2.61</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campaign 3: Developers -->
+                <div class="section" id="campaign-developers">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">Campaign: Developers</div>
+                            <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">ID: camp_dev_003 • Created: Nov 12, 2025</div>
+                        </div>
+                        <div class="section-actions">
+                            <span class="badge success">Active</span>
+                            <button class="btn">Edit</button>
+                            <button class="btn">Pause</button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2" style="margin-top: 20px;">
+                        <div>
+                            <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Ad Copy</h4>
+                            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border: 1px solid var(--border);">
+                                <div style="color: var(--accent); font-size: 11px; margin-bottom: 8px;">HEADLINE 1</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">Skip the Boilerplate | AI Builds It</div>
+                                <div style="color: var(--accent); font-size: 11px; margin: 16px 0 8px;">HEADLINE 2</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">React + Django + Postgres Ready</div>
+                                <div style="color: var(--accent); font-size: 11px; margin: 16px 0 8px;">HEADLINE 3</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">Production Code, Not Prototypes</div>
+                                <div style="color: var(--text-muted); font-size: 11px; margin: 20px 0 8px;">DESCRIPTION 1</div>
+                                <div style="color: #cbd5e0; line-height: 1.5;">Describe what you need, get clean production code. React frontend, Django API, PostgreSQL. Full auth, CRUD, admin panels generated automatically.</div>
+                                <div style="color: var(--text-muted); font-size: 11px; margin: 16px 0 8px;">DESCRIPTION 2</div>
+                                <div style="color: #cbd5e0; line-height: 1.5;">Built by developers, for developers. Export to GitHub, deploy anywhere. Clean architecture, proper tests, real documentation. Try free.</div>
+                                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                                    <span style="color: var(--success); font-size: 13px;">faibric.com/developers</span>
+                                    <span style="color: var(--text-muted); font-size: 13px;"> • Ad</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Targeting</h4>
+                            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border: 1px solid var(--border);">
+                                <div style="margin-bottom: 16px;">
+                                    <div style="color: var(--text-muted); font-size: 12px;">Keywords</div>
+                                    <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;">
+                                        <span class="badge info">react boilerplate</span>
+                                        <span class="badge info">django starter</span>
+                                        <span class="badge info">fullstack template</span>
+                                        <span class="badge info">ai code generator</span>
+                                        <span class="badge info">crud generator</span>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <div style="color: var(--text-muted); font-size: 12px;">Audience</div>
+                                    <div style="margin-top: 8px; color: #cbd5e0;">
+                                        Software Developers, Full-stack Engineers, Freelance Developers
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <div style="color: var(--text-muted); font-size: 12px;">Locations</div>
+                                    <div style="margin-top: 8px; color: #cbd5e0;">
+                                        Worldwide (English)
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">Bid Strategy</div>
+                                    <div style="margin-top: 8px; color: #cbd5e0;">
+                                        Maximize Clicks • Max CPC: $0.75 • Daily Budget: $50
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 12px;">Performance Metrics</h4>
+                    <div class="stats-grid" style="grid-template-columns: repeat(8, 1fr);">
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Impressions</div>
+                            <div class="value" style="font-size: 24px;">5,890</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Clicks</div>
+                            <div class="value" style="font-size: 24px;">423</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">CTR</div>
+                            <div class="value" style="font-size: 24px;">7.18%</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Avg CPC</div>
+                            <div class="value" style="font-size: 24px;">$0.50</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Spend</div>
+                            <div class="value" style="font-size: 24px;">$212</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Conversions</div>
+                            <div class="value" style="font-size: 24px;">67</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Conv. Rate</div>
+                            <div class="value" style="font-size: 24px; color: var(--warning);">15.8%</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">CPA</div>
+                            <div class="value" style="font-size: 24px;">$3.16</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campaign 4: Enterprise (Paused) -->
+                <div class="section" id="campaign-enterprise" style="opacity: 0.7;">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-title">Campaign: Enterprise</div>
+                            <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">ID: camp_ent_004 • Created: Nov 15, 2025</div>
+                        </div>
+                        <div class="section-actions">
+                            <span class="badge warning">Paused</span>
+                            <button class="btn">Edit</button>
+                            <button class="btn primary">Resume</button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-2" style="margin-top: 20px;">
+                        <div>
+                            <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Ad Copy</h4>
+                            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border: 1px solid var(--border);">
+                                <div style="color: var(--accent); font-size: 11px; margin-bottom: 8px;">HEADLINE 1</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">Enterprise App Development | AI</div>
+                                <div style="color: var(--accent); font-size: 11px; margin: 16px 0 8px;">HEADLINE 2</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">SOC2 Compliant Infrastructure</div>
+                                <div style="color: var(--accent); font-size: 11px; margin: 16px 0 8px;">HEADLINE 3</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #4285f4;">Deploy to Your Cloud or Ours</div>
+                                <div style="color: var(--text-muted); font-size: 11px; margin: 20px 0 8px;">DESCRIPTION 1</div>
+                                <div style="color: #cbd5e0; line-height: 1.5;">Build internal tools, admin panels, and customer portals with enterprise security. SSO, audit logs, RBAC included. Request a demo.</div>
+                                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                                    <span style="color: var(--success); font-size: 13px;">faibric.com/enterprise</span>
+                                    <span style="color: var(--text-muted); font-size: 13px;"> • Ad</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Targeting</h4>
+                            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border: 1px solid var(--border);">
+                                <div style="margin-bottom: 16px;">
+                                    <div style="color: var(--text-muted); font-size: 12px;">Keywords</div>
+                                    <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;">
+                                        <span class="badge info">enterprise app builder</span>
+                                        <span class="badge info">internal tools platform</span>
+                                        <span class="badge info">admin panel generator</span>
+                                        <span class="badge info">low code enterprise</span>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <div style="color: var(--text-muted); font-size: 12px;">Audience</div>
+                                    <div style="margin-top: 8px; color: #cbd5e0;">
+                                        IT Directors, VPs of Engineering, Enterprise Architects
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">Bid Strategy</div>
+                                    <div style="margin-top: 8px; color: #cbd5e0;">
+                                        Target CPA • Target: $15.00 • Daily Budget: $100 (paused)
+                                    </div>
+                                </div>
+                                <div style="margin-top: 16px; padding: 12px; background: rgba(245, 158, 11, 0.1); border-radius: 8px;">
+                                    <div style="color: var(--warning); font-size: 13px;">⚠️ Paused: CPA too high ($12.50 actual vs $8 target). Needs ad copy revision.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 12px;">Performance Metrics (before pause)</h4>
+                    <div class="stats-grid" style="grid-template-columns: repeat(8, 1fr);">
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Impressions</div>
+                            <div class="value" style="font-size: 24px;">4,253</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Clicks</div>
+                            <div class="value" style="font-size: 24px;">303</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">CTR</div>
+                            <div class="value" style="font-size: 24px;">7.12%</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Avg CPC</div>
+                            <div class="value" style="font-size: 24px;">$2.06</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Spend</div>
+                            <div class="value" style="font-size: 24px;">$624</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Conversions</div>
+                            <div class="value" style="font-size: 24px;">47</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">Conv. Rate</div>
+                            <div class="value" style="font-size: 24px; color: var(--warning);">15.5%</div>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <div class="label">CPA</div>
+                            <div class="value" style="font-size: 24px; color: var(--danger);">$13.28</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DAILY REPORTS PAGE -->
+            <div id="page-daily" class="page">
+                <div class="page-header">
+                    <h2>📅 Daily Reports</h2>
+                    <p>Automated daily summaries sent to your email</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">Report History</div>
+                        <button class="btn primary">📧 Send Test Report</button>
+                    </div>
+                    <table class="table" style="margin-top: 16px;">
+                        <thead><tr><th>Date</th><th>Sessions</th><th>Conversions</th><th>Revenue</th><th>Ad Spend</th><th>LLM Cost</th><th>Net</th><th>Issues</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Nov 27, 2025</strong></td>
+                                <td>156</td>
+                                <td>45 (28.8%)</td>
+                                <td>$567</td>
+                                <td>$127</td>
+                                <td>$89</td>
+                                <td style="color: var(--success);">$351</td>
+                                <td><span class="badge danger">3</span></td>
+                                <td><button class="btn" onclick="showReportDetail('nov27')">View →</button></td>
+                            </tr>
+                            <tr>
+                                <td>Nov 26, 2025</td>
+                                <td>142</td>
+                                <td>38 (26.8%)</td>
+                                <td>$489</td>
+                                <td>$118</td>
+                                <td>$76</td>
+                                <td style="color: var(--success);">$295</td>
+                                <td><span class="badge warning">1</span></td>
+                                <td><button class="btn">View →</button></td>
+                            </tr>
+                            <tr>
+                                <td>Nov 25, 2025</td>
+                                <td>167</td>
+                                <td>52 (31.1%)</td>
+                                <td>$623</td>
+                                <td>$134</td>
+                                <td>$98</td>
+                                <td style="color: var(--success);">$391</td>
+                                <td><span class="badge success">0</span></td>
+                                <td><button class="btn">View →</button></td>
+                            </tr>
+                            <tr>
+                                <td>Nov 24, 2025</td>
+                                <td>134</td>
+                                <td>31 (23.1%)</td>
+                                <td>$378</td>
+                                <td>$112</td>
+                                <td>$67</td>
+                                <td style="color: var(--success);">$199</td>
+                                <td><span class="badge warning">2</span></td>
+                                <td><button class="btn">View →</button></td>
+                            </tr>
+                            <tr>
+                                <td>Nov 23, 2025</td>
+                                <td>128</td>
+                                <td>29 (22.7%)</td>
+                                <td>$345</td>
+                                <td>$98</td>
+                                <td>$58</td>
+                                <td style="color: var(--success);">$189</td>
+                                <td><span class="badge success">0</span></td>
+                                <td><button class="btn">View →</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Sample Report Detail -->
+                <div class="section" id="report-detail-nov27">
+                    <div class="section-header">
+                        <div class="section-title">📄 Daily Report: November 27, 2025</div>
+                        <button class="btn">Download PDF</button>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 24px; margin-top: 20px; font-family: 'SF Mono', Monaco, monospace; font-size: 13px; line-height: 1.8;">
+                        <div style="color: var(--accent); font-weight: bold; margin-bottom: 16px;">═══════════════════════════════════════════════</div>
+                        <div style="color: var(--accent); font-weight: bold; font-size: 16px;">FAIBRIC DAILY REPORT - November 27, 2025</div>
+                        <div style="color: var(--accent); font-weight: bold; margin-bottom: 16px;">═══════════════════════════════════════════════</div>
+                        
+                        <div style="color: var(--text-muted); margin: 20px 0 8px;">📊 FUNNEL OVERVIEW</div>
+                        <div>Visitors:     156 (100%)</div>
+                        <div>Email Given:  134 (85.9%)</div>
+                        <div>Verified:     78 (50.0%)</div>
+                        <div>Deployed:     45 (28.8%) ✓</div>
+                        <div style="color: var(--warning);">Email Changes: 7 users changed their email</div>
+                        
+                        <div style="color: var(--text-muted); margin: 20px 0 8px;">💰 REVENUE & COSTS</div>
+                        <div>New Subscriptions: $567</div>
+                        <div>  - Pro ($99.99):  4 users = $399.96</div>
+                        <div>  - Basic ($19.99): 8 users = $159.92</div>
+                        <div>  - Upgrades:      1 user  = $80.00</div>
+                        <div>Google Ads Spend:  $127</div>
+                        <div>LLM API Costs:     $89</div>
+                        <div style="color: var(--success);">Net Profit:        $351</div>
+                        
+                        <div style="color: var(--text-muted); margin: 20px 0 8px;">📣 GOOGLE ADS</div>
+                        <div>Impressions: 3,892</div>
+                        <div>Clicks:      298</div>
+                        <div>CTR:         7.66%</div>
+                        <div>Conversions: 56</div>
+                        <div>CPA:         $2.27</div>
+                        <div style="color: var(--success);">Best Campaign: "SaaS Founders" (CTR 8.2%)</div>
+                        
+                        <div style="color: var(--text-muted); margin: 20px 0 8px;">⚠️ ISSUES REQUIRING ATTENTION (3)</div>
+                        <div style="color: var(--danger);">1. user@example.com - "Trading bot with ML" - Low rating (1/5)</div>
+                        <div style="color: var(--danger);">2. dev@startup.io - "Real-time collaboration" - Build failed</div>
+                        <div style="color: var(--danger);">3. pm@agency.co - "Gantt chart dashboard" - User rejected output</div>
+                        
+                        <div style="color: var(--text-muted); margin: 20px 0 8px;">💬 TOP REQUESTS TODAY</div>
+                        <div>1. "SaaS dashboard with user analytics" (12 requests)</div>
+                        <div>2. "E-commerce with Stripe" (8 requests)</div>
+                        <div>3. "Admin panel with CRUD" (7 requests)</div>
+                        <div>4. "API backend with authentication" (6 requests)</div>
+                        <div>5. "Portfolio website with CMS" (5 requests)</div>
+                        
+                        <div style="color: var(--text-muted); margin: 20px 0 8px;">🤖 LLM USAGE</div>
+                        <div>Total Requests:  2,456</div>
+                        <div>Tokens Used:     892K</div>
+                        <div>  - Opus 4.5:    654K (code generation)</div>
+                        <div>  - Sonnet:      156K (chat)</div>
+                        <div>  - Haiku:       82K (summaries)</div>
+                        
+                        <div style="color: var(--accent); font-weight: bold; margin-top: 20px;">═══════════════════════════════════════════════</div>
+                        <div style="color: var(--text-muted);">Report generated automatically at 9:00 AM EST</div>
+                        <div style="color: var(--text-muted);">Sent to: admin@faibric.com</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Report Settings</div>
+                    <table class="table" style="margin-top: 16px;">
+                        <tbody>
+                            <tr>
+                                <td>Recipient Email</td>
+                                <td><strong>admin@faibric.com</strong></td>
+                                <td><button class="btn">Edit</button></td>
+                            </tr>
+                            <tr>
+                                <td>Send Time</td>
+                                <td><strong>9:00 AM EST</strong></td>
+                                <td><button class="btn">Edit</button></td>
+                            </tr>
+                            <tr>
+                                <td>Frequency</td>
+                                <td><strong>Daily</strong></td>
+                                <td><button class="btn">Edit</button></td>
+                            </tr>
+                            <tr>
+                                <td>Include Sections</td>
+                                <td>
+                                    <span class="badge info">Funnel</span>
+                                    <span class="badge info">Revenue</span>
+                                    <span class="badge info">Google Ads</span>
+                                    <span class="badge info">Issues</span>
+                                    <span class="badge info">Top Requests</span>
+                                    <span class="badge info">LLM Usage</span>
+                                </td>
+                                <td><button class="btn">Edit</button></td>
+                            </tr>
+                            <tr>
+                                <td>Alert Threshold</td>
+                                <td><strong>Issues ≥ 3</strong> → Send immediately</td>
+                                <td><button class="btn">Edit</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- ANALYTICS PAGE -->
+            <div id="page-analytics" class="page">
+                <div class="page-header">
+                    <h2>📈 Analytics</h2>
+                    <p>Deep dive into platform metrics</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">Key Metrics Over Time (Last 14 Days)</div>
+                        <div class="section-actions">
+                            <button class="btn">7 Days</button>
+                            <button class="btn primary">14 Days</button>
+                            <button class="btn">30 Days</button>
+                        </div>
+                    </div>
+                    <table class="table" style="margin-top: 16px;">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Sessions</th>
+                                <th>Emails</th>
+                                <th>Verified</th>
+                                <th>Deployed</th>
+                                <th>Conv. Rate</th>
+                                <th>Revenue</th>
+                                <th>LLM Cost</th>
+                                <th>Margin</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Nov 27</strong></td>
+                                <td>156</td>
+                                <td>134</td>
+                                <td>78</td>
+                                <td>45</td>
+                                <td><span class="badge success">28.8%</span></td>
+                                <td>$567</td>
+                                <td>$89</td>
+                                <td style="color: var(--success);">$478</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 26</td>
+                                <td>142</td>
+                                <td>121</td>
+                                <td>67</td>
+                                <td>38</td>
+                                <td><span class="badge success">26.8%</span></td>
+                                <td>$489</td>
+                                <td>$76</td>
+                                <td style="color: var(--success);">$413</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 25</td>
+                                <td>167</td>
+                                <td>145</td>
+                                <td>89</td>
+                                <td>52</td>
+                                <td><span class="badge success">31.1%</span></td>
+                                <td>$623</td>
+                                <td>$98</td>
+                                <td style="color: var(--success);">$525</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 24</td>
+                                <td>134</td>
+                                <td>112</td>
+                                <td>56</td>
+                                <td>31</td>
+                                <td><span class="badge warning">23.1%</span></td>
+                                <td>$378</td>
+                                <td>$67</td>
+                                <td style="color: var(--success);">$311</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 23</td>
+                                <td>128</td>
+                                <td>108</td>
+                                <td>52</td>
+                                <td>29</td>
+                                <td><span class="badge warning">22.7%</span></td>
+                                <td>$345</td>
+                                <td>$58</td>
+                                <td style="color: var(--success);">$287</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 22</td>
+                                <td>145</td>
+                                <td>126</td>
+                                <td>71</td>
+                                <td>41</td>
+                                <td><span class="badge success">28.3%</span></td>
+                                <td>$512</td>
+                                <td>$82</td>
+                                <td style="color: var(--success);">$430</td>
+                            </tr>
+                            <tr>
+                                <td>Nov 21</td>
+                                <td>158</td>
+                                <td>139</td>
+                                <td>82</td>
+                                <td>48</td>
+                                <td><span class="badge success">30.4%</span></td>
+                                <td>$589</td>
+                                <td>$91</td>
+                                <td style="color: var(--success);">$498</td>
+                            </tr>
+                        </tbody>
+                        <tfoot style="border-top: 2px solid var(--border);">
+                            <tr>
+                                <td><strong>Totals</strong></td>
+                                <td><strong>1,030</strong></td>
+                                <td><strong>885</strong></td>
+                                <td><strong>495</strong></td>
+                                <td><strong>284</strong></td>
+                                <td><strong>27.6%</strong></td>
+                                <td><strong>$3,503</strong></td>
+                                <td><strong>$561</strong></td>
+                                <td><strong style="color: var(--success);">$2,942</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="section">
+                        <div class="section-title">Engagement Metrics</div>
+                        <table class="table" style="margin-top: 16px;">
+                            <tbody>
+                                <tr>
+                                    <td>Average Session Duration</td>
+                                    <td style="text-align: right;"><strong>27.8 min</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Median Session Duration</td>
+                                    <td style="text-align: right;"><strong>18.5 min</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Average Inputs per Session</td>
+                                    <td style="text-align: right;"><strong>2.5</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Average Characters Typed</td>
+                                    <td style="text-align: right;"><strong>342</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Email Change Rate</td>
+                                    <td style="text-align: right; color: var(--warning);"><strong>4.2%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Return Visitors</td>
+                                    <td style="text-align: right;"><strong>12.3%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Time to First Input</td>
+                                    <td style="text-align: right;"><strong>23 sec</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Time to Email Submit</td>
+                                    <td style="text-align: right;"><strong>4.2 min</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="section">
+                        <div class="section-title">Quality Metrics</div>
+                        <table class="table" style="margin-top: 16px;">
+                            <tbody>
+                                <tr>
+                                    <td>Build Success Rate</td>
+                                    <td style="text-align: right; color: var(--success);"><strong>94.2%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Deploy Success Rate</td>
+                                    <td style="text-align: right; color: var(--success);"><strong>98.7%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Average User Rating</td>
+                                    <td style="text-align: right;"><strong>4.3/5 ⭐</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>5-Star Ratings</td>
+                                    <td style="text-align: right;"><strong>58%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Issues Flagged (this week)</td>
+                                    <td style="text-align: right; color: var(--warning);"><strong>12</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Issues Resolved (this week)</td>
+                                    <td style="text-align: right; color: var(--success);"><strong>9</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Avg Resolution Time</td>
+                                    <td style="text-align: right;"><strong>4.2 hours</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Regeneration Success Rate</td>
+                                    <td style="text-align: right; color: var(--success);"><strong>87%</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">LLM Model Usage Breakdown</div>
+                    <table class="table" style="margin-top: 16px;">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Purpose</th>
+                                <th>Requests (7d)</th>
+                                <th>Tokens (7d)</th>
+                                <th>Avg Latency</th>
+                                <th>Cost (7d)</th>
+                                <th>Cost/Request</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Claude Opus 4.5</strong></td>
+                                <td>Code Generation</td>
+                                <td>4,567</td>
+                                <td>2.1M</td>
+                                <td>8.2s</td>
+                                <td>$312</td>
+                                <td>$0.068</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Claude Opus 4.5</strong></td>
+                                <td>QA Fixes</td>
+                                <td>89</td>
+                                <td>156K</td>
+                                <td>12.4s</td>
+                                <td>$23</td>
+                                <td>$0.258</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Claude Sonnet</strong></td>
+                                <td>Chat/Clarification</td>
+                                <td>3,234</td>
+                                <td>890K</td>
+                                <td>2.1s</td>
+                                <td>$89</td>
+                                <td>$0.028</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Claude Haiku</strong></td>
+                                <td>Summarization</td>
+                                <td>8,912</td>
+                                <td>245K</td>
+                                <td>0.8s</td>
+                                <td>$24</td>
+                                <td>$0.003</td>
+                            </tr>
+                            <tr>
+                                <td><strong>OpenAI Embeddings</strong></td>
+                                <td>Code Search</td>
+                                <td>12,456</td>
+                                <td>567K</td>
+                                <td>0.3s</td>
+                                <td>$28</td>
+                                <td>$0.002</td>
+                            </tr>
+                        </tbody>
+                        <tfoot style="border-top: 2px solid var(--border);">
+                            <tr>
+                                <td colspan="2"><strong>Total</strong></td>
+                                <td><strong>29,258</strong></td>
+                                <td><strong>3.96M</strong></td>
+                                <td>-</td>
+                                <td><strong>$476</strong></td>
+                                <td><strong>$0.016</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Top Request Categories (This Week)</div>
+                    <table class="table" style="margin-top: 16px;">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Count</th>
+                                <th>% of Total</th>
+                                <th>Avg Duration</th>
+                                <th>Conv. Rate</th>
+                                <th>Avg Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>SaaS Dashboard</strong></td>
+                                <td>234</td>
+                                <td>22.7%</td>
+                                <td>34.2 min</td>
+                                <td><span class="badge success">38.5%</span></td>
+                                <td>4.5 ⭐</td>
+                            </tr>
+                            <tr>
+                                <td><strong>E-commerce</strong></td>
+                                <td>189</td>
+                                <td>18.3%</td>
+                                <td>41.5 min</td>
+                                <td><span class="badge success">32.1%</span></td>
+                                <td>4.3 ⭐</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Admin Panel / CRM</strong></td>
+                                <td>156</td>
+                                <td>15.1%</td>
+                                <td>28.7 min</td>
+                                <td><span class="badge success">35.2%</span></td>
+                                <td>4.4 ⭐</td>
+                            </tr>
+                            <tr>
+                                <td><strong>API / Backend</strong></td>
+                                <td>134</td>
+                                <td>13.0%</td>
+                                <td>22.3 min</td>
+                                <td><span class="badge warning">24.6%</span></td>
+                                <td>4.1 ⭐</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Portfolio / Landing</strong></td>
+                                <td>112</td>
+                                <td>10.9%</td>
+                                <td>15.8 min</td>
+                                <td><span class="badge success">42.0%</span></td>
+                                <td>4.6 ⭐</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AI/ML Tools</strong></td>
+                                <td>89</td>
+                                <td>8.6%</td>
+                                <td>45.2 min</td>
+                                <td><span class="badge danger">18.0%</span></td>
+                                <td>3.8 ⭐</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Other</strong></td>
+                                <td>116</td>
+                                <td>11.3%</td>
+                                <td>26.4 min</td>
+                                <td><span class="badge warning">22.4%</span></td>
+                                <td>4.0 ⭐</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 12px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
+                        <span style="color: var(--accent);">💡 Insight:</span> AI/ML Tools requests have lower success rate (18%) - consider adding specialized prompts or limiting scope for this category.
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        function showPage(pageName) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            // Show selected page
+            document.getElementById('page-' + pageName).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
+

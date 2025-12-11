@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faibric - User Flow Preview</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #000;
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .flow-container {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .flow-step {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .step-header {
+      background: #000;
+      color: #fff;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .step-number {
+      background: #2563eb;
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      margin-right: 12px;
+    }
+    .step-title {
+      display: flex;
+      align-items: center;
+      font-weight: 600;
+    }
+    .step-url {
+      font-size: 12px;
+      color: #999;
+      font-family: monospace;
+    }
+    .step-url a {
+      color: #999;
+      text-decoration: none;
+    }
+    .step-url a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+    iframe {
+      width: 100%;
+      height: 500px;
+      border: none;
+      background: #fff;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    @media (max-width: 1200px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #000;
+      margin: 40px 0 20px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <h1>Faibric User Flow Preview</h1>
+  <p class="subtitle">All pages from the new user journey</p>
+
+  <div class="flow-container">
+    
+    <div class="section-title">New User Onboarding Flow</div>
+    
+    <div class="flow-step">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-number">1</span>
+          Landing Page - Describe Your Idea
+        </div>
+        <span class="step-url"><a href="http://localhost:5173/" target="_blank">localhost:5173/</a></span>
+      </div>
+      <iframe src="http://localhost:5173/"></iframe>
+    </div>
+
+    <div class="flow-step">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-number">2</span>
+          Login Page
+        </div>
+        <span class="step-url"><a href="http://localhost:5173/login" target="_blank">localhost:5173/login</a></span>
+      </div>
+      <iframe src="http://localhost:5173/login"></iframe>
+    </div>
+
+    <div class="flow-step">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-number">3</span>
+          Register Page
+        </div>
+        <span class="step-url"><a href="http://localhost:5173/register" target="_blank">localhost:5173/register</a></span>
+      </div>
+      <iframe src="http://localhost:5173/register"></iframe>
+    </div>
+
+    <div class="section-title">Customer Dashboard (After Login)</div>
+
+    <div class="row">
+      <div class="flow-step">
+        <div class="step-header">
+          <div class="step-title">
+            <span class="step-number">4</span>
+            Projects Dashboard
+          </div>
+          <span class="step-url"><a href="http://localhost:5173/dashboard" target="_blank">localhost:5173/dashboard</a></span>
+        </div>
+        <iframe src="http://localhost:5173/dashboard"></iframe>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-header">
+          <div class="step-title">
+            <span class="step-number">5</span>
+            My Account (Credits/Billing)
+          </div>
+          <span class="step-url"><a href="http://localhost:5173/account" target="_blank">localhost:5173/account</a></span>
+        </div>
+        <iframe src="http://localhost:5173/account"></iframe>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-number">6</span>
+          Admin Panel Builder
+        </div>
+        <span class="step-url"><a href="http://localhost:5173/panel-builder" target="_blank">localhost:5173/panel-builder</a></span>
+      </div>
+      <iframe src="http://localhost:5173/panel-builder"></iframe>
+    </div>
+
+    <div class="section-title">Faibric Admin Dashboard (Staff Only)</div>
+
+    <div class="flow-step">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-number">7</span>
+          Faibric Admin - Platform Analytics
+        </div>
+        <span class="step-url"><a href="http://localhost:5173/admin" target="_blank">localhost:5173/admin</a></span>
+      </div>
+      <iframe src="http://localhost:5173/admin"></iframe>
+    </div>
+
+    <div class="flow-step">
+      <div class="step-header">
+        <div class="step-title">
+          <span class="step-number">8</span>
+          External Services Status
+        </div>
+        <span class="step-url"><a href="http://localhost:5173/admin/services" target="_blank">localhost:5173/admin/services</a></span>
+      </div>
+      <iframe src="http://localhost:5173/admin/services"></iframe>
+    </div>
+
+  </div>
+
+  <script>
+    // Auto-refresh iframes every 30 seconds to keep sessions alive
+    // setInterval(() => {
+    //   document.querySelectorAll('iframe').forEach(iframe => {
+    //     iframe.src = iframe.src;
+    //   });
+    // }, 30000);
+  </script>
+</body>
+</html>
+

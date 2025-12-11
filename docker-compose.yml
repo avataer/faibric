@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.10
+    container_name: faibric_traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - faibric_network
+      - deployed_apps
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: faibric_postgres
+    environment:
+      POSTGRES_DB: faibric_db
+      POSTGRES_USER: faibric_user
+      POSTGRES_PASSWORD: faibric_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - faibric_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: faibric_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - faibric_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: faibric_backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock  # Enable Docker access
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - DATABASE_URL=postgresql://faibric_user:faibric_password@postgres:5432/faibric_db
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - APP_SUBDOMAIN_BASE=localhost
+    depends_on:
+      - postgres
+      - redis
+      - traefik
+    networks:
+      - faibric_network
+      - deployed_apps
+    labels:
+      - "traefik.enable=true"
+      # Main backend route
+      - "traefik.http.routers.backend.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.backend.service=backend"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+      # API Gateway route - allows ANY subdomain to call /api/*
+      - "traefik.http.routers.gateway.rule=PathPrefix(`/api/`)"
+      - "traefik.http.routers.gateway.priority=100"
+      - "traefik.http.routers.gateway.service=backend"
+
+  celery:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: faibric_celery
+    command: celery -A faibric_backend worker -l info
+    volumes:
+      - ./backend:/app
+      - /var/run/docker.sock:/var/run/docker.sock  # Enable Docker access
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - DATABASE_URL=postgresql://faibric_user:faibric_password@postgres:5432/faibric_db
+      - REDIS_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - APP_SUBDOMAIN_BASE=localhost
+    depends_on:
+      - postgres
+      - redis
+      - traefik
+    networks:
+      - faibric_network
+      - deployed_apps
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: faibric_frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - faibric_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=5173"
+
+volumes:
+  postgres_data:
+
+networks:
+  faibric_network:
+    driver: bridge
+  deployed_apps:
+    driver: bridge
+
+
