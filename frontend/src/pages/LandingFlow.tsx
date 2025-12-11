@@ -9,15 +9,19 @@ import {
   CardContent,
   CircularProgress,
   Alert,
-  LinearProgress,
   Stepper,
   Step,
   StepLabel,
   Link,
 } from '@mui/material'
+// Note: LinearProgress removed - now using BuildingStudio component
 import { api } from '../services/api'
+import BuildingStudio from '../components/BuildingStudio'
 
 type FlowStep = 'input' | 'email' | 'verify' | 'building' | 'deployed'
+
+// Check if we're in development mode
+const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost'
 
 interface SessionData {
   session_token: string
@@ -286,7 +290,7 @@ const LandingFlow = () => {
                 We sent a magic link to <strong>{email}</strong>
               </Typography>
               <Typography variant="body2" sx={{ color: '#6b7280', mb: 3 }}>
-                Click the link in your email to access your project.
+                Click the link in your email to start building your app.
               </Typography>
               
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
@@ -299,70 +303,61 @@ const LandingFlow = () => {
                   Wrong email? Click here to change it
                 </Link>
                 
-                {/* Dev/Testing: Skip verification and start building */}
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={async () => {
-                    if (sessionToken) {
-                      try {
-                        setLoading(true)
-                        await api.post('/api/onboarding/build/', { session_token: sessionToken })
-                        setStep('building')
-                      } catch (err) {
-                        console.error('Failed to start build:', err)
-                        setStep('building') // Still go to building step to show status
-                      } finally {
-                        setLoading(false)
+                {/* Dev/Testing ONLY: Skip verification - HIDDEN in production */}
+                {isDevelopment && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    color="warning"
+                    onClick={async () => {
+                      if (sessionToken) {
+                        try {
+                          setLoading(true)
+                          await api.post('/api/onboarding/build/', { session_token: sessionToken })
+                          setStep('building')
+                        } catch (err: any) {
+                          // In production, this will fail with 403
+                          if (err.response?.status === 403) {
+                            setError('Email verification required. Check your inbox.')
+                          } else {
+                            console.error('Failed to start build:', err)
+                            setStep('building')
+                          }
+                        } finally {
+                          setLoading(false)
+                        }
                       }
-                    } else {
-                      setStep('building')
-                    }
-                  }}
-                  sx={{ mt: 2 }}
-                  disabled={loading}
-                >
-                  {loading ? <CircularProgress size={20} /> : '[DEV] Skip to Building'}
-                </Button>
+                    }}
+                    sx={{ mt: 2 }}
+                    disabled={loading}
+                  >
+                    {loading ? <CircularProgress size={20} /> : '⚠️ [DEV ONLY] Skip Verification'}
+                  </Button>
+                )}
               </Box>
             </CardContent>
           </Card>
         )}
 
-        {/* Step 4: Building */}
-        {step === 'building' && (
-          <Card>
-            <CardContent sx={{ p: 4, textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ color: '#000000', fontWeight: 600, mb: 1 }}>
-                Building your project
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#374151', mb: 3 }}>
-                This usually takes 2-5 minutes depending on complexity.
-              </Typography>
-              
-              <Box sx={{ mb: 3 }}>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={sessionData?.build_progress || 0}
-                  sx={{ height: 12, borderRadius: 6 }}
-                />
-                <Typography variant="body2" sx={{ color: '#374151', mt: 1 }}>
-                  {sessionData?.build_progress || 0}% complete
-                </Typography>
-              </Box>
-              
-              <Typography variant="caption" sx={{ color: '#6b7280', display: 'block', mb: 2 }}>
-                Your request: "{request.substring(0, 100)}..."
-              </Typography>
-              
-              {/* Show current status */}
-              {sessionData?.status && (
-                <Typography variant="caption" sx={{ display: 'block', mb: 2 }}>
-                  Status: {sessionData.status}
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
+        {/* Step 4: Building - Full screen split view */}
+        {step === 'building' && sessionToken && (
+          <Box sx={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            zIndex: 1000 
+          }}>
+            <BuildingStudio
+              sessionToken={sessionToken}
+              initialRequest={request}
+              onDeployed={(url) => {
+                setSessionData(prev => prev ? { ...prev, deployment_url: url } : { session_token: sessionToken, status: 'deployed', deployment_url: url })
+                setStep('deployed')
+              }}
+            />
+          </Box>
         )}
 
         {/* Step 5: Deployed */}

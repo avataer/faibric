@@ -168,11 +168,15 @@ class VerifyMagicLinkView(APIView):
             # Generate JWT for the user
             from rest_framework_simplejwt.tokens import RefreshToken
             from django.contrib.auth import get_user_model
+            from .tasks import build_app_from_session_task
             
             User = get_user_model()
             user = User.objects.get(id=result['user_id'])
             
             refresh = RefreshToken.for_user(user)
+            
+            # NOW we can start building - email is verified!
+            build_app_from_session_task.delay(result['session_token'])
             
             return Response({
                 'success': True,
@@ -295,14 +299,23 @@ class FollowUpInputView(APIView):
 class TriggerBuildView(APIView):
     """
     Trigger app building for a session.
-    Called when user clicks "Skip to Building" or after email verification.
+    ONLY available in development mode for testing.
+    In production, builds are ONLY triggered after email verification.
     """
     permission_classes = [AllowAny]
     
     def post(self, request):
-        """Trigger the build process."""
+        """Trigger the build process - DEV ONLY."""
+        import os
         import logging
         logger = logging.getLogger(__name__)
+        
+        # Block in production - builds should only happen after email verification
+        if os.environ.get('RENDER') or os.environ.get('PRODUCTION'):
+            return Response({
+                'error': 'Build can only be triggered after email verification',
+                'hint': 'Check your email for the magic link'
+            }, status=403)
         
         session_token = request.data.get('session_token')
         
@@ -315,7 +328,7 @@ class TriggerBuildView(APIView):
             return Response({'error': 'Session not found'}, status=404)
         
         try:
-            # Start the build task
+            # Start the build task (DEV ONLY)
             from .tasks import build_app_from_session_task
             result = build_app_from_session_task.delay(session_token)
             
@@ -325,7 +338,7 @@ class TriggerBuildView(APIView):
             
             return Response({
                 'success': True,
-                'message': 'Build started',
+                'message': 'Build started (DEV MODE)',
                 'session_token': session_token,
                 'task_id': str(result.id) if result else None,
             })
