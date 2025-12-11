@@ -303,8 +303,8 @@ const LandingFlow = () => {
                   Wrong email? Click here to change it
                 </Link>
                 
-                {/* Dev/Testing ONLY: Skip verification - HIDDEN in production */}
-                {isDevelopment && (
+                {/* TEMPORARY: Skip verification while email is being configured */}
+                {(
                   <Button
                     variant="outlined"
                     size="small"
@@ -331,7 +331,7 @@ const LandingFlow = () => {
                     sx={{ mt: 2 }}
                     disabled={loading}
                   >
-                    {loading ? <CircularProgress size={20} /> : '⚠️ [DEV ONLY] Skip Verification'}
+                    {loading ? <CircularProgress size={20} /> : 'Skip & Start Building →'}
                   </Button>
                 )}
               </Box>

@@ -299,23 +299,24 @@ class FollowUpInputView(APIView):
 class TriggerBuildView(APIView):
     """
     Trigger app building for a session.
-    ONLY available in development mode for testing.
-    In production, builds are ONLY triggered after email verification.
+    Temporarily enabled for testing while email is being configured.
+    TODO: Re-enable email verification requirement once SendGrid is set up.
     """
     permission_classes = [AllowAny]
     
     def post(self, request):
-        """Trigger the build process - DEV ONLY."""
+        """Trigger the build process."""
         import os
         import logging
         logger = logging.getLogger(__name__)
         
-        # Block in production - builds should only happen after email verification
-        if os.environ.get('RENDER') or os.environ.get('PRODUCTION'):
-            return Response({
-                'error': 'Build can only be triggered after email verification',
-                'hint': 'Check your email for the magic link'
-            }, status=403)
+        # TEMPORARY: Allow builds without email verification for testing
+        # TODO: Uncomment this block once SendGrid is configured
+        # if os.environ.get('RENDER') or os.environ.get('PRODUCTION'):
+        #     return Response({
+        #         'error': 'Build can only be triggered after email verification',
+        #         'hint': 'Check your email for the magic link'
+        #     }, status=403)
         
         session_token = request.data.get('session_token')
         
