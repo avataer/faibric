@@ -109,9 +109,11 @@ def build_app_from_session_task(self, session_token: str):
             event_data={'progress': 20, 'message': '✨ Designing your app architecture...'},
         )
         
+        # Pass session to generator for real-time streaming updates
         result = generator.generate_app(
             user_prompt=project.user_prompt or project.description,
-            project_id=project.id
+            project_id=project.id,
+            session=session  # For streaming thinking updates
         )
         
         SessionEvent.objects.create(

@@ -27,6 +27,9 @@ ABSOLUTE RULES (NEVER BREAK THESE):
 6. Import ONLY from 'react': import React, {{ useState, useEffect }} from 'react'
 7. NO external libraries, NO imports except React
 8. Component must be a complete, working, self-contained function
+9. TYPOGRAPHY: ALWAYS use Apple San Francisco font. Set on EVERY text element:
+   fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif"
+   This is MANDATORY - NEVER use any other font unless user explicitly requests it.
 """
 
 

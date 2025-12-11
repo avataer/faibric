@@ -45,37 +45,73 @@ class AIGeneratorV2:
     def generate_app(
         self, 
         user_prompt: str, 
-        project_id: int = None
+        project_id: int = None,
+        session = None
     ) -> Dict[str, Any]:
         """
-        Generate a complete app in a single AI call.
+        Generate a complete app in a single AI call with streaming.
         Returns dict with components and metadata.
         """
         
         # Broadcast: Starting
         self._broadcast(project_id, "thinking", "🧠 Analyzing your request...")
+        self._add_session_event(session, "🧠 Analyzing your request...")
         
         # Classify the prompt
         app_type = self.classify_prompt(user_prompt)
         self._broadcast(project_id, "action", f"📋 Building a {app_type}...")
+        self._add_session_event(session, f"📋 Identified app type: {app_type}")
         
         # Get the specialized prompt
         prompt_template = get_prompt_for_type(app_type)
         full_prompt = prompt_template.format(user_prompt=user_prompt)
         
-        # Single AI call to generate everything
+        # IMPORTANT: Force San Francisco fonts in all generated apps
+        font_instruction = """
+CRITICAL STYLING REQUIREMENT:
+- Use ONLY Apple San Francisco font family in ALL CSS
+- Always set: font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+- Apply this font to body, html, and all text elements
+- NEVER use other fonts unless explicitly requested by the user
+"""
+        full_prompt = font_instruction + "\n\n" + full_prompt
+        
+        # Stream AI response for real-time thinking
         self._broadcast(project_id, "thinking", "🎨 Generating components...")
+        self._add_session_event(session, "🎨 Claude Opus 4.5 is writing your code...")
         
         try:
-            response = self.client.messages.create(
+            # Use streaming to get real-time updates
+            full_response = ""
+            thinking_shown = False
+            
+            with self.client.messages.stream(
                 model=self.model,
                 max_tokens=8000,
-                system="You are an expert React developer. Output ONLY valid JSON.",
+                system="You are an expert React developer. Output ONLY valid JSON. ALWAYS use San Francisco font (-apple-system, BlinkMacSystemFont, 'SF Pro Display').",
                 messages=[
                     {"role": "user", "content": full_prompt}
                 ],
                 temperature=0.7
-            )
+            ) as stream:
+                chunk_count = 0
+                for text in stream.text_stream:
+                    full_response += text
+                    chunk_count += 1
+                    
+                    # Show progress every 20 chunks
+                    if chunk_count % 20 == 0:
+                        progress_msg = f"💭 Writing code... ({len(full_response)} chars)"
+                        self._add_session_event(session, progress_msg)
+                    
+                    # Show first substantial content
+                    if not thinking_shown and len(full_response) > 100:
+                        thinking_shown = True
+                        preview = full_response[:80].replace('\n', ' ')
+                        self._add_session_event(session, f"✍️ Started: {preview}...")
+            
+            result_text = full_response
+            self._add_session_event(session, f"✅ Generated {len(result_text)} characters of code")
             
             result_text = response.content[0].text
             
@@ -221,3 +257,18 @@ class AIGeneratorV2:
         
         cache.set(messages_key, existing, timeout=3600)
         print(f"📢 [{project_id}] {content}")
+    
+    def _add_session_event(self, session, message: str):
+        """Add a build progress event to the session for frontend polling"""
+        if not session:
+            return
+        
+        try:
+            from apps.onboarding.models import SessionEvent
+            SessionEvent.objects.create(
+                session=session,
+                event_type='build_progress',
+                event_data={'message': message, 'progress': 0},
+            )
+        except Exception as e:
+            print(f"Failed to add session event: {e}")
