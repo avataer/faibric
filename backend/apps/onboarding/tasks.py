@@ -9,6 +9,172 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+@shared_task(bind=True, max_retries=2)
+def build_app_from_session_task(self, session_token: str):
+    """
+    Complete flow: Create project -> Generate with AI -> Deploy to Render
+    This is triggered after successful email verification or DEV skip.
+    """
+    from .models import LandingSession, SessionEvent
+    from .services import OnboardingService
+    from apps.projects.models import Project
+    from apps.ai_engine.v2.generator import AIGeneratorV2
+    from apps.deployment.tasks import deploy_app_task
+    
+    try:
+        session = LandingSession.objects.get(session_token=session_token)
+        
+        # Step 1: Create project if not exists
+        if not session.converted_to_project:
+            logger.info(f"Creating project for session {session_token}")
+            
+            # Need a user - create anonymous if not exists
+            if not session.converted_to_user:
+                from django.contrib.auth import get_user_model
+                from apps.tenants.models import Tenant, TenantMembership
+                import secrets
+                
+                User = get_user_model()
+                
+                # Create anonymous user
+                username = f"user_{secrets.token_hex(4)}"
+                email = session.email or f"{username}@faibric.app"
+                
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=None,
+                )
+                
+                # Create tenant
+                tenant = Tenant.objects.create(
+                    name=f"{username}'s Workspace",
+                    slug=f"ws-{secrets.token_hex(4)}",
+                    owner=user,
+                )
+                TenantMembership.objects.create(
+                    tenant=tenant,
+                    user=user,
+                    role='owner',
+                    is_active=True,
+                )
+                
+                session.converted_to_user = user
+                session.converted_to_tenant = tenant
+                session.save()
+            
+            # Create project
+            project = Project.objects.create(
+                tenant=session.converted_to_tenant,
+                user=session.converted_to_user,
+                name=f"App: {session.initial_request[:50]}",
+                description=session.initial_request,
+                user_prompt=session.initial_request,
+                status='generating',
+            )
+            
+            session.converted_to_project = project
+            session.status = 'building'
+            session.save()
+            
+            SessionEvent.objects.create(
+                session=session,
+                event_type='project_created',
+                event_data={'project_id': str(project.id)},
+            )
+        else:
+            project = session.converted_to_project
+        
+        # Step 2: Generate with AI
+        logger.info(f"Generating app for project {project.id}")
+        
+        SessionEvent.objects.create(
+            session=session,
+            event_type='build_started',
+            event_data={'project_id': str(project.id)},
+        )
+        
+        generator = AIGeneratorV2()
+        result = generator.generate_app(
+            user_prompt=project.user_prompt or project.description,
+            project_id=project.id
+        )
+        
+        # Store the generated code
+        if 'frontend' in result:
+            components = result['frontend']
+        else:
+            components = result.get('components', {})
+        
+        frontend_code = {
+            'App.tsx': '',
+            'components': {}
+        }
+        
+        for name, code in components.items():
+            clean_name = name.replace('components/', '')
+            if clean_name == 'App' or clean_name == 'App.tsx':
+                frontend_code['App.tsx'] = code
+            else:
+                frontend_code['components'][clean_name] = code
+        
+        # If no App.tsx, create one
+        if not frontend_code['App.tsx']:
+            comp_imports = '\n'.join([f"import {c} from './components/{c}';" for c in frontend_code['components'].keys()])
+            comp_uses = '\n        '.join([f"<{c} />" for c in frontend_code['components'].keys()])
+            frontend_code['App.tsx'] = f"""import React from 'react';
+{comp_imports}
+
+function App() {{
+  return (
+    <div>
+        {comp_uses}
+    </div>
+  );
+}}
+
+export default App;
+"""
+        
+        project.frontend_code = str(frontend_code)
+        project.status = 'ready'
+        project.save()
+        
+        SessionEvent.objects.create(
+            session=session,
+            event_type='build_progress',
+            event_data={'progress': 100, 'message': 'Code generated successfully'},
+        )
+        
+        # Step 3: Deploy
+        logger.info(f"Deploying project {project.id}")
+        deploy_app_task.delay(project.id)
+        
+        return {
+            'success': True,
+            'project_id': project.id,
+            'session_token': session_token,
+        }
+        
+    except Exception as e:
+        logger.error(f"Error building app from session: {e}")
+        
+        try:
+            session = LandingSession.objects.get(session_token=session_token)
+            SessionEvent.objects.create(
+                session=session,
+                event_type='error',
+                event_data={'error': str(e)[:500]},
+            )
+        except:
+            pass
+        
+        if self.request.retries < self.max_retries:
+            raise self.retry(exc=e, countdown=30)
+        
+        return {'success': False, 'error': str(e)}
+
+
 @shared_task
 def generate_and_send_daily_report():
     """

@@ -16,6 +16,7 @@ from .views import (
     FunnelDashboardView,
     ActivityTrackingView,
     FollowUpInputView,
+    TriggerBuildView,
     SessionDetailView,
     InputAnalyticsView,
     AllInputsView,
@@ -37,6 +38,9 @@ urlpatterns = [
     # Activity tracking (called from frontend)
     path('activity/', ActivityTrackingView.as_view(), name='activity-tracking'),
     path('follow-up/', FollowUpInputView.as_view(), name='follow-up-input'),
+    
+    # Build trigger
+    path('build/', TriggerBuildView.as_view(), name='trigger-build'),
     
     # Visual dashboard
     path('admin/funnel/', FunnelDashboardView.as_view(), name='funnel-dashboard'),

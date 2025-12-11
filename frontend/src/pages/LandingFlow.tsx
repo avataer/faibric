@@ -299,14 +299,30 @@ const LandingFlow = () => {
                   Wrong email? Click here to change it
                 </Link>
                 
-                {/* Dev/Testing: Skip verification */}
+                {/* Dev/Testing: Skip verification and start building */}
                 <Button
                   variant="outlined"
                   size="small"
-                  onClick={() => setStep('building')}
+                  onClick={async () => {
+                    if (sessionToken) {
+                      try {
+                        setLoading(true)
+                        await api.post('/api/onboarding/build/', { session_token: sessionToken })
+                        setStep('building')
+                      } catch (err) {
+                        console.error('Failed to start build:', err)
+                        setStep('building') // Still go to building step to show status
+                      } finally {
+                        setLoading(false)
+                      }
+                    } else {
+                      setStep('building')
+                    }
+                  }}
                   sx={{ mt: 2 }}
+                  disabled={loading}
                 >
-                  [DEV] Skip to Building
+                  {loading ? <CircularProgress size={20} /> : '[DEV] Skip to Building'}
                 </Button>
               </Box>
             </CardContent>
@@ -339,14 +355,12 @@ const LandingFlow = () => {
                 Your request: "{request.substring(0, 100)}..."
               </Typography>
               
-              {/* Dev/Testing: Skip to deployed */}
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => setStep('deployed')}
-              >
-                [DEV] Skip to Deployed
-              </Button>
+              {/* Show current status */}
+              {sessionData?.status && (
+                <Typography variant="caption" sx={{ display: 'block', mb: 2 }}>
+                  Status: {sessionData.status}
+                </Typography>
+              )}
             </CardContent>
           </Card>
         )}

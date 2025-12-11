@@ -205,11 +205,33 @@ class SessionStatusView(APIView):
             # Get recent events
             events = session.events.order_by('-timestamp')[:10]
             
+            # Get deployment URL from project if exists
+            deployment_url = None
+            build_progress = 0
+            
+            if session.converted_to_project:
+                project = session.converted_to_project
+                deployment_url = project.deployment_url
+                
+                # Calculate build progress based on status
+                if project.status == 'generating':
+                    build_progress = 30
+                elif project.status == 'ready':
+                    build_progress = 70
+                elif project.status == 'deploying':
+                    build_progress = 85
+                elif project.status == 'deployed':
+                    build_progress = 100
+                    session.status = 'deployed'
+                    session.save()
+            
             return Response({
                 'status': session.status,
                 'email': session.email,
                 'is_converted': session.is_converted,
                 'project_id': str(session.converted_to_project_id) if session.converted_to_project else None,
+                'deployment_url': deployment_url,
+                'build_progress': build_progress,
                 'events': SessionEventSerializer(events, many=True).data,
             })
         except LandingSession.DoesNotExist:
@@ -268,6 +290,36 @@ class FollowUpInputView(APIView):
         InputTracker.log_follow_up(session, message, context)
         
         return Response({'status': 'logged'})
+
+
+class TriggerBuildView(APIView):
+    """
+    Trigger app building for a session.
+    Called when user clicks "Skip to Building" or after email verification.
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        """Trigger the build process."""
+        session_token = request.data.get('session_token')
+        
+        if not session_token:
+            return Response({'error': 'Session token required'}, status=400)
+        
+        try:
+            session = LandingSession.objects.get(session_token=session_token)
+        except LandingSession.DoesNotExist:
+            return Response({'error': 'Session not found'}, status=404)
+        
+        # Start the build task
+        from .tasks import build_app_from_session_task
+        build_app_from_session_task.delay(session_token)
+        
+        return Response({
+            'success': True,
+            'message': 'Build started',
+            'session_token': session_token,
+        })
 
 
 # ============================================
