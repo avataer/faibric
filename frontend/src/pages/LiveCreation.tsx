@@ -94,7 +94,7 @@ const LiveCreation = () => {
           const cacheBuster = `?t=${Date.now()}`
           iframeRef.current.src = project.deployment_url + cacheBuster
         }
-      } else if (project.status === 'deploying' || project.status === 'generating' || project.status === 'building') {
+      } else if (['deploying', 'generating', 'building'].includes(project.status as string)) {
         setIsBuilding(true)
       } else if (project.status === 'ready') {
         setIsBuilding(false)

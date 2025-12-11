@@ -60,3 +60,4 @@ element.innerHTML = DOMPurify.sanitize(userInput); // CORRECT
 
 
 
+

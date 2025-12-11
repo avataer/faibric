@@ -575,3 +575,4 @@ def get_templates_by_category(category: str):
 
 
 
+
