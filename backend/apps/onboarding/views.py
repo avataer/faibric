@@ -301,6 +301,9 @@ class TriggerBuildView(APIView):
     
     def post(self, request):
         """Trigger the build process."""
+        import logging
+        logger = logging.getLogger(__name__)
+        
         session_token = request.data.get('session_token')
         
         if not session_token:
@@ -311,15 +314,27 @@ class TriggerBuildView(APIView):
         except LandingSession.DoesNotExist:
             return Response({'error': 'Session not found'}, status=404)
         
-        # Start the build task
-        from .tasks import build_app_from_session_task
-        build_app_from_session_task.delay(session_token)
-        
-        return Response({
-            'success': True,
-            'message': 'Build started',
-            'session_token': session_token,
-        })
+        try:
+            # Start the build task
+            from .tasks import build_app_from_session_task
+            result = build_app_from_session_task.delay(session_token)
+            
+            # Update session status
+            session.status = 'building'
+            session.save()
+            
+            return Response({
+                'success': True,
+                'message': 'Build started',
+                'session_token': session_token,
+                'task_id': str(result.id) if result else None,
+            })
+        except Exception as e:
+            logger.exception(f"Failed to start build task: {e}")
+            return Response({
+                'success': False,
+                'error': f'Failed to start build: {str(e)}'
+            }, status=500)
 
 
 # ============================================
