@@ -20,13 +20,19 @@ class RenderDeployer:
     """
     
     def __init__(self):
-        self.render_api_key = getattr(settings, 'RENDER_API_KEY', os.environ.get('RENDER_API_KEY', ''))
-        self.github_token = getattr(settings, 'GITHUB_TOKEN', os.environ.get('GITHUB_TOKEN', ''))
-        self.github_repo = getattr(settings, 'GITHUB_APPS_REPO', os.environ.get('GITHUB_APPS_REPO', 'avataer/faibric-apps'))
-        self.render_owner_id = getattr(settings, 'RENDER_OWNER_ID', os.environ.get('RENDER_OWNER_ID', ''))
+        # Get from settings first, fall back to env vars
+        self.render_api_key = getattr(settings, 'RENDER_API_KEY', None) or os.environ.get('RENDER_API_KEY', '')
+        self.github_token = getattr(settings, 'GITHUB_TOKEN', None) or os.environ.get('GITHUB_TOKEN', '')
+        self.github_repo = getattr(settings, 'GITHUB_APPS_REPO', None) or os.environ.get('GITHUB_APPS_REPO', 'avataer/faibric-apps')
+        self.render_owner_id = getattr(settings, 'RENDER_OWNER_ID', None) or os.environ.get('RENDER_OWNER_ID', '')
         
         self.render_api = "https://api.render.com/v1"
         self.github_api = "https://api.github.com"
+        
+        # Debug logging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"RenderDeployer init: github_token={'set' if self.github_token else 'MISSING'}, render_api_key={'set' if self.render_api_key else 'MISSING'}")
     
     def deploy_react_app(self, project):
         """Deploy React app to Render.com"""

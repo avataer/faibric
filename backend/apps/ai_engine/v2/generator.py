@@ -95,25 +95,19 @@ CRITICAL STYLING REQUIREMENT:
                 temperature=0.7
             ) as stream:
                 chunk_count = 0
-                last_shown_length = 0
+                last_update_len = 0
                 
                 for text in stream.text_stream:
                     full_response += text
                     chunk_count += 1
                     
-                    # Show actual code every 40 chunks (roughly every 400-800 chars)
-                    if chunk_count % 40 == 0:
-                        # Get the new code since last update
-                        new_code = full_response[last_shown_length:]
-                        # Clean it up for display - show last ~200 chars
-                        if len(new_code) > 200:
-                            display_code = "..." + new_code[-200:]
-                        else:
-                            display_code = new_code
-                        # Remove excessive whitespace for cleaner display
-                        display_code = ' '.join(display_code.split())[:150]
-                        self._add_session_event(session, display_code)
-                        last_shown_length = len(full_response)
+                    # Show progress every 60 chunks
+                    if chunk_count % 60 == 0:
+                        # Extract a readable code snippet from recent content
+                        snippet = self._extract_readable_snippet(full_response, last_update_len)
+                        if snippet:
+                            self._add_session_event(session, snippet)
+                        last_update_len = len(full_response)
             
             result_text = full_response
             self._add_session_event(session, f"Generated {len(result_text)} characters")
@@ -261,6 +255,42 @@ CRITICAL STYLING REQUIREMENT:
         )
         
         return code
+    
+    def _extract_readable_snippet(self, full_text: str, start_from: int) -> str:
+        """Extract a readable code snippet from the AI response for display"""
+        new_content = full_text[start_from:]
+        if len(new_content) < 50:
+            return None
+        
+        # Look for meaningful code patterns to show
+        patterns = [
+            # Function definitions
+            (r'(const \w+ = \([^)]*\) => \{)', 'function'),
+            # Component definitions
+            (r'(function \w+\([^)]*\) \{)', 'function'),
+            # JSX elements with content
+            (r'(<\w+[^>]*>[^<]{10,50})', 'element'),
+            # State hooks
+            (r"(useState\([^)]+\))", 'state'),
+            # Style definitions
+            (r'(style=\{\{[^}]{20,60})', 'style'),
+            # Return statements
+            (r'(return \([^)]{0,30})', 'return'),
+        ]
+        
+        for pattern, ptype in patterns:
+            match = re.search(pattern, new_content)
+            if match:
+                snippet = match.group(1)
+                # Clean up and truncate
+                snippet = snippet.replace('\\n', ' ').strip()
+                if len(snippet) > 80:
+                    snippet = snippet[:77] + '...'
+                return f"[{ptype}] {snippet}"
+        
+        # Fallback: show character progress
+        total = len(full_text)
+        return f"Writing code... {total} chars"
     
     def _broadcast(self, project_id: int, msg_type: str, content: str):
         """Broadcast progress message to Redis cache"""

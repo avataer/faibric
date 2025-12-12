@@ -74,6 +74,12 @@ ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 GROK_API_KEY = os.getenv('GROK_API_KEY')
 
+# Deployment settings (Render + GitHub)
+RENDER_API_KEY = os.getenv('RENDER_API_KEY', '')
+RENDER_OWNER_ID = os.getenv('RENDER_OWNER_ID', '')
+GITHUB_TOKEN = os.getenv('GITHUB_TOKEN', '')
+GITHUB_APPS_REPO = os.getenv('GITHUB_APPS_REPO', 'avataer/faibric-apps')
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
