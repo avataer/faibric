@@ -31,7 +31,13 @@ class RenderDeployer:
     @property
     def github_token(self):
         """Get token - always read fresh from env."""
-        return os.environ.get('GITHUB_TOKEN', '') or getattr(settings, 'GITHUB_TOKEN', '')
+        token = os.environ.get('GITHUB_TOKEN', '')
+        if not token:
+            token = getattr(settings, 'GITHUB_TOKEN', '')
+        # Debug log
+        import logging
+        logging.getLogger(__name__).info(f"github_token property: {'FOUND' if token else 'MISSING'} (len={len(token) if token else 0})")
+        return token
     
     @property
     def github_repo(self):
