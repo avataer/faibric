@@ -8,7 +8,6 @@ import {
   IconButton,
   CircularProgress,
   Chip,
-  LinearProgress,
 } from '@mui/material'
 import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
@@ -16,6 +15,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import StopIcon from '@mui/icons-material/Stop'
 import { SandpackProvider, SandpackPreview } from '@codesandbox/sandpack-react'
 import { api } from '../services/api'
+import ProgressivePreview from './ProgressivePreview'
 
 interface Message {
   id: string
@@ -495,47 +495,11 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
               />
             </>
           ) : (
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: 'column',
-              alignItems: 'center', 
-              justifyContent: 'center',
-              height: '100%',
-              gap: 3,
-              p: 4,
-            }}>
-              <Box sx={{ width: '100%', maxWidth: 400 }}>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={buildProgress} 
-                  sx={{ height: 8, borderRadius: 4 }}
-                />
-              </Box>
-              <Typography variant="h5" fontWeight={600} color="text.primary">
-                {buildProgress < 30 ? 'Analyzing your request...' :
-                 buildProgress < 60 ? 'Writing code...' :
-                 buildProgress < 80 ? 'Generating components...' :
-                 buildProgress < 95 ? 'Deploying to cloud...' :
-                 'Almost ready...'}
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {buildProgress}% complete
-              </Typography>
-              <Typography 
-                variant="body2" 
-                color="text.secondary" 
-                sx={{ 
-                  maxWidth: 400, 
-                  textAlign: 'center',
-                  fontFamily: 'monospace',
-                  backgroundColor: '#f5f5f5',
-                  p: 1,
-                  borderRadius: 1,
-                }}
-              >
-                {buildPhase}
-              </Typography>
-            </Box>
+            <ProgressivePreview 
+              progress={buildProgress}
+              phase={buildPhase}
+              projectName={initialRequest.slice(0, 30)}
+            />
           )}
         </Box>
       </Box>
