@@ -78,13 +78,21 @@ CRITICAL REQUIREMENTS - FOLLOW EXACTLY:
    - NEVER use placeholder text like "Lorem ipsum", "[Your text here]", "Coming soon", etc.
    - NEVER use placeholder images like "placeholder.jpg", "example.jpg", empty src attributes
    - Instead, generate REAL, realistic content that matches the user's request
-   - Use real Unsplash image URLs from https://images.unsplash.com with relevant search terms
    - Write actual compelling copy, descriptions, and text content
    - If the user asks for a restaurant site, write real menu items with prices
    - If it's a portfolio, write realistic project descriptions
    - Make the content feel like a real, finished website
 
-3. COMPLETE CODE: Always finish all JSX tags and exports
+3. IMAGES MUST MATCH CONTENT - CRITICAL:
+   - Use Unsplash SEARCH URLs: https://source.unsplash.com/800x600/?keyword1,keyword2
+   - NEVER use random photo IDs like photo-1544947950 - these show WRONG images
+   - The keywords in the URL MUST match what the image should actually show
+   - If user says "Asian women with dogs", use: https://source.unsplash.com/800x600/?asian,woman,dog
+   - If user says "Italian restaurant", use: https://source.unsplash.com/800x600/?italian,pasta,restaurant
+   - READ THE USER'S REQUEST CAREFULLY and ensure images match their SPECIFIC requirements
+   - Each image URL should have UNIQUE keywords to show different relevant images
+
+4. COMPLETE CODE: Always finish all JSX tags and exports
 """
         full_prompt = strict_requirements + "\n\n" + full_prompt
         
@@ -106,7 +114,10 @@ CRITICAL RULES:
 2. ALWAYS use San Francisco font (-apple-system, BlinkMacSystemFont, 'SF Pro Display')
 3. NEVER use placeholder content - no "Lorem ipsum", "placeholder", "[Your text]", "Coming soon"
 4. Generate REAL, compelling content that matches the user's request
-5. Use real Unsplash URLs for images (https://images.unsplash.com/photo-...)
+5. IMAGES: Use Unsplash SEARCH URLs: https://source.unsplash.com/800x600/?keyword1,keyword2
+   - Keywords MUST match what the image should show
+   - NEVER use random photo IDs like photo-1544947950
+   - Read user requirements carefully and use matching keywords
 6. Always complete all JSX tags - never leave code incomplete""",
                 messages=[
                     {"role": "user", "content": full_prompt}

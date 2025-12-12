@@ -35,9 +35,20 @@ CONTENT RULES (EXTREMELY IMPORTANT):
 - NEVER use placeholder text: No "Lorem ipsum", "placeholder", "[Your text]", "Coming soon", "Sample", "Example"
 - NEVER use placeholder images: No "placeholder.jpg", "example.png", empty src, or via.placeholder.com
 - Generate REAL, realistic content that matches the business/site type
-- For images, use REAL Unsplash URLs: https://images.unsplash.com/photo-XXXXX?w=800
 - Write compelling, professional copy as if for a real business
 - Include realistic prices, names, descriptions, testimonials
+
+IMAGE RULES (CRITICAL - FOLLOW EXACTLY):
+- Use Unsplash SEARCH URLs that match the ACTUAL content needed: https://source.unsplash.com/800x600/?keyword1,keyword2
+- The image URL MUST reflect what the image should show
+- If user says "Asian women with dogs" use: https://source.unsplash.com/800x600/?asian,woman,dog
+- If user says "luxury cars" use: https://source.unsplash.com/800x600/?luxury,car
+- NEVER use random photo IDs like photo-1544947950 - these show WRONG content
+- Each image URL must have SPECIFIC keywords matching the required content
+- Example portfolio with specific requirements:
+  - User wants "Italian food" -> https://source.unsplash.com/800x600/?italian,pasta,food
+  - User wants "mountain landscape" -> https://source.unsplash.com/800x600/?mountain,landscape
+  - User wants "professional headshot" -> https://source.unsplash.com/800x600/?professional,portrait,business
 """
 
 

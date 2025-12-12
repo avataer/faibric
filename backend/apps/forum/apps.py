@@ -12,3 +12,5 @@ class ForumConfig(AppConfig):
 
 
 
+
+

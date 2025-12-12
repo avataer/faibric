@@ -237,3 +237,5 @@ export default App;
             logger.info(f"📢 {message}")
         except Exception as e:
             logger.error(f"Failed to add event: {e}")
+
+

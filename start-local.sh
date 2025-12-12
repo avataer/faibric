@@ -71,3 +71,5 @@ echo "======================================"
 # Wait for Ctrl+C
 trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; docker-compose stop db redis; exit 0" SIGINT SIGTERM
 wait
+
+

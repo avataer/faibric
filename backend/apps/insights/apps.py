@@ -12,3 +12,5 @@ class InsightsConfig(AppConfig):
 
 
 
+
+
