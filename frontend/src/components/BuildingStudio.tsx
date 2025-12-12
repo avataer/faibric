@@ -499,6 +499,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
               progress={buildProgress}
               phase={buildPhase}
               projectName={initialRequest.slice(0, 30)}
+              userRequest={initialRequest}
             />
           )}
         </Box>
