@@ -20,19 +20,28 @@ class RenderDeployer:
     """
     
     def __init__(self):
-        # Get from settings first, fall back to env vars
-        self.render_api_key = getattr(settings, 'RENDER_API_KEY', None) or os.environ.get('RENDER_API_KEY', '')
-        self.github_token = getattr(settings, 'GITHUB_TOKEN', None) or os.environ.get('GITHUB_TOKEN', '')
-        self.github_repo = getattr(settings, 'GITHUB_APPS_REPO', None) or os.environ.get('GITHUB_APPS_REPO', 'avataer/faibric-apps')
-        self.render_owner_id = getattr(settings, 'RENDER_OWNER_ID', None) or os.environ.get('RENDER_OWNER_ID', '')
-        
         self.render_api = "https://api.render.com/v1"
         self.github_api = "https://api.github.com"
-        
-        # Debug logging
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"RenderDeployer init: github_token={'set' if self.github_token else 'MISSING'}, render_api_key={'set' if self.render_api_key else 'MISSING'}")
+    
+    @property
+    def render_api_key(self):
+        """Get API key - always read fresh from env."""
+        return os.environ.get('RENDER_API_KEY', '') or getattr(settings, 'RENDER_API_KEY', '')
+    
+    @property
+    def github_token(self):
+        """Get token - always read fresh from env."""
+        return os.environ.get('GITHUB_TOKEN', '') or getattr(settings, 'GITHUB_TOKEN', '')
+    
+    @property
+    def github_repo(self):
+        """Get repo - always read fresh from env."""
+        return os.environ.get('GITHUB_APPS_REPO', '') or getattr(settings, 'GITHUB_APPS_REPO', 'avataer/faibric-apps')
+    
+    @property
+    def render_owner_id(self):
+        """Get owner ID - always read fresh from env."""
+        return os.environ.get('RENDER_OWNER_ID', '') or getattr(settings, 'RENDER_OWNER_ID', '')
     
     def deploy_react_app(self, project):
         """Deploy React app to Render.com"""
