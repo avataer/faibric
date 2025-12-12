@@ -43,8 +43,10 @@ for env_file in [_env_main, _env_local]:
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-change-this')
 
 # SECURITY: DEBUG defaults to True for development safety
-# In production, explicitly set DEBUG=0
-DEBUG = os.getenv('DEBUG', '1') in ('1', 'true', 'True', 'TRUE', '')
+# In production, explicitly set DEBUG=0 or DEBUG=false
+# Empty string is treated as False (not truthy) for security
+_debug_val = os.getenv('DEBUG', '1').lower()
+DEBUG = _debug_val in ('1', 'true', 'yes', 'on') and _debug_val != ''
 
 # ALLOWED_HOSTS must be set BEFORE any potential early exit
 # This prevents "You must set ALLOWED_HOSTS" errors

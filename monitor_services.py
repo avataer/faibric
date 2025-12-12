@@ -180,14 +180,13 @@ def restart_backend():
     subprocess.run(["pkill", "-9", "-f", "manage.py"], capture_output=True)
     time.sleep(2)
     
-    # Start new
+    # Start new - use shell redirection to avoid file descriptor leaks
     env = os.environ.copy()
     subprocess.Popen(
-        ["python", "manage.py", "runserver", "0.0.0.0:8000"],
+        "python manage.py runserver 0.0.0.0:8000 >> /tmp/django.log 2>&1",
         cwd=BACKEND_DIR,
         env=env,
-        stdout=open("/tmp/django.log", "a"),
-        stderr=subprocess.STDOUT,
+        shell=True,
         start_new_session=True
     )
     
@@ -223,12 +222,11 @@ def restart_frontend():
     subprocess.run(["pkill", "-9", "-f", "vite"], capture_output=True)
     time.sleep(2)
     
-    # Start new
+    # Start new - use shell redirection to avoid file descriptor leaks
     subprocess.Popen(
-        ["npm", "run", "dev"],
+        "npm run dev >> /tmp/frontend.log 2>&1",
         cwd=FRONTEND_DIR,
-        stdout=open("/tmp/frontend.log", "a"),
-        stderr=subprocess.STDOUT,
+        shell=True,
         start_new_session=True
     )
     
