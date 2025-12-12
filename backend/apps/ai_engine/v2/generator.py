@@ -181,6 +181,7 @@ CRITICAL STYLING REQUIREMENT:
         # Remove markdown code blocks if present
         text = re.sub(r'^```(?:json)?\n?', '', text, flags=re.MULTILINE)
         text = re.sub(r'\n?```$', '', text, flags=re.MULTILINE)
+        text = re.sub(r'```\w*\n?', '', text)  # Remove any remaining code blocks
         text = text.strip()
         
         # Try direct parse
@@ -189,13 +190,35 @@ CRITICAL STYLING REQUIREMENT:
         except json.JSONDecodeError:
             pass
         
-        # Try to find JSON object in text
-        match = re.search(r'\{[\s\S]*\}', text)
-        if match:
-            try:
-                return json.loads(match.group())
-            except json.JSONDecodeError:
-                pass
+        # Try to find JSON object starting with {"
+        # Use greedy match to find the largest valid JSON
+        start_idx = text.find('{"')
+        if start_idx != -1:
+            # Find matching closing brace
+            depth = 0
+            for i, char in enumerate(text[start_idx:]):
+                if char == '{':
+                    depth += 1
+                elif char == '}':
+                    depth -= 1
+                    if depth == 0:
+                        json_str = text[start_idx:start_idx + i + 1]
+                        try:
+                            return json.loads(json_str)
+                        except json.JSONDecodeError:
+                            pass
+                        break
+        
+        # Fallback: look for component code directly
+        # If we find React code, wrap it in a components dict
+        if 'import React' in text or 'function App' in text or 'export default' in text:
+            # Extract the code
+            code_match = re.search(r'(import React[\s\S]*export default \w+;?)', text)
+            if code_match:
+                return {
+                    'title': 'Generated App',
+                    'components': {'App': code_match.group(1)}
+                }
         
         return None
     
