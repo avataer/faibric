@@ -31,18 +31,45 @@ interface SessionData {
 }
 
 const LandingFlow = () => {
-  const [step, setStep] = useState<FlowStep>('input')
+  // Restore session from localStorage on mount
+  const savedSession = typeof window !== 'undefined' ? localStorage.getItem('faibric_session') : null
+  const savedState = savedSession ? JSON.parse(savedSession) : null
+  
+  const [step, setStep] = useState<FlowStep>(savedState?.step || 'input')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
   // Form data
-  const [request, setRequest] = useState('')
-  const [email, setEmail] = useState('')
-  const [sessionToken, setSessionToken] = useState<string | null>(null)
-  const [sessionData, setSessionData] = useState<SessionData | null>(null)
+  const [request, setRequest] = useState(savedState?.request || '')
+  const [email, setEmail] = useState(savedState?.email || '')
+  const [sessionToken, setSessionToken] = useState<string | null>(savedState?.sessionToken || null)
+  const [sessionData, setSessionData] = useState<SessionData | null>(savedState?.sessionData || null)
   
   // Typing tracking
   const typingStartRef = useRef<number | null>(null)
+  
+  // Persist session state to localStorage
+  useEffect(() => {
+    if (sessionToken) {
+      localStorage.setItem('faibric_session', JSON.stringify({
+        step,
+        request,
+        email,
+        sessionToken,
+        sessionData
+      }))
+    }
+  }, [step, request, email, sessionToken, sessionData])
+  
+  // Clear session when starting fresh
+  const clearSession = () => {
+    localStorage.removeItem('faibric_session')
+    setStep('input')
+    setRequest('')
+    setEmail('')
+    setSessionToken(null)
+    setSessionData(null)
+  }
   
   // Poll for build status
   useEffect(() => {
@@ -356,6 +383,7 @@ const LandingFlow = () => {
                 setSessionData(prev => prev ? { ...prev, deployment_url: url } : { session_token: sessionToken, status: 'deployed', deployment_url: url })
                 // Stay in building view - don't switch to deployed card
               }}
+              onNewProject={clearSession}
             />
           </Box>
         )}

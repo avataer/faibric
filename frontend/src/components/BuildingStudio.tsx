@@ -27,9 +27,10 @@ interface BuildingStudioProps {
   sessionToken: string
   initialRequest: string
   onDeployed?: (url: string) => void
+  onNewProject?: () => void
 }
 
-const BuildingStudio = ({ sessionToken, initialRequest, onDeployed }: BuildingStudioProps) => {
+const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject }: BuildingStudioProps) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isBuilding, setIsBuilding] = useState(true)
@@ -266,11 +267,23 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed }: BuildingSt
                 </Button>
               </>
             ) : (
-              <Chip 
-                label="Deployed"
-                color="success"
-                size="small"
-              />
+              <>
+                <Chip 
+                  label="Deployed"
+                  color="success"
+                  size="small"
+                />
+                {onNewProject && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={onNewProject}
+                    sx={{ ml: 1 }}
+                  >
+                    Start New Project
+                  </Button>
+                )}
+              </>
             )}
           </Box>
         </Box>
@@ -381,16 +394,48 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed }: BuildingSt
         {/* Preview Content */}
         <Box sx={{ flex: 1, position: 'relative' }}>
           {deploymentUrl ? (
-            <iframe
-              key={previewKey}
-              src={deploymentUrl}
-              style={{
-                width: '100%',
-                height: '100%',
-                border: 'none',
-              }}
-              title="App Preview"
-            />
+            <>
+              {/* Show loading overlay while iframe loads */}
+              <Box sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#f9fafb',
+                zIndex: 1,
+              }} id="iframe-loading">
+                <Box sx={{ textAlign: 'center' }}>
+                  <CircularProgress size={40} sx={{ mb: 2 }} />
+                  <Typography variant="body1" color="text.secondary">
+                    Loading your app...
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    {deploymentUrl}
+                  </Typography>
+                </Box>
+              </Box>
+              <iframe
+                key={previewKey}
+                src={deploymentUrl}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  position: 'relative',
+                  zIndex: 2,
+                }}
+                title="App Preview"
+                onLoad={() => {
+                  // Hide loading overlay when iframe loads
+                  const loadingEl = document.getElementById('iframe-loading')
+                  if (loadingEl) loadingEl.style.display = 'none'
+                }}
+              />
+            </>
           ) : (
             <Box sx={{ 
               display: 'flex', 
