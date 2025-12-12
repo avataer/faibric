@@ -155,6 +155,9 @@ class BuildService:
         
         for name, code in components.items():
             clean_name = name.replace('components/', '')
+            # Unescape the code - convert \\n to real newlines
+            if isinstance(code, str):
+                code = code.replace('\\n', '\n').replace('\\t', '\t').replace("\\'", "'").replace('\\"', '"')
             if clean_name in ('App', 'App.tsx'):
                 frontend_code['App.tsx'] = code
             else:
@@ -178,7 +181,8 @@ function App() {{
 export default App;
 """
         
-        project.frontend_code = str(frontend_code)
+        import json
+        project.frontend_code = json.dumps(frontend_code)
         project.status = 'ready'
         project.save()
     

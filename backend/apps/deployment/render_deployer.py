@@ -91,14 +91,19 @@ class RenderDeployer:
         """Extract frontend code from project"""
         if not project.frontend_code:
             return self._default_app(project)
-        
+
         try:
-            import ast
             if isinstance(project.frontend_code, str):
-                code_dict = ast.literal_eval(project.frontend_code)
+                # Try JSON first (new format)
+                try:
+                    code_dict = json.loads(project.frontend_code)
+                except json.JSONDecodeError:
+                    # Fall back to ast.literal_eval (old format)
+                    import ast
+                    code_dict = ast.literal_eval(project.frontend_code)
             else:
                 code_dict = project.frontend_code
-            
+
             return {
                 'App.tsx': code_dict.get('App.tsx', self._default_app_tsx()),
                 'components': code_dict.get('components', {})
