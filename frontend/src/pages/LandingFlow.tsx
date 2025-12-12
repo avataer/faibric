@@ -375,16 +375,25 @@ const LandingFlow = () => {
                 <Button
                   variant="contained"
                   size="large"
-                  onClick={() => window.open(sessionData?.deployment_url, '_blank')}
+                  onClick={() => {
+                    if (sessionData?.deployment_url) {
+                      window.open(sessionData.deployment_url, '_blank')
+                    }
+                  }}
+                  disabled={!sessionData?.deployment_url}
                 >
                   Open Live App
                 </Button>
                 <Button
                   variant="outlined"
                   size="large"
-                  href="/dashboard"
+                  onClick={() => {
+                    if (sessionData?.deployment_url) {
+                      window.open(sessionData.deployment_url, '_blank')
+                    }
+                  }}
                 >
-                  Go to Dashboard
+                  Open in New Tab
                 </Button>
               </Box>
             </CardContent>

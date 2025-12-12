@@ -257,40 +257,22 @@ CRITICAL STYLING REQUIREMENT:
         return code
     
     def _extract_readable_snippet(self, full_text: str, start_from: int) -> str:
-        """Extract a readable code snippet from the AI response for display"""
-        new_content = full_text[start_from:]
-        if len(new_content) < 100:
-            return None
-        
-        # Clean the content first - unescape JSON
-        clean = new_content.replace('\\n', '\n').replace('\\"', '"').replace('\\\\', '\\')
-        
-        # Extract meaningful code lines
-        lines = [l.strip() for l in clean.split('\n') if l.strip()]
-        
-        # Find interesting lines
-        for line in lines[-10:]:  # Check recent lines
-            # Skip JSON structure
-            if line.startswith('{') or line.startswith('}') or line.startswith('"'):
-                continue
-            # Skip very short lines
-            if len(line) < 15:
-                continue
-            # Found a code line
-            if len(line) > 60:
-                line = line[:57] + '...'
-            return line
-        
-        # Fallback: progress indicator
+        """Show simple progress instead of code fragments"""
         total = len(full_text)
-        if total < 2000:
-            return "Setting up component structure..."
+        
+        # Just show clean progress messages
+        if total < 1500:
+            return "Creating app structure..."
+        elif total < 3000:
+            return "Building components..."
         elif total < 5000:
-            return "Writing UI components..."
-        elif total < 8000:
-            return "Adding styles and interactions..."
+            return "Adding functionality..."
+        elif total < 7000:
+            return "Styling interface..."
+        elif total < 9000:
+            return "Adding interactions..."
         else:
-            return "Finalizing code..."
+            return "Finishing up..."
     
     def _broadcast(self, project_id: int, msg_type: str, content: str):
         """Broadcast progress message to Redis cache"""
