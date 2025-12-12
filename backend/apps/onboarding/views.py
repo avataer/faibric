@@ -319,20 +319,22 @@ class FollowUpInputView(APIView):
 
 class ModifyBuildView(APIView):
     """
-    Modify and rebuild - user sends a new request to change/replace the website.
+    Modify existing website - makes TARGETED changes, not full rebuild.
+    Only rebuilds from scratch if explicitly requested or no existing code.
     """
     permission_classes = [AllowAny]
     
     def post(self, request):
-        """Update request and trigger new build."""
+        """Modify existing code or rebuild if needed."""
         import logging
         import threading
+        import json
         logger = logging.getLogger(__name__)
         
         session_token = request.data.get('session_token')
-        new_request = request.data.get('request')
+        user_request = request.data.get('request')
         
-        if not session_token or not new_request:
+        if not session_token or not user_request:
             return Response({'error': 'Session token and request required'}, status=400)
         
         try:
@@ -340,46 +342,136 @@ class ModifyBuildView(APIView):
         except LandingSession.DoesNotExist:
             return Response({'error': 'Session not found'}, status=404)
         
-        # Update the session with new request
-        session.initial_request = new_request
-        session.status = 'building'
-        session.build_progress = 0
-        session.deployment_url = None  # Clear old deployment
-        session.save()
+        # Check if this is a modification or new project request
+        is_new_project = any(phrase in user_request.lower() for phrase in [
+            'new website', 'new project', 'start over', 'from scratch',
+            'different website', 'another website', 'dont need this',
+            "don't need this", 'completely different', 'i need a website',
+            'i am a', 'i am an'  # New identity = new project
+        ])
         
-        # Clear old project if exists
-        if session.converted_to_project:
-            old_project = session.converted_to_project
-            session.converted_to_project = None
+        has_existing_code = session.converted_to_project and session.converted_to_project.frontend_code
+        
+        if is_new_project or not has_existing_code:
+            # FULL REBUILD - new project requested
+            session.status = 'building'
+            session.build_progress = 0
+            session.initial_request = user_request
             session.save()
-            # Keep old project in DB for reference but mark as replaced
+            
+            # Clear old project reference
+            if session.converted_to_project:
+                session.converted_to_project = None
+                session.save()
+            
+            SessionEvent.objects.create(
+                session=session,
+                event_type='build_progress',
+                event_data={'message': 'Starting new build with updated request...'}
+            )
+            
+            def run_full_build():
+                from .build_service import BuildService
+                try:
+                    BuildService.build_from_session(session_token)
+                except Exception as e:
+                    logger.exception(f"Full rebuild failed: {e}")
+            
+            thread = threading.Thread(target=run_full_build, daemon=True)
+            thread.start()
+            
+            return Response({
+                'success': True,
+                'mode': 'rebuild',
+                'message': 'Starting new project from scratch',
+            })
         
-        # Log the modification
-        InputTracker.log_follow_up(session, new_request, 'modification_request')
-        
-        # Add event
-        SessionEvent.objects.create(
-            session=session,
-            event_type='build_progress',
-            event_data={'message': 'Starting new build with updated request...'}
-        )
-        
-        # Run build in background thread
-        def run_build():
-            from .build_service import BuildService
-            try:
-                BuildService.build_from_session(session_token)
-            except Exception as e:
-                logger.exception(f"Modification build failed: {e}")
-        
-        thread = threading.Thread(target=run_build, daemon=True)
-        thread.start()
-        
-        return Response({
-            'success': True,
-            'message': 'Rebuilding with new request',
-            'session_token': session_token,
-        })
+        else:
+            # QUICK MODIFICATION - just change the existing code
+            session.status = 'building'
+            session.build_progress = 50  # Start at 50% since we already have code
+            session.save()
+            
+            SessionEvent.objects.create(
+                session=session,
+                event_type='build_progress',
+                event_data={'message': f'Applying changes: {user_request[:50]}...'}
+            )
+            
+            def run_modification():
+                from apps.ai_engine.v2.generator import AIGeneratorV2
+                from apps.deployment.render_deployer import RenderDeployer
+                
+                try:
+                    project = session.converted_to_project
+                    
+                    # Get existing code
+                    try:
+                        code_data = json.loads(project.frontend_code)
+                        if isinstance(code_data, dict) and 'App.tsx' in code_data:
+                            current_code = code_data['App.tsx']
+                        else:
+                            current_code = str(project.frontend_code)
+                    except:
+                        current_code = str(project.frontend_code)
+                    
+                    # Modify with AI (quick!)
+                    SessionEvent.objects.create(
+                        session=session,
+                        event_type='build_progress',
+                        event_data={'message': 'AI modifying code...'}
+                    )
+                    
+                    generator = AIGeneratorV2()
+                    new_code = generator.modify_app(
+                        current_code=current_code,
+                        user_request=user_request,
+                        project_id=project.id
+                    )
+                    
+                    # Store modified code
+                    project.frontend_code = json.dumps({'App.tsx': new_code})
+                    project.save()
+                    
+                    SessionEvent.objects.create(
+                        session=session,
+                        event_type='build_progress',
+                        event_data={'message': 'Deploying changes...'}
+                    )
+                    
+                    # Deploy
+                    deployer = RenderDeployer()
+                    deploy_result = deployer.deploy_react_app(project)
+                    
+                    # Update URLs
+                    project.deployment_url = deploy_result.get('url', '')
+                    project.save()
+                    
+                    session.status = 'deployed'
+                    session.save()
+                    
+                    SessionEvent.objects.create(
+                        session=session,
+                        event_type='build_progress',
+                        event_data={'message': f"Changes deployed: {deploy_result.get('url')}"}
+                    )
+                    
+                except Exception as e:
+                    logger.exception(f"Modification failed: {e}")
+                    SessionEvent.objects.create(
+                        session=session,
+                        event_type='error',
+                        event_data={'error': str(e)}
+                    )
+            
+            thread = threading.Thread(target=run_modification, daemon=True)
+            thread.start()
+            
+            return Response({
+                'success': True,
+                'mode': 'modify',
+                'message': 'Applying quick changes to existing code',
+            })
 
 
 class TriggerBuildView(APIView):

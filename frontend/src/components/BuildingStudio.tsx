@@ -190,25 +190,29 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     const newRequest = input
     setInput('')
 
-    // Add assistant acknowledgment
-    setMessages(prev => [...prev, {
-      id: `assistant-${Date.now()}`,
-      role: 'assistant',
-      content: "Got it! I'm rebuilding your website with these changes...",
-      timestamp: new Date(),
-    }])
-
     try {
-      // Call the modify endpoint to trigger a new build
-      await api.post('/api/onboarding/modify/', {
+      // Call the modify endpoint
+      const res = await api.post('/api/onboarding/modify/', {
         session_token: sessionToken,
         request: newRequest,
       })
       
-      // Reset state for new build
+      const mode = res.data.mode
+      
+      // Add assistant acknowledgment based on mode
+      setMessages(prev => [...prev, {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: mode === 'modify' 
+          ? "Got it! Applying your changes quickly..." 
+          : "Starting fresh with your new request...",
+        timestamp: new Date(),
+      }])
+      
+      // Reset state for build
       setIsBuilding(true)
-      setBuildProgress(0)
-      setBuildPhase('Starting new build...')
+      setBuildProgress(mode === 'modify' ? 50 : 0)  // Modifications start at 50%
+      setBuildPhase(mode === 'modify' ? 'Modifying code...' : 'Starting new build...')
       setDeploymentUrl(null)
       setGeneratedCode(null)
       setShowLivePreview(false)
@@ -218,7 +222,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
       setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
         role: 'system',
-        content: 'Failed to start rebuild. Please try again.',
+        content: 'Failed to apply changes. Please try again.',
         timestamp: new Date(),
       }])
     }
