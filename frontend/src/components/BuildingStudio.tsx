@@ -14,7 +14,7 @@ import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import StopIcon from '@mui/icons-material/Stop'
-import { Sandpack } from '@codesandbox/sandpack-react'
+import { SandpackProvider, SandpackPreview } from '@codesandbox/sandpack-react'
 import { api } from '../services/api'
 
 interface Message {
@@ -425,36 +425,18 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
         <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
           {/* Show live Sandpack preview while code is available */}
           {sandpackCode && showLivePreview ? (
-            <Box sx={{ height: '100%', width: '100%' }}>
-              <Sandpack
+            <Box sx={{ height: '100%', width: '100%', overflow: 'hidden' }}>
+              <SandpackProvider
                 key={previewKey}
                 template="react-ts"
                 theme="light"
-                options={{
-                  showNavigator: false,
-                  showTabs: false,
-                  showLineNumbers: false,
-                  showConsole: false,
-                  showConsoleButton: false,
-                  editorHeight: 0,
-                  editorWidthPercentage: 0,
-                }}
                 files={{
                   '/App.tsx': {
                     code: sandpackCode,
                     active: true,
                   },
                   '/styles.css': {
-                    code: `
-* {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
-  box-sizing: border-box;
-}
-body {
-  margin: 0;
-  padding: 0;
-}
-                    `,
+                    code: `* { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; box-sizing: border-box; } body { margin: 0; padding: 0; }`,
                   },
                 }}
                 customSetup={{
@@ -462,7 +444,13 @@ body {
                     "lucide-react": "latest",
                   },
                 }}
-              />
+              >
+                <SandpackPreview 
+                  style={{ height: '100%', width: '100%' }}
+                  showNavigator={false}
+                  showRefreshButton={false}
+                />
+              </SandpackProvider>
             </Box>
           ) : deploymentUrl && !showLivePreview ? (
             <>
