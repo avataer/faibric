@@ -301,22 +301,27 @@ export default App;"""
             return "Finishing up..."
     
     def _broadcast(self, project_id: int, msg_type: str, content: str):
-        """Broadcast progress message to Redis cache"""
+        """Broadcast progress message to Redis cache - non-critical, don't crash on failure"""
         if not project_id:
             return
         
-        messages_key = f'project_messages_{project_id}'
-        existing = cache.get(messages_key, [])
+        try:
+            messages_key = f'project_messages_{project_id}'
+            existing = cache.get(messages_key, []) or []
+            
+            existing.append({
+                'id': f'{project_id}_{len(existing)}',
+                'type': msg_type,
+                'content': content,
+                'timestamp': timezone.now().isoformat()
+            })
+            
+            cache.set(messages_key, existing, timeout=3600)
+        except Exception as e:
+            # Redis failure is non-critical - just log and continue
+            print(f"Redis broadcast failed: {e}")
         
-        existing.append({
-            'id': f'{project_id}_{len(existing)}',
-            'type': msg_type,
-            'content': content,
-            'timestamp': timezone.now().isoformat()
-        })
-        
-        cache.set(messages_key, existing, timeout=3600)
-        print(f"📢 [{project_id}] {content}")
+        print(f"[{project_id}] {content}")
     
     def _add_session_event(self, session, message: str):
         """Add a build progress event to the session for frontend polling"""
