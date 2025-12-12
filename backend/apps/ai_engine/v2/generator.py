@@ -87,8 +87,8 @@ CRITICAL STYLING REQUIREMENT:
             
             with self.client.messages.stream(
                 model=self.model,
-                max_tokens=8000,
-                system="You are an expert React developer. Output ONLY valid JSON. ALWAYS use San Francisco font (-apple-system, BlinkMacSystemFont, 'SF Pro Display').",
+                max_tokens=16000,
+                system="You are an expert React developer. Output ONLY valid JSON. ALWAYS use San Francisco font (-apple-system, BlinkMacSystemFont, 'SF Pro Display'). IMPORTANT: Always complete all JSX tags - never leave code incomplete.",
                 messages=[
                     {"role": "user", "content": full_prompt}
                 ],

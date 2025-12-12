@@ -141,6 +141,28 @@ class BuildService:
         return project
     
     @classmethod
+    def _validate_code(cls, code: str) -> str:
+        """Validate and fix incomplete React code."""
+        if not code:
+            return code
+        
+        # Count opening and closing tags/braces
+        open_braces = code.count('{') - code.count('}')
+        open_parens = code.count('(') - code.count(')')
+        
+        # Fix unclosed braces
+        if open_braces > 0:
+            code += '}' * open_braces
+        if open_parens > 0:
+            code += ')' * open_parens
+        
+        # Ensure export default App if missing
+        if 'function App' in code and 'export default App' not in code:
+            code += '\n\nexport default App;'
+        
+        return code
+    
+    @classmethod
     def _store_generated_code(cls, project, result):
         """Store generated components in project."""
         if 'frontend' in result:
@@ -158,6 +180,7 @@ class BuildService:
             # Unescape the code - convert \\n to real newlines
             if isinstance(code, str):
                 code = code.replace('\\n', '\n').replace('\\t', '\t').replace("\\'", "'").replace('\\"', '"')
+                code = cls._validate_code(code)
             if clean_name in ('App', 'App.tsx'):
                 frontend_code['App.tsx'] = code
             else:
