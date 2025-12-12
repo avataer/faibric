@@ -83,14 +83,14 @@ CRITICAL REQUIREMENTS - FOLLOW EXACTLY:
    - If it's a portfolio, write realistic project descriptions
    - Make the content feel like a real, finished website
 
-3. IMAGES MUST MATCH CONTENT - CRITICAL:
-   - Use Unsplash SEARCH URLs: https://source.unsplash.com/800x600/?keyword1,keyword2
-   - NEVER use random photo IDs like photo-1544947950 - these show WRONG images
-   - The keywords in the URL MUST match what the image should actually show
-   - If user says "Asian women with dogs", use: https://source.unsplash.com/800x600/?asian,woman,dog
-   - If user says "Italian restaurant", use: https://source.unsplash.com/800x600/?italian,pasta,restaurant
-   - READ THE USER'S REQUEST CAREFULLY and ensure images match their SPECIFIC requirements
-   - Each image URL should have UNIQUE keywords to show different relevant images
+3. IMAGES - USE PICSUM (source.unsplash.com is broken):
+   - Use Picsum: https://picsum.photos/seed/KEYWORD/800/600
+   - Replace KEYWORD with descriptive text: seed/asian-woman-1, seed/dog-portrait-2
+   - Each image needs a UNIQUE seed to get different images
+   - Increment numbers for variety: seed/art1, seed/art2, seed/art3
+   - Example for NFT artist: https://picsum.photos/seed/nft-art-1/800/600
+   - NEVER use source.unsplash.com - it returns 503 errors
+   - NEVER leave image src empty
 
 4. COMPLETE CODE: Always finish all JSX tags and exports
 """
@@ -114,10 +114,10 @@ CRITICAL RULES:
 2. ALWAYS use San Francisco font (-apple-system, BlinkMacSystemFont, 'SF Pro Display')
 3. NEVER use placeholder content - no "Lorem ipsum", "placeholder", "[Your text]", "Coming soon"
 4. Generate REAL, compelling content that matches the user's request
-5. IMAGES: Use Unsplash SEARCH URLs: https://source.unsplash.com/800x600/?keyword1,keyword2
-   - Keywords MUST match what the image should show
-   - NEVER use random photo IDs like photo-1544947950
-   - Read user requirements carefully and use matching keywords
+5. IMAGES: Use Picsum: https://picsum.photos/seed/KEYWORD/800/600
+   - Use unique seeds: seed/portrait1, seed/art2, seed/photo3
+   - NEVER use source.unsplash.com (broken, returns 503)
+   - NEVER leave image src empty
 6. Always complete all JSX tags - never leave code incomplete""",
                 messages=[
                     {"role": "user", "content": full_prompt}

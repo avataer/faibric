@@ -39,16 +39,14 @@ CONTENT RULES (EXTREMELY IMPORTANT):
 - Include realistic prices, names, descriptions, testimonials
 
 IMAGE RULES (CRITICAL - FOLLOW EXACTLY):
-- Use Unsplash SEARCH URLs that match the ACTUAL content needed: https://source.unsplash.com/800x600/?keyword1,keyword2
-- The image URL MUST reflect what the image should show
-- If user says "Asian women with dogs" use: https://source.unsplash.com/800x600/?asian,woman,dog
-- If user says "luxury cars" use: https://source.unsplash.com/800x600/?luxury,car
-- NEVER use random photo IDs like photo-1544947950 - these show WRONG content
-- Each image URL must have SPECIFIC keywords matching the required content
-- Example portfolio with specific requirements:
-  - User wants "Italian food" -> https://source.unsplash.com/800x600/?italian,pasta,food
-  - User wants "mountain landscape" -> https://source.unsplash.com/800x600/?mountain,landscape
-  - User wants "professional headshot" -> https://source.unsplash.com/800x600/?professional,portrait,business
+- Use Picsum for placeholder images: https://picsum.photos/seed/KEYWORD/800/600
+- Replace KEYWORD with a relevant word (e.g., dog1, portrait2, art3)
+- Each image should have a UNIQUE seed to get different images
+- Example: https://picsum.photos/seed/asian-woman-dogs-1/800/600
+- For variety, increment the number: seed/dog1, seed/dog2, seed/dog3
+- These URLs always work and return real photos
+- NEVER use source.unsplash.com - it is broken
+- NEVER leave image src empty or use placeholder.jpg
 """
 
 
