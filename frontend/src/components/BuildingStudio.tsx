@@ -14,6 +14,7 @@ import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import StopIcon from '@mui/icons-material/Stop'
+import { Sandpack } from '@codesandbox/sandpack-react'
 import { api } from '../services/api'
 
 interface Message {
@@ -38,8 +39,10 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
   const [buildProgress, setBuildProgress] = useState(0)
   const [buildPhase, setBuildPhase] = useState<string>('Starting...')
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null)
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null)
   const [previewKey, setPreviewKey] = useState(0)
   const [isStopping, setIsStopping] = useState(false)
+  const [showLivePreview, setShowLivePreview] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Initialize with the user's request
@@ -54,7 +57,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
       {
         id: '2',
         role: 'assistant',
-        content: "I'm building your app now. You can see it taking shape in the preview on the right. Feel free to ask for changes or additions while I work!",
+        content: "I'm building your app now. Watch it come to life in the preview on the right!",
         timestamp: new Date(),
       },
     ])
@@ -72,10 +75,15 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
         setBuildProgress(data.build_progress || 0)
         setBuildStatus(data.status)
 
+        // Update generated code for live preview
+        if (data.generated_code && data.generated_code !== generatedCode) {
+          setGeneratedCode(data.generated_code)
+          setPreviewKey(prev => prev + 1)
+        }
+
         if (data.deployment_url && data.deployment_url !== deploymentUrl) {
           setDeploymentUrl(data.deployment_url)
           setIsBuilding(false)
-          setPreviewKey(prev => prev + 1)
           
           // Add system message about deployment
           setMessages(prev => [...prev, {
@@ -92,18 +100,15 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
 
         // Add ALL build_progress events as system messages
         if (data.events && data.events.length > 0) {
-          // Process events in reverse order (oldest first) to maintain chronological order
           const progressEvents = data.events
             .filter((e: any) => e.event_type === 'build_progress' && e.event_data?.message)
             .reverse()
           
-          // Update build phase from latest event
           if (progressEvents.length > 0) {
             const latestMsg = progressEvents[progressEvents.length - 1].event_data.message
             setBuildPhase(latestMsg)
             
             // Calculate progress based on events
-            const totalEvents = progressEvents.length
             if (data.status === 'deployed') {
               setBuildProgress(100)
             } else if (latestMsg.includes('Deploying')) {
@@ -113,7 +118,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
             } else if (latestMsg.includes('Generated')) {
               setBuildProgress(70)
             } else {
-              setBuildProgress(Math.min(60, 10 + totalEvents * 5))
+              setBuildProgress(Math.min(60, 10 + progressEvents.length * 5))
             }
           }
           
@@ -142,7 +147,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
           if (errorEvents.length > 0) {
             const latestError = errorEvents[0]
             setMessages(prev => {
-              const errorMsg = `⚠️ ${latestError.event_data?.error || 'An error occurred'}`
+              const errorMsg = `Error: ${latestError.event_data?.error || 'An error occurred'}`
               const exists = prev.some(m => m.content === errorMsg)
               if (!exists) {
                 return [...prev, {
@@ -161,11 +166,10 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
       }
     }
 
-    // Poll immediately and then every 2 seconds for faster updates
     pollStatus()
     const interval = setInterval(pollStatus, 2000)
     return () => clearInterval(interval)
-  }, [sessionToken, deploymentUrl, onDeployed])
+  }, [sessionToken, deploymentUrl, generatedCode, onDeployed])
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -185,8 +189,6 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     setMessages(prev => [...prev, userMessage])
     setInput('')
 
-    // TODO: Send to backend for iterative changes
-    // For now, just acknowledge
     setTimeout(() => {
       setMessages(prev => [...prev, {
         id: `assistant-${Date.now()}`,
@@ -217,6 +219,23 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     }
     setIsStopping(false)
   }
+
+  // Clean up generated code for Sandpack
+  const getSandpackCode = () => {
+    if (!generatedCode) return null
+    
+    let code = generatedCode
+    
+    // Remove escaped characters
+    code = code.replace(/\\n/g, '\n')
+    code = code.replace(/\\t/g, '\t')
+    code = code.replace(/\\"/g, '"')
+    code = code.replace(/\\'/g, "'")
+    
+    return code
+  }
+
+  const sandpackCode = getSandpackCode()
 
   return (
     <Box sx={{ 
@@ -372,9 +391,20 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
           justifyContent: 'space-between',
           backgroundColor: '#ffffff',
         }}>
-          <Typography variant="subtitle1" fontWeight={500}>
-            Live Preview
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="subtitle1" fontWeight={500}>
+              Live Preview
+            </Typography>
+            {deploymentUrl && (
+              <Chip
+                label="Switch to deployed"
+                size="small"
+                variant={showLivePreview ? "outlined" : "filled"}
+                onClick={() => setShowLivePreview(!showLivePreview)}
+                sx={{ cursor: 'pointer' }}
+              />
+            )}
+          </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <IconButton size="small" onClick={refreshPreview} title="Refresh preview">
               <RefreshIcon />
@@ -392,10 +422,51 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
         </Box>
 
         {/* Preview Content */}
-        <Box sx={{ flex: 1, position: 'relative' }}>
-          {deploymentUrl ? (
+        <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+          {/* Show live Sandpack preview while code is available */}
+          {sandpackCode && showLivePreview ? (
+            <Box sx={{ height: '100%', width: '100%' }}>
+              <Sandpack
+                key={previewKey}
+                template="react-ts"
+                theme="light"
+                options={{
+                  showNavigator: false,
+                  showTabs: false,
+                  showLineNumbers: false,
+                  showConsole: false,
+                  showConsoleButton: false,
+                  editorHeight: 0,
+                  editorWidthPercentage: 0,
+                }}
+                files={{
+                  '/App.tsx': {
+                    code: sandpackCode,
+                    active: true,
+                  },
+                  '/styles.css': {
+                    code: `
+* {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 0;
+}
+                    `,
+                  },
+                }}
+                customSetup={{
+                  dependencies: {
+                    "lucide-react": "latest",
+                  },
+                }}
+              />
+            </Box>
+          ) : deploymentUrl && !showLivePreview ? (
             <>
-              {/* Show loading overlay while iframe loads */}
+              {/* Show deployed iframe */}
               <Box sx={{
                 position: 'absolute',
                 top: 0,
@@ -411,7 +482,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
                 <Box sx={{ textAlign: 'center' }}>
                   <CircularProgress size={40} sx={{ mb: 2 }} />
                   <Typography variant="body1" color="text.secondary">
-                    Loading your app...
+                    Loading deployed app...
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                     {deploymentUrl}
@@ -419,7 +490,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
                 </Box>
               </Box>
               <iframe
-                key={previewKey}
+                key={`iframe-${previewKey}`}
                 src={deploymentUrl}
                 style={{
                   width: '100%',
@@ -430,7 +501,6 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
                 }}
                 title="App Preview"
                 onLoad={() => {
-                  // Hide loading overlay when iframe loads
                   const loadingEl = document.getElementById('iframe-loading')
                   if (loadingEl) loadingEl.style.display = 'none'
                 }}

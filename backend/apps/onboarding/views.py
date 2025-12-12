@@ -208,19 +208,34 @@ class SessionStatusView(APIView):
     
     def get(self, request, session_token):
         """Get current session status."""
+        import json
         try:
             session = LandingSession.objects.get(session_token=session_token)
             
             # Get recent events
             events = session.events.order_by('-timestamp')[:10]
             
-            # Get deployment URL from project if exists
+            # Get deployment URL and generated code from project if exists
             deployment_url = None
             build_progress = 0
+            generated_code = None
             
             if session.converted_to_project:
                 project = session.converted_to_project
                 deployment_url = project.deployment_url
+                
+                # Get generated code for live preview
+                if project.frontend_code:
+                    try:
+                        # Try parsing as JSON first
+                        code_data = json.loads(project.frontend_code)
+                        if isinstance(code_data, dict) and 'App.tsx' in code_data:
+                            generated_code = code_data.get('App.tsx', '')
+                        elif isinstance(code_data, str):
+                            generated_code = code_data
+                    except (json.JSONDecodeError, TypeError):
+                        # Fallback to raw string
+                        generated_code = str(project.frontend_code)
                 
                 # Calculate build progress based on status
                 if project.status == 'generating':
@@ -241,6 +256,7 @@ class SessionStatusView(APIView):
                 'project_id': str(session.converted_to_project_id) if session.converted_to_project else None,
                 'deployment_url': deployment_url,
                 'build_progress': build_progress,
+                'generated_code': generated_code,  # Include generated code for live preview
                 'events': SessionEventSerializer(events, many=True).data,
             })
         except LandingSession.DoesNotExist:
