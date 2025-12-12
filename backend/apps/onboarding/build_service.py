@@ -146,6 +146,18 @@ class BuildService:
         if not code:
             return code
         
+        # Fix common escape issues
+        code = code.replace('\\>', '>')  # Remove escaped >
+        code = code.replace('\\<', '<')  # Remove escaped <
+        code = code.replace('}}>>', '}}>') # Fix double >>
+        code = code.replace('>>>', '>')  # Fix triple >
+        code = code.replace('>>', '>')   # Fix double >
+        
+        # Fix malformed JSX closing patterns
+        import re
+        code = re.sub(r'\}\}\s*>\s*>', '}}>',code)  # Fix }}> > to }}>
+        code = re.sub(r'>\s*>', '>', code)  # Fix > > to >
+        
         # Count opening and closing tags/braces
         open_braces = code.count('{') - code.count('}')
         open_parens = code.count('(') - code.count(')')
@@ -177,9 +189,12 @@ class BuildService:
         
         for name, code in components.items():
             clean_name = name.replace('components/', '')
-            # Unescape the code - convert \\n to real newlines
             if isinstance(code, str):
+                # First fix any escaped characters that shouldn't be there
+                code = code.replace('\\>', '>').replace('\\<', '<')
+                # Then unescape standard escapes - convert \\n to real newlines
                 code = code.replace('\\n', '\n').replace('\\t', '\t').replace("\\'", "'").replace('\\"', '"')
+                # Finally validate and fix any remaining issues
                 code = cls._validate_code(code)
             if clean_name in ('App', 'App.tsx'):
                 frontend_code['App.tsx'] = code
