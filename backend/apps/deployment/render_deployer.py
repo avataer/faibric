@@ -355,8 +355,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             'Content-Type': 'application/json'
         }
         
-        # Generate service name
-        service_name = f"app-{project.id}-{project.name[:20].lower().replace(' ', '-')}"
+        # Generate service name - sanitize to only allow alphanumeric and hyphens
+        import re
+        slug = project.name[:20].lower().replace(' ', '-')
+        slug = re.sub(r'[^a-z0-9-]', '', slug)  # Remove all non-alphanumeric except hyphens
+        slug = re.sub(r'-+', '-', slug)  # Collapse multiple hyphens
+        slug = slug.strip('-')  # Remove leading/trailing hyphens
+        service_name = f"app-{project.id}-{slug}"
         
         # Check if service already exists
         existing_url = self._get_existing_service(service_name, headers)
@@ -489,3 +494,5 @@ function Welcome() {{
 
 export default Welcome;
 """
+
+

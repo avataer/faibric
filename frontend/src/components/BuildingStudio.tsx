@@ -169,7 +169,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     pollStatus()
     const interval = setInterval(pollStatus, 2000)
     return () => clearInterval(interval)
-  }, [sessionToken, deploymentUrl, generatedCode, onDeployed])
+  }, [sessionToken, deploymentUrl, onDeployed]) // Note: generatedCode intentionally excluded to prevent feedback loop
 
   // Scroll to bottom on new messages
   useEffect(() => {
