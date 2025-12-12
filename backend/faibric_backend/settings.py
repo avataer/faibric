@@ -2,31 +2,53 @@
 Django settings for faibric_backend project.
 """
 import os
+import sys
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 
-# Load .env from project root (parent of backend/)
-# .env.local takes precedence over .env for local development
-_project_root = Path(__file__).resolve().parent.parent.parent
-_env_local = _project_root / '.env.local'
-_env_main = _project_root / '.env'
-
-if _env_local.exists():
-    load_dotenv(_env_local)
-else:
-    load_dotenv(_env_main)
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
+_project_root = BASE_DIR.parent
+
+# Load .env files - ALWAYS load both, .env.local overrides .env
+# This ensures env vars survive Django's auto-reloader child processes
+_env_main = _project_root / '.env'
+_env_local = _project_root / '.env.local'
+
+# Load base .env first
+if _env_main.exists():
+    load_dotenv(_env_main, override=False)
+
+# Then load .env.local to override (for local development)
+if _env_local.exists():
+    load_dotenv(_env_local, override=True)
+
+# CRITICAL: Also set in os.environ for child processes
+# This fixes Django's StatReloader not inheriting load_dotenv vars
+for env_file in [_env_main, _env_local]:
+    if env_file.exists():
+        with open(env_file) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, _, value = line.partition('=')
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    # Only set if not already in environment (preserves explicit overrides)
+                    if key not in os.environ or env_file == _env_local:
+                        os.environ[key] = value
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-change-this')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', '1') == '1'
+# SECURITY: DEBUG defaults to True for development safety
+# In production, explicitly set DEBUG=0
+DEBUG = os.getenv('DEBUG', '1') in ('1', 'true', 'True', 'TRUE', '')
 
-ALLOWED_HOSTS = ['*']  # Configure properly in production
+# ALLOWED_HOSTS must be set BEFORE any potential early exit
+# This prevents "You must set ALLOWED_HOSTS" errors
+ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', '.onrender.com', '.faibric.com']
 
 # Frontend URL (for emails and CORS)
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
