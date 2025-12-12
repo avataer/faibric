@@ -422,53 +422,21 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
         </Box>
 
         {/* Preview Content */}
-        <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: '#fff' }}>
           {/* Priority 1: Show deployed site when available */}
           {deploymentUrl && !showLivePreview ? (
-            <>
-              <Box 
-                id="iframe-loading"
-                sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: '#f9fafb',
-                  zIndex: 1,
-                }}
-              >
-                <Box sx={{ textAlign: 'center' }}>
-                  <CircularProgress size={48} sx={{ mb: 2, color: '#3b82f6' }} />
-                  <Typography variant="h6" fontWeight={600} color="text.primary">
-                    Loading your website...
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {deploymentUrl}
-                  </Typography>
-                </Box>
-              </Box>
-              <iframe
-                key={`iframe-${previewKey}`}
-                src={deploymentUrl}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  position: 'relative',
-                  zIndex: 2,
-                  backgroundColor: '#fff',
-                }}
-                title="Your Deployed Website"
-                onLoad={() => {
-                  const loadingEl = document.getElementById('iframe-loading')
-                  if (loadingEl) loadingEl.style.display = 'none'
-                }}
-              />
-            </>
+            <iframe
+              key={`iframe-${previewKey}-${deploymentUrl}`}
+              src={deploymentUrl}
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                backgroundColor: '#fff',
+              }}
+              title="Your Deployed Website"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            />
           ) : sandpackCode && showLivePreview ? (
             /* Priority 2: Show Sandpack live preview during build */
             <Box sx={{ height: '100%', width: '100%', overflow: 'hidden' }}>
