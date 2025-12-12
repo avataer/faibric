@@ -6,7 +6,16 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env from project root (parent of backend/)
+# .env.local takes precedence over .env for local development
+_project_root = Path(__file__).resolve().parent.parent.parent
+_env_local = _project_root / '.env.local'
+_env_main = _project_root / '.env'
+
+if _env_local.exists():
+    load_dotenv(_env_local)
+else:
+    load_dotenv(_env_main)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -113,17 +122,37 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'faibric_backend.wsgi.application'
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'faibric_db'),
-        'USER': os.getenv('DB_USER', 'faibric_user'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'faibric_password'),
-        'HOST': os.getenv('DB_HOST', 'postgres'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+# Database configuration
+import dj_database_url
+
+USE_SQLITE = os.getenv('USE_SQLITE', '0') == '1'
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if USE_SQLITE:
+    # SQLite for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+elif DATABASE_URL:
+    # Parse DATABASE_URL (for Render and other cloud providers)
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL)
+    }
+else:
+    # Fall back to individual environment variables
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'faibric_db'),
+            'USER': os.getenv('DB_USER', 'faibric_user'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'faibric_password'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

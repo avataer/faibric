@@ -104,3 +104,4 @@ yarn-error.log
 dist/
 build/
 
+.env.local
