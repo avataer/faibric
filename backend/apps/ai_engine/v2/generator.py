@@ -66,15 +66,27 @@ class AIGeneratorV2:
         prompt_template = get_prompt_for_type(app_type)
         full_prompt = prompt_template.format(user_prompt=user_prompt)
         
-        # IMPORTANT: Force San Francisco fonts in all generated apps
-        font_instruction = """
-CRITICAL STYLING REQUIREMENT:
-- Use ONLY Apple San Francisco font family in ALL CSS
-- Always set: font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
-- Apply this font to body, html, and all text elements
-- NEVER use other fonts unless explicitly requested by the user
+        # IMPORTANT: Strict requirements for generated apps
+        strict_requirements = """
+CRITICAL REQUIREMENTS - FOLLOW EXACTLY:
+
+1. FONTS: Use ONLY Apple San Francisco font family in ALL CSS
+   - Always set: font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+   - Apply this font to body, html, and all text elements
+
+2. NO PLACEHOLDERS - This is extremely important:
+   - NEVER use placeholder text like "Lorem ipsum", "[Your text here]", "Coming soon", etc.
+   - NEVER use placeholder images like "placeholder.jpg", "example.jpg", empty src attributes
+   - Instead, generate REAL, realistic content that matches the user's request
+   - Use real Unsplash image URLs from https://images.unsplash.com with relevant search terms
+   - Write actual compelling copy, descriptions, and text content
+   - If the user asks for a restaurant site, write real menu items with prices
+   - If it's a portfolio, write realistic project descriptions
+   - Make the content feel like a real, finished website
+
+3. COMPLETE CODE: Always finish all JSX tags and exports
 """
-        full_prompt = font_instruction + "\n\n" + full_prompt
+        full_prompt = strict_requirements + "\n\n" + full_prompt
         
         # Stream AI response for real-time thinking
         self._broadcast(project_id, "thinking", "Generating components...")

@@ -339,8 +339,8 @@ const LandingFlow = () => {
           </Card>
         )}
 
-        {/* Step 4: Building - Full screen split view */}
-        {step === 'building' && sessionToken && (
+        {/* Step 4 & 5: Building and Deployed - Stay in split-screen view */}
+        {(step === 'building' || step === 'deployed') && sessionToken && (
           <Box sx={{ 
             position: 'fixed', 
             top: 0, 
@@ -354,50 +354,10 @@ const LandingFlow = () => {
               initialRequest={request}
               onDeployed={(url) => {
                 setSessionData(prev => prev ? { ...prev, deployment_url: url } : { session_token: sessionToken, status: 'deployed', deployment_url: url })
-                setStep('deployed')
+                // Stay in building view - don't switch to deployed card
               }}
             />
           </Box>
-        )}
-
-        {/* Step 5: Deployed */}
-        {step === 'deployed' && (
-          <Card>
-            <CardContent sx={{ p: 4, textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ color: '#16a34a', fontWeight: 600, mb: 1 }}>
-                Your project is ready
-              </Typography>
-              <Typography variant="body1" sx={{ color: '#374151', mb: 3 }}>
-                Your app has been deployed and is live.
-              </Typography>
-              
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={() => {
-                    if (sessionData?.deployment_url) {
-                      window.open(sessionData.deployment_url, '_blank')
-                    }
-                  }}
-                  disabled={!sessionData?.deployment_url}
-                >
-                  Open Live App
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="large"
-                  onClick={() => {
-                    if (sessionData?.deployment_url) {
-                      window.open(sessionData.deployment_url, '_blank')
-                    }
-                  }}
-                >
-                  Open in New Tab
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
         )}
       </Container>
     </Box>
