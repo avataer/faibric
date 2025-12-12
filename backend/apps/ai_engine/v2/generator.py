@@ -210,14 +210,40 @@ CRITICAL STYLING REQUIREMENT:
         
         # Fallback: look for component code directly
         # If we find React code, wrap it in a components dict
-        if 'import React' in text or 'function App' in text or 'export default' in text:
-            # Extract the code
-            code_match = re.search(r'(import React[\s\S]*export default \w+;?)', text)
-            if code_match:
-                return {
-                    'title': 'Generated App',
-                    'components': {'App': code_match.group(1)}
-                }
+        if 'import React' in text or 'function App' in text or 'export default' in text or 'const App' in text:
+            # Try to extract the entire code block
+            code = text
+            # Clean up any explanation text before/after the code
+            if 'import' in code:
+                start = code.find('import')
+                code = code[start:]
+            # Find end - either export default or end of substantial code
+            if 'export default' in code:
+                end_match = re.search(r'export default \w+;?\s*$', code, re.MULTILINE)
+                if end_match:
+                    code = code[:end_match.end()]
+            
+            return {
+                'title': 'Generated App',
+                'components': {'App': code.strip()}
+            }
+        
+        # Last resort: if we have any JSX-looking content, wrap it
+        if '<' in text and '/>' in text:
+            # Wrap in a basic component
+            wrapped = f"""import React from 'react';
+
+function App() {{
+  return (
+    {text}
+  );
+}}
+
+export default App;"""
+            return {
+                'title': 'Generated App', 
+                'components': {'App': wrapped}
+            }
         
         return None
     
