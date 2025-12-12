@@ -30,6 +30,14 @@ ABSOLUTE RULES (NEVER BREAK THESE):
 9. TYPOGRAPHY: ALWAYS use Apple San Francisco font. Set on EVERY text element:
    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif"
    This is MANDATORY - NEVER use any other font unless user explicitly requests it.
+
+CONTENT RULES (EXTREMELY IMPORTANT):
+- NEVER use placeholder text: No "Lorem ipsum", "placeholder", "[Your text]", "Coming soon", "Sample", "Example"
+- NEVER use placeholder images: No "placeholder.jpg", "example.png", empty src, or via.placeholder.com
+- Generate REAL, realistic content that matches the business/site type
+- For images, use REAL Unsplash URLs: https://images.unsplash.com/photo-XXXXX?w=800
+- Write compelling, professional copy as if for a real business
+- Include realistic prices, names, descriptions, testimonials
 """
 
 

@@ -100,7 +100,14 @@ CRITICAL REQUIREMENTS - FOLLOW EXACTLY:
             with self.client.messages.stream(
                 model=self.model,
                 max_tokens=16000,
-                system="You are an expert React developer. Output ONLY valid JSON. ALWAYS use San Francisco font (-apple-system, BlinkMacSystemFont, 'SF Pro Display'). IMPORTANT: Always complete all JSX tags - never leave code incomplete.",
+                system="""You are an expert React developer. 
+CRITICAL RULES:
+1. Output ONLY valid JSON
+2. ALWAYS use San Francisco font (-apple-system, BlinkMacSystemFont, 'SF Pro Display')
+3. NEVER use placeholder content - no "Lorem ipsum", "placeholder", "[Your text]", "Coming soon"
+4. Generate REAL, compelling content that matches the user's request
+5. Use real Unsplash URLs for images (https://images.unsplash.com/photo-...)
+6. Always complete all JSX tags - never leave code incomplete""",
                 messages=[
                     {"role": "user", "content": full_prompt}
                 ],
