@@ -1,0 +1,26 @@
+# Simplified local development setup
+# Just DB and Redis - backend/frontend run natively for hot reload
+
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: faibric_db
+    environment:
+      POSTGRES_DB: faibric
+      POSTGRES_USER: faibric
+      POSTGRES_PASSWORD: faibric
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: faibric_redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

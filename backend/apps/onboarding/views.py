@@ -168,15 +168,20 @@ class VerifyMagicLinkView(APIView):
             # Generate JWT for the user
             from rest_framework_simplejwt.tokens import RefreshToken
             from django.contrib.auth import get_user_model
-            from .tasks import build_app_from_session_task
+            import threading
             
             User = get_user_model()
             user = User.objects.get(id=result['user_id'])
             
             refresh = RefreshToken.for_user(user)
             
-            # NOW we can start building - email is verified!
-            build_app_from_session_task.delay(result['session_token'])
+            # Start building in background thread (no Celery)
+            def run_build():
+                from .build_service import BuildService
+                BuildService.build_from_session(result['session_token'])
+            
+            thread = threading.Thread(target=run_build, daemon=True)
+            thread.start()
             
             return Response({
                 'success': True,
@@ -299,24 +304,15 @@ class FollowUpInputView(APIView):
 class TriggerBuildView(APIView):
     """
     Trigger app building for a session.
-    Temporarily enabled for testing while email is being configured.
-    TODO: Re-enable email verification requirement once SendGrid is set up.
+    Runs in-process (no Celery worker needed) for faster deploys.
     """
     permission_classes = [AllowAny]
     
     def post(self, request):
-        """Trigger the build process."""
-        import os
+        """Trigger the build process - runs in background thread."""
         import logging
+        import threading
         logger = logging.getLogger(__name__)
-        
-        # TEMPORARY: Allow builds without email verification for testing
-        # TODO: Uncomment this block once SendGrid is configured
-        # if os.environ.get('RENDER') or os.environ.get('PRODUCTION'):
-        #     return Response({
-        #         'error': 'Build can only be triggered after email verification',
-        #         'hint': 'Check your email for the magic link'
-        #     }, status=403)
         
         session_token = request.data.get('session_token')
         
@@ -328,27 +324,26 @@ class TriggerBuildView(APIView):
         except LandingSession.DoesNotExist:
             return Response({'error': 'Session not found'}, status=404)
         
-        try:
-            # Start the build task (DEV ONLY)
-            from .tasks import build_app_from_session_task
-            result = build_app_from_session_task.delay(session_token)
-            
-            # Update session status
-            session.status = 'building'
-            session.save()
-            
-            return Response({
-                'success': True,
-                'message': 'Build started (DEV MODE)',
-                'session_token': session_token,
-                'task_id': str(result.id) if result else None,
-            })
-        except Exception as e:
-            logger.exception(f"Failed to start build task: {e}")
-            return Response({
-                'success': False,
-                'error': f'Failed to start build: {str(e)}'
-            }, status=500)
+        # Update session status immediately
+        session.status = 'building'
+        session.save()
+        
+        # Run build in background thread (no Celery needed)
+        def run_build():
+            from .build_service import BuildService
+            try:
+                BuildService.build_from_session(session_token)
+            except Exception as e:
+                logger.exception(f"Build failed: {e}")
+        
+        thread = threading.Thread(target=run_build, daemon=True)
+        thread.start()
+        
+        return Response({
+            'success': True,
+            'message': 'Build started',
+            'session_token': session_token,
+        })
 
 
 # ============================================
