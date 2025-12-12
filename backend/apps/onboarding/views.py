@@ -346,6 +346,39 @@ class TriggerBuildView(APIView):
         })
 
 
+class StopBuildView(APIView):
+    """Stop an ongoing build."""
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        """Stop the build process."""
+        session_token = request.data.get('session_token')
+        
+        if not session_token:
+            return Response({'error': 'Session token required'}, status=400)
+        
+        try:
+            session = LandingSession.objects.get(session_token=session_token)
+        except LandingSession.DoesNotExist:
+            return Response({'error': 'Session not found'}, status=404)
+        
+        # Mark session as stopped
+        session.status = 'stopped'
+        session.save()
+        
+        # Add event
+        SessionEvent.objects.create(
+            session=session,
+            event_type='build_progress',
+            event_data={'message': 'Build stopped by user'}
+        )
+        
+        return Response({
+            'success': True,
+            'message': 'Build stopped',
+        })
+
+
 # ============================================
 # Visual Dashboard (HTML)
 # ============================================

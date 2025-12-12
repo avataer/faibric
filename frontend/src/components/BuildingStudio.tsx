@@ -8,10 +8,12 @@ import {
   IconButton,
   CircularProgress,
   Chip,
+  LinearProgress,
 } from '@mui/material'
 import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import StopIcon from '@mui/icons-material/Stop'
 import { api } from '../services/api'
 
 interface Message {
@@ -33,8 +35,10 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed }: BuildingSt
   const [isBuilding, setIsBuilding] = useState(true)
   const [buildStatus, setBuildStatus] = useState<string>('initializing')
   const [buildProgress, setBuildProgress] = useState(0)
+  const [buildPhase, setBuildPhase] = useState<string>('Starting...')
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null)
   const [previewKey, setPreviewKey] = useState(0)
+  const [isStopping, setIsStopping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Initialize with the user's request
@@ -91,6 +95,26 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed }: BuildingSt
           const progressEvents = data.events
             .filter((e: any) => e.event_type === 'build_progress' && e.event_data?.message)
             .reverse()
+          
+          // Update build phase from latest event
+          if (progressEvents.length > 0) {
+            const latestMsg = progressEvents[progressEvents.length - 1].event_data.message
+            setBuildPhase(latestMsg)
+            
+            // Calculate progress based on events
+            const totalEvents = progressEvents.length
+            if (data.status === 'deployed') {
+              setBuildProgress(100)
+            } else if (latestMsg.includes('Deploying')) {
+              setBuildProgress(85)
+            } else if (latestMsg.includes('Code generation complete')) {
+              setBuildProgress(75)
+            } else if (latestMsg.includes('Generated')) {
+              setBuildProgress(70)
+            } else {
+              setBuildProgress(Math.min(60, 10 + totalEvents * 5))
+            }
+          }
           
           setMessages(prev => {
             let updated = [...prev]
@@ -176,6 +200,23 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed }: BuildingSt
     setPreviewKey(prev => prev + 1)
   }
 
+  const handleStop = async () => {
+    setIsStopping(true)
+    try {
+      await api.post(`/api/onboarding/stop/`, { session_token: sessionToken })
+      setIsBuilding(false)
+      setMessages(prev => [...prev, {
+        id: `stop-${Date.now()}`,
+        role: 'system',
+        content: 'Build stopped. You can start a new build or make changes.',
+        timestamp: new Date(),
+      }])
+    } catch (err) {
+      console.error('Failed to stop build:', err)
+    }
+    setIsStopping(false)
+  }
+
   return (
     <Box sx={{ 
       display: 'flex', 
@@ -205,12 +246,25 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed }: BuildingSt
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             {isBuilding ? (
-              <Chip 
-                label={`Building... ${buildProgress}%`}
-                color="primary"
-                size="small"
-                icon={<CircularProgress size={14} color="inherit" />}
-              />
+              <>
+                <Chip 
+                  label={`Building... ${buildProgress}%`}
+                  color="primary"
+                  size="small"
+                  icon={<CircularProgress size={14} color="inherit" />}
+                />
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  startIcon={<StopIcon />}
+                  onClick={handleStop}
+                  disabled={isStopping}
+                  sx={{ ml: 1 }}
+                >
+                  {isStopping ? 'Stopping...' : 'Stop'}
+                </Button>
+              </>
             ) : (
               <Chip 
                 label="Deployed"
@@ -344,17 +398,39 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed }: BuildingSt
               alignItems: 'center', 
               justifyContent: 'center',
               height: '100%',
-              gap: 2,
+              gap: 3,
+              p: 4,
             }}>
-              <CircularProgress size={48} />
-              <Typography variant="h6" color="text.secondary">
-                Building your app...
+              <Box sx={{ width: '100%', maxWidth: 400 }}>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={buildProgress} 
+                  sx={{ height: 8, borderRadius: 4 }}
+                />
+              </Box>
+              <Typography variant="h5" fontWeight={600} color="text.primary">
+                {buildProgress < 30 ? 'Analyzing your request...' :
+                 buildProgress < 60 ? 'Writing code...' :
+                 buildProgress < 80 ? 'Generating components...' :
+                 buildProgress < 95 ? 'Deploying to cloud...' :
+                 'Almost ready...'}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body1" color="text.secondary">
                 {buildProgress}% complete
               </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 400, textAlign: 'center' }}>
-                Your app will appear here once it's deployed. This usually takes 2-5 minutes.
+              <Typography 
+                variant="body2" 
+                color="text.secondary" 
+                sx={{ 
+                  maxWidth: 400, 
+                  textAlign: 'center',
+                  fontFamily: 'monospace',
+                  backgroundColor: '#f5f5f5',
+                  p: 1,
+                  borderRadius: 1,
+                }}
+              >
+                {buildPhase}
               </Typography>
             </Box>
           )}

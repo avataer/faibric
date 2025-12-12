@@ -259,38 +259,38 @@ CRITICAL STYLING REQUIREMENT:
     def _extract_readable_snippet(self, full_text: str, start_from: int) -> str:
         """Extract a readable code snippet from the AI response for display"""
         new_content = full_text[start_from:]
-        if len(new_content) < 50:
+        if len(new_content) < 100:
             return None
         
-        # Look for meaningful code patterns to show
-        patterns = [
-            # Function definitions
-            (r'(const \w+ = \([^)]*\) => \{)', 'function'),
-            # Component definitions
-            (r'(function \w+\([^)]*\) \{)', 'function'),
-            # JSX elements with content
-            (r'(<\w+[^>]*>[^<]{10,50})', 'element'),
-            # State hooks
-            (r"(useState\([^)]+\))", 'state'),
-            # Style definitions
-            (r'(style=\{\{[^}]{20,60})', 'style'),
-            # Return statements
-            (r'(return \([^)]{0,30})', 'return'),
-        ]
+        # Clean the content first - unescape JSON
+        clean = new_content.replace('\\n', '\n').replace('\\"', '"').replace('\\\\', '\\')
         
-        for pattern, ptype in patterns:
-            match = re.search(pattern, new_content)
-            if match:
-                snippet = match.group(1)
-                # Clean up and truncate
-                snippet = snippet.replace('\\n', ' ').strip()
-                if len(snippet) > 80:
-                    snippet = snippet[:77] + '...'
-                return f"[{ptype}] {snippet}"
+        # Extract meaningful code lines
+        lines = [l.strip() for l in clean.split('\n') if l.strip()]
         
-        # Fallback: show character progress
+        # Find interesting lines
+        for line in lines[-10:]:  # Check recent lines
+            # Skip JSON structure
+            if line.startswith('{') or line.startswith('}') or line.startswith('"'):
+                continue
+            # Skip very short lines
+            if len(line) < 15:
+                continue
+            # Found a code line
+            if len(line) > 60:
+                line = line[:57] + '...'
+            return line
+        
+        # Fallback: progress indicator
         total = len(full_text)
-        return f"Writing code... {total} chars"
+        if total < 2000:
+            return "Setting up component structure..."
+        elif total < 5000:
+            return "Writing UI components..."
+        elif total < 8000:
+            return "Adding styles and interactions..."
+        else:
+            return "Finalizing code..."
     
     def _broadcast(self, project_id: int, msg_type: str, content: str):
         """Broadcast progress message to Redis cache"""
