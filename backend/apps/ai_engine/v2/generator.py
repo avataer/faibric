@@ -113,12 +113,6 @@ CRITICAL STYLING REQUIREMENT:
             result_text = full_response
             self._add_session_event(session, f"✅ Generated {len(result_text)} characters of code")
             
-            result_text = response.content[0].text
-            
-            # Log token usage
-            if hasattr(response, 'usage') and response.usage:
-                print(f"🔢 Tokens - Input: {response.usage.input_tokens}, Output: {response.usage.output_tokens}")
-            
             # Clean and parse JSON
             result = self._parse_json_response(result_text)
             
