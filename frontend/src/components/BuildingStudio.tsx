@@ -42,7 +42,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
   const [generatedCode, setGeneratedCode] = useState<string | null>(null)
   const [previewKey, setPreviewKey] = useState(0)
   const [isStopping, setIsStopping] = useState(false)
-  const [showLivePreview, setShowLivePreview] = useState(true)
+  const [showLivePreview, setShowLivePreview] = useState(false) // Default to deployed site when ready
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Initialize with the user's request
@@ -397,9 +397,9 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
             </Typography>
             {deploymentUrl && (
               <Chip
-                label="Switch to deployed"
+                label={showLivePreview ? "View deployed site" : "View code preview"}
                 size="small"
-                variant={showLivePreview ? "outlined" : "filled"}
+                variant="outlined"
                 onClick={() => setShowLivePreview(!showLivePreview)}
                 sx={{ cursor: 'pointer' }}
               />
@@ -423,8 +423,54 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
 
         {/* Preview Content */}
         <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-          {/* Show live Sandpack preview while code is available */}
-          {sandpackCode && showLivePreview ? (
+          {/* Priority 1: Show deployed site when available */}
+          {deploymentUrl && !showLivePreview ? (
+            <>
+              <Box 
+                id="iframe-loading"
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: '#f9fafb',
+                  zIndex: 1,
+                }}
+              >
+                <Box sx={{ textAlign: 'center' }}>
+                  <CircularProgress size={48} sx={{ mb: 2, color: '#3b82f6' }} />
+                  <Typography variant="h6" fontWeight={600} color="text.primary">
+                    Loading your website...
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    {deploymentUrl}
+                  </Typography>
+                </Box>
+              </Box>
+              <iframe
+                key={`iframe-${previewKey}`}
+                src={deploymentUrl}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  position: 'relative',
+                  zIndex: 2,
+                  backgroundColor: '#fff',
+                }}
+                title="Your Deployed Website"
+                onLoad={() => {
+                  const loadingEl = document.getElementById('iframe-loading')
+                  if (loadingEl) loadingEl.style.display = 'none'
+                }}
+              />
+            </>
+          ) : sandpackCode && showLivePreview ? (
+            /* Priority 2: Show Sandpack live preview during build */
             <Box sx={{ height: '100%', width: '100%', overflow: 'hidden' }}>
               <SandpackProvider
                 key={previewKey}
@@ -452,49 +498,8 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
                 />
               </SandpackProvider>
             </Box>
-          ) : deploymentUrl && !showLivePreview ? (
-            <>
-              {/* Show deployed iframe */}
-              <Box sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#f9fafb',
-                zIndex: 1,
-              }} id="iframe-loading">
-                <Box sx={{ textAlign: 'center' }}>
-                  <CircularProgress size={40} sx={{ mb: 2 }} />
-                  <Typography variant="body1" color="text.secondary">
-                    Loading deployed app...
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {deploymentUrl}
-                  </Typography>
-                </Box>
-              </Box>
-              <iframe
-                key={`iframe-${previewKey}`}
-                src={deploymentUrl}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  position: 'relative',
-                  zIndex: 2,
-                }}
-                title="App Preview"
-                onLoad={() => {
-                  const loadingEl = document.getElementById('iframe-loading')
-                  if (loadingEl) loadingEl.style.display = 'none'
-                }}
-              />
-            </>
           ) : (
+            /* Priority 3: Show animated progressive preview during build */
             <ProgressivePreview 
               progress={buildProgress}
               phase={buildPhase}
