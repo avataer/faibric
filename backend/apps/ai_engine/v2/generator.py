@@ -54,13 +54,13 @@ class AIGeneratorV2:
         """
         
         # Broadcast: Starting
-        self._broadcast(project_id, "thinking", "🧠 Analyzing your request...")
-        self._add_session_event(session, "🧠 Analyzing your request...")
+        self._broadcast(project_id, "thinking", "Analyzing your request...")
+        self._add_session_event(session, "Analyzing request...")
         
         # Classify the prompt
         app_type = self.classify_prompt(user_prompt)
-        self._broadcast(project_id, "action", f"📋 Building a {app_type}...")
-        self._add_session_event(session, f"📋 Identified app type: {app_type}")
+        self._broadcast(project_id, "action", f"Building a {app_type}...")
+        self._add_session_event(session, f"App type: {app_type}")
         
         # Get the specialized prompt
         prompt_template = get_prompt_for_type(app_type)
@@ -77,8 +77,8 @@ CRITICAL STYLING REQUIREMENT:
         full_prompt = font_instruction + "\n\n" + full_prompt
         
         # Stream AI response for real-time thinking
-        self._broadcast(project_id, "thinking", "🎨 Generating components...")
-        self._add_session_event(session, "🎨 Claude Opus 4.5 is writing your code...")
+        self._broadcast(project_id, "thinking", "Generating components...")
+        self._add_session_event(session, "Claude Opus 4.5 generating code...")
         
         try:
             # Use streaming to get real-time updates
@@ -95,23 +95,28 @@ CRITICAL STYLING REQUIREMENT:
                 temperature=0.7
             ) as stream:
                 chunk_count = 0
+                last_shown_length = 0
+                
                 for text in stream.text_stream:
                     full_response += text
                     chunk_count += 1
                     
-                    # Show progress every 20 chunks
-                    if chunk_count % 20 == 0:
-                        progress_msg = f"💭 Writing code... ({len(full_response)} chars)"
-                        self._add_session_event(session, progress_msg)
-                    
-                    # Show first substantial content
-                    if not thinking_shown and len(full_response) > 100:
-                        thinking_shown = True
-                        preview = full_response[:80].replace('\n', ' ')
-                        self._add_session_event(session, f"✍️ Started: {preview}...")
+                    # Show actual code every 40 chunks (roughly every 400-800 chars)
+                    if chunk_count % 40 == 0:
+                        # Get the new code since last update
+                        new_code = full_response[last_shown_length:]
+                        # Clean it up for display - show last ~200 chars
+                        if len(new_code) > 200:
+                            display_code = "..." + new_code[-200:]
+                        else:
+                            display_code = new_code
+                        # Remove excessive whitespace for cleaner display
+                        display_code = ' '.join(display_code.split())[:150]
+                        self._add_session_event(session, display_code)
+                        last_shown_length = len(full_response)
             
             result_text = full_response
-            self._add_session_event(session, f"✅ Generated {len(result_text)} characters of code")
+            self._add_session_event(session, f"Generated {len(result_text)} characters")
             
             # Clean and parse JSON
             result = self._parse_json_response(result_text)
@@ -127,7 +132,7 @@ CRITICAL STYLING REQUIREMENT:
             result['components'] = self._clean_components(result['components'])
             result['app_type'] = app_type
             
-            self._broadcast(project_id, "success", f"✅ Generated {len(result['components'])} component(s)")
+            self._broadcast(project_id, "success", f"Generated {len(result['components'])} component(s)")
             
             return result
             
@@ -146,7 +151,7 @@ CRITICAL STYLING REQUIREMENT:
         Returns the modified code.
         """
         
-        self._broadcast(project_id, "thinking", f"🔧 Applying changes: {user_request[:50]}...")
+        self._broadcast(project_id, "thinking", f"Applying changes: {user_request[:50]}...")
         
         prompt = MODIFY_PROMPT.format(
             current_code=current_code,
@@ -167,7 +172,7 @@ CRITICAL STYLING REQUIREMENT:
             result = response.content[0].text
             result = self._strip_code_markers(result)
             
-            self._broadcast(project_id, "success", "✅ Changes applied")
+            self._broadcast(project_id, "success", "Changes applied")
             
             return result
             

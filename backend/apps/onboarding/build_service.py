@@ -40,10 +40,10 @@ class BuildService:
             else:
                 project = session.converted_to_project
             
-            cls._add_event(session, '🚀 Starting build...')
+            cls._add_event(session, 'Starting build...')
             
             # Step 2: Generate with AI (streaming)
-            cls._add_event(session, '🤖 AI is analyzing your request...')
+            cls._add_event(session, 'AI analyzing request...')
             
             generator = AIGeneratorV2()
             result = generator.generate_app(
@@ -54,10 +54,10 @@ class BuildService:
             
             # Store generated code
             cls._store_generated_code(project, result)
-            cls._add_event(session, '✅ Code generated!')
+            cls._add_event(session, 'Code generation complete')
             
             # Step 3: Deploy to Render
-            cls._add_event(session, '☁️ Deploying to Render.com...')
+            cls._add_event(session, 'Deploying to Render...')
             
             deployer = RenderDeployer()
             deploy_result = deployer.deploy_react_app(project)
@@ -71,16 +71,16 @@ class BuildService:
             session.status = 'deployed'
             session.save()
             
-            cls._add_event(session, f"🎉 Live at: {deploy_result.get('url')}")
+            cls._add_event(session, f"Live: {deploy_result.get('url')}")
             
-            logger.info(f"✅ Build complete: {deploy_result.get('url')}")
+            logger.info(f"Build complete: {deploy_result.get('url')}")
             return {'success': True, 'url': deploy_result.get('url')}
             
         except Exception as e:
             logger.exception(f"Build failed: {e}")
             try:
                 session = LandingSession.objects.get(session_token=session_token)
-                cls._add_event(session, f"❌ Build failed: {str(e)[:200]}")
+                cls._add_event(session, f"Build failed: {str(e)[:200]}")
                 session.status = 'failed'
                 session.save()
             except:
@@ -137,7 +137,7 @@ class BuildService:
         session.converted_to_project = project
         session.save()
         
-        cls._add_event(session, f"📁 Created project: {clean_name[:30]}...")
+        cls._add_event(session, f"Created project: {clean_name[:30]}")
         return project
     
     @classmethod
