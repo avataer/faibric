@@ -18,6 +18,7 @@ from .views import (
     FollowUpInputView,
     TriggerBuildView,
     StopBuildView,
+    ModifyBuildView,
     SessionDetailView,
     InputAnalyticsView,
     AllInputsView,
@@ -43,6 +44,7 @@ urlpatterns = [
     # Build trigger
     path('build/', TriggerBuildView.as_view(), name='trigger-build'),
     path('stop/', StopBuildView.as_view(), name='stop-build'),
+    path('modify/', ModifyBuildView.as_view(), name='modify-build'),
     
     # Visual dashboard
     path('admin/funnel/', FunnelDashboardView.as_view(), name='funnel-dashboard'),

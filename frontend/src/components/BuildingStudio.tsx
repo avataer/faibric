@@ -187,16 +187,41 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     }
 
     setMessages(prev => [...prev, userMessage])
+    const newRequest = input
     setInput('')
 
-    setTimeout(() => {
+    // Add assistant acknowledgment
+    setMessages(prev => [...prev, {
+      id: `assistant-${Date.now()}`,
+      role: 'assistant',
+      content: "Got it! I'm rebuilding your website with these changes...",
+      timestamp: new Date(),
+    }])
+
+    try {
+      // Call the modify endpoint to trigger a new build
+      await api.post('/api/onboarding/modify/', {
+        session_token: sessionToken,
+        request: newRequest,
+      })
+      
+      // Reset state for new build
+      setIsBuilding(true)
+      setBuildProgress(0)
+      setBuildPhase('Starting new build...')
+      setDeploymentUrl(null)
+      setGeneratedCode(null)
+      setShowLivePreview(false)
+      
+    } catch (err) {
+      console.error('Failed to modify build:', err)
       setMessages(prev => [...prev, {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: "I'll incorporate that change. The preview will update shortly.",
+        id: `error-${Date.now()}`,
+        role: 'system',
+        content: 'Failed to start rebuild. Please try again.',
         timestamp: new Date(),
       }])
-    }, 1000)
+    }
   }
 
   const refreshPreview = () => {
@@ -358,10 +383,10 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
         }}>
           <TextField
             fullWidth
-            placeholder="Ask for changes or additions..."
+            placeholder={isBuilding ? "Building in progress..." : "Describe changes or request a new website..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            onKeyPress={(e) => e.key === 'Enter' && !isBuilding && handleSend()}
             size="small"
             disabled={isBuilding}
           />

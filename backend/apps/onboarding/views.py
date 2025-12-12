@@ -317,6 +317,71 @@ class FollowUpInputView(APIView):
         return Response({'status': 'logged'})
 
 
+class ModifyBuildView(APIView):
+    """
+    Modify and rebuild - user sends a new request to change/replace the website.
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        """Update request and trigger new build."""
+        import logging
+        import threading
+        logger = logging.getLogger(__name__)
+        
+        session_token = request.data.get('session_token')
+        new_request = request.data.get('request')
+        
+        if not session_token or not new_request:
+            return Response({'error': 'Session token and request required'}, status=400)
+        
+        try:
+            session = LandingSession.objects.get(session_token=session_token)
+        except LandingSession.DoesNotExist:
+            return Response({'error': 'Session not found'}, status=404)
+        
+        # Update the session with new request
+        session.initial_request = new_request
+        session.status = 'building'
+        session.build_progress = 0
+        session.deployment_url = None  # Clear old deployment
+        session.save()
+        
+        # Clear old project if exists
+        if session.converted_to_project:
+            old_project = session.converted_to_project
+            session.converted_to_project = None
+            session.save()
+            # Keep old project in DB for reference but mark as replaced
+        
+        # Log the modification
+        InputTracker.log_follow_up(session, new_request, 'modification_request')
+        
+        # Add event
+        SessionEvent.objects.create(
+            session=session,
+            event_type='build_progress',
+            event_data={'message': 'Starting new build with updated request...'}
+        )
+        
+        # Run build in background thread
+        def run_build():
+            from .build_service import BuildService
+            try:
+                BuildService.build_from_session(session_token)
+            except Exception as e:
+                logger.exception(f"Modification build failed: {e}")
+        
+        thread = threading.Thread(target=run_build, daemon=True)
+        thread.start()
+        
+        return Response({
+            'success': True,
+            'message': 'Rebuilding with new request',
+            'session_token': session_token,
+        })
+
+
 class TriggerBuildView(APIView):
     """
     Trigger app building for a session.
