@@ -9,6 +9,7 @@ from .views import (
     LibraryItemViewSet,
     ConstraintViewSet,
     CodeGenerationViewSet,
+    LibraryStatsView,
 )
 
 router = DefaultRouter()
@@ -16,6 +17,7 @@ router.register(r'categories', LibraryCategoryViewSet, basename='library-categor
 router.register(r'items', LibraryItemViewSet, basename='library-items')
 router.register(r'constraints', ConstraintViewSet, basename='constraints')
 router.register(r'generate', CodeGenerationViewSet, basename='code-generation')
+router.register(r'admin/stats', LibraryStatsView, basename='library-stats')
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -276,6 +276,110 @@ class ConstraintViewSet(TenantMixin, viewsets.ModelViewSet):
         })
 
 
+class LibraryStatsView(viewsets.ViewSet):
+    """
+    Library statistics for Faibric admin.
+    Shows component reuse, popular items, and cost savings.
+    """
+    permission_classes = []  # Open for admin access
+    
+    @action(detail=False, methods=['get'], url_path='overview')
+    def overview(self, request):
+        """Get library overview stats."""
+        from django.db.models import Sum, Count
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        total_items = LibraryItem.objects.filter(is_active=True).count()
+        total_usage = LibraryItem.objects.aggregate(total=Sum('usage_count'))['total'] or 0
+        
+        # Top 10 most reused components
+        top_reused = list(
+            LibraryItem.objects.filter(is_active=True, usage_count__gt=0)
+            .order_by('-usage_count')
+            .values('id', 'name', 'item_type', 'usage_count', 'quality_score', 'keywords')[:10]
+        )
+        
+        # Recent additions (last 7 days)
+        week_ago = timezone.now() - timedelta(days=7)
+        recent_items = LibraryItem.objects.filter(created_at__gte=week_ago).count()
+        
+        # Usage by type
+        usage_by_type = list(
+            LibraryItem.objects.filter(is_active=True)
+            .values('item_type')
+            .annotate(count=Count('id'), total_usage=Sum('usage_count'))
+            .order_by('-total_usage')
+        )
+        
+        # Estimated cost savings (rough: each reuse saves ~$0.05 in API calls)
+        estimated_savings = total_usage * 0.05
+        
+        return Response({
+            'total_items': total_items,
+            'total_reuses': total_usage,
+            'estimated_cost_savings_usd': round(estimated_savings, 2),
+            'new_items_this_week': recent_items,
+            'top_reused_components': top_reused,
+            'usage_by_type': usage_by_type,
+        })
+    
+    @action(detail=False, methods=['get'], url_path='items')
+    def all_items(self, request):
+        """List all library items with full details for admin."""
+        items = LibraryItem.objects.filter(is_active=True).order_by('-usage_count', '-created_at')
+        
+        return Response({
+            'count': items.count(),
+            'items': [
+                {
+                    'id': str(item.id),
+                    'name': item.name,
+                    'item_type': item.item_type,
+                    'language': item.language,
+                    'usage_count': item.usage_count,
+                    'quality_score': item.quality_score,
+                    'keywords': item.keywords,
+                    'description': item.description[:200] if item.description else '',
+                    'code_preview': item.code[:500] if item.code else '',
+                    'last_used_at': item.last_used_at,
+                    'created_at': item.created_at,
+                    'source': item.source,
+                }
+                for item in items
+            ]
+        })
+    
+    @action(detail=True, methods=['get'], url_path='detail')
+    def item_detail(self, request, pk=None):
+        """Get full details of a specific library item."""
+        try:
+            item = LibraryItem.objects.get(id=pk)
+            return Response({
+                'id': str(item.id),
+                'name': item.name,
+                'slug': item.slug,
+                'item_type': item.item_type,
+                'language': item.language,
+                'code': item.code,
+                'description': item.description,
+                'usage_example': item.usage_example,
+                'documentation': item.documentation,
+                'keywords': item.keywords,
+                'tags': item.tags,
+                'dependencies': item.dependencies,
+                'quality_score': item.quality_score,
+                'usage_count': item.usage_count,
+                'last_used_at': item.last_used_at,
+                'source': item.source,
+                'is_public': item.is_public,
+                'created_at': item.created_at,
+                'updated_at': item.updated_at,
+            })
+        except LibraryItem.DoesNotExist:
+            return Response({'error': 'Item not found'}, status=404)
+
+
 class CodeGenerationViewSet(TenantMixin, viewsets.ViewSet):
     """
     API viewset for code generation with research.
