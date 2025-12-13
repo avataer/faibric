@@ -306,3 +306,23 @@ class UserSummary(models.Model):
     def __str__(self):
         return f"{self.session_token} - {self.user_type}"
 
+
+# Import extended dashboard models
+from .models_dashboard import (
+    CustomerHealthScore,
+    UserSegment,
+    Cohort,
+    AlertRule,
+    Alert,
+    ScheduledReport,
+    GeneratedReport,
+    PromptAnalytics,
+    AIInsight,
+    ActivityFeed,
+    SystemMetric,
+    BuildQueueItem,
+    FunnelSnapshot,
+    ComponentGapAnalysis,
+    AdminConfig,
+)
+

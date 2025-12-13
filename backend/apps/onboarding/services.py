@@ -95,6 +95,18 @@ class OnboardingService:
             event_data={'request': initial_request[:500]},
         )
         
+        # Log to activity feed
+        try:
+            from apps.analytics.services import ActivityFeedService
+            ActivityFeedService.log_activity(
+                activity_type='new_user',
+                title=f'New user: {initial_request[:50]}...',
+                session_token=session_token,
+                severity='info',
+            )
+        except Exception:
+            pass
+        
         return session
     
     @staticmethod

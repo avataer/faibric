@@ -26,3 +26,26 @@ Attempting auto-restart...
 [2025-12-13 08:33:34.496785] Backend Service RECOVERED
 The Faibric backend has been automatically restarted and is now healthy.
 Time: 2025-12-13 08:33:34.416604
+
+============================================================
+[2025-12-13 11:10:38.548383] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-13 11:10:38.443154
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-13 11:15:29.847899] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-13 11:15:29.754258
+
+============================================================
+[2025-12-13 11:17:29.971457] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-13 11:17:29.883708
+
+Attempting auto-restart...

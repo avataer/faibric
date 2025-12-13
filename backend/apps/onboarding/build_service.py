@@ -8,6 +8,22 @@ from django.db import connection
 logger = logging.getLogger(__name__)
 
 
+def log_activity(activity_type, title, session=None, severity='info', description=''):
+    """Log to activity feed (fails silently)."""
+    try:
+        from apps.analytics.services import ActivityFeedService
+        ActivityFeedService.log_activity(
+            activity_type=activity_type,
+            title=title,
+            description=description,
+            session_token=session.session_token if session else '',
+            email=session.email if session else '',
+            severity=severity,
+        )
+    except Exception as e:
+        logger.warning(f"Failed to log activity: {e}")
+
+
 class BuildService:
     """
     Handles the complete build flow:
@@ -41,6 +57,7 @@ class BuildService:
                 project = session.converted_to_project
             
             cls._add_event(session, 'Starting build...')
+            log_activity('build_started', f'Build started: {project.name[:40]}', session)
             
             # Step 2: Generate with AI (streaming)
             cls._add_event(session, 'AI analyzing request...')
@@ -72,6 +89,7 @@ class BuildService:
             session.save()
             
             cls._add_event(session, f"Live: {deploy_result.get('url')}")
+            log_activity('deployed', f'Deployed: {project.name[:40]}', session, 'success', deploy_result.get('url', ''))
             
             logger.info(f"Build complete: {deploy_result.get('url')}")
             return {'success': True, 'url': deploy_result.get('url')}
