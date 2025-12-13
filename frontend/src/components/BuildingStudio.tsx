@@ -63,9 +63,12 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     ])
   }, [initialRequest])
 
-  // Poll for build status
+  // Poll for build status - only while building
   useEffect(() => {
     if (!sessionToken) return
+    
+    // Don't poll if we're deployed and not rebuilding
+    if (!isBuilding && deploymentUrl) return
 
     const pollStatus = async () => {
       try {
@@ -169,7 +172,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     pollStatus()
     const interval = setInterval(pollStatus, 2000)
     return () => clearInterval(interval)
-  }, [sessionToken, deploymentUrl, onDeployed]) // Note: generatedCode intentionally excluded to prevent feedback loop
+  }, [sessionToken, deploymentUrl, onDeployed, isBuilding]) // Stop polling when deployed
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -455,7 +458,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
           {/* Priority 1: Show deployed site when available */}
           {deploymentUrl && !showLivePreview ? (
             <iframe
-              key={`iframe-${previewKey}-${deploymentUrl}`}
+              key={`iframe-${deploymentUrl}`}
               src={deploymentUrl}
               style={{
                 width: '100%',

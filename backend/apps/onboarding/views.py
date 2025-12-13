@@ -401,6 +401,7 @@ class ModifyBuildView(APIView):
             def run_modification():
                 from apps.ai_engine.v2.generator import AIGeneratorV2
                 from apps.deployment.render_deployer import RenderDeployer
+                from .models import UserInput
                 
                 try:
                     project = session.converted_to_project
@@ -415,6 +416,32 @@ class ModifyBuildView(APIView):
                     except:
                         current_code = str(project.frontend_code)
                     
+                    # BUILD FULL CLIENT CONTEXT - everything the client has ever said
+                    context_parts = []
+                    
+                    # 1. Original request (most important!)
+                    context_parts.append(f"ORIGINAL CLIENT REQUEST: {session.initial_request}")
+                    
+                    # 2. Project description if different
+                    if project.description and project.description != session.initial_request:
+                        context_parts.append(f"PROJECT DESCRIPTION: {project.description}")
+                    
+                    # 3. All follow-up messages from this session
+                    follow_ups = UserInput.objects.filter(
+                        session=session,
+                        input_type='follow_up'
+                    ).order_by('created_at')
+                    
+                    if follow_ups.exists():
+                        context_parts.append("PREVIOUS MESSAGES FROM CLIENT:")
+                        for fu in follow_ups:
+                            context_parts.append(f"  - {fu.content}")
+                    
+                    # 4. Current modification request
+                    context_parts.append(f"CURRENT MODIFICATION REQUEST: {user_request}")
+                    
+                    full_context = "\n".join(context_parts)
+                    
                     # Modify with AI (quick!)
                     SessionEvent.objects.create(
                         session=session,
@@ -425,7 +452,7 @@ class ModifyBuildView(APIView):
                     generator = AIGeneratorV2()
                     new_code = generator.modify_app(
                         current_code=current_code,
-                        user_request=user_request,
+                        user_request=full_context,  # Pass FULL context, not just modification
                         project_id=project.id
                     )
                     

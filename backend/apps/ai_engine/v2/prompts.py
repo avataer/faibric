@@ -182,33 +182,30 @@ Generate now:"""
 
 
 # Modification prompt for quick updates
-MODIFY_PROMPT = """You are an expert React developer. Modify or completely rewrite this component based on the user's request.
+MODIFY_PROMPT = """You are an expert React developer. You are making a MODIFICATION to an existing website.
 
-CURRENT CODE:
+CURRENT CODE (the existing website to modify):
 {current_code}
 
-USER REQUEST:
+CLIENT CONTEXT AND MODIFICATION REQUEST:
 {user_request}
+
+CRITICAL UNDERSTANDING:
+- The "ORIGINAL CLIENT REQUEST" tells you what the website is FOR (e.g., stocks trader, hairdresser, etc.)
+- The "CURRENT MODIFICATION REQUEST" tells you what CHANGE to make
+- You must KEEP the website's purpose and content, only applying the requested change
+- Example: If original was "stocks trader website" and modification is "make background red",
+  you keep ALL the stocks trading content and just change the background color to red
 
 ABSOLUTE RULES:
 1. Return ONLY the code - no markdown, no backticks, no explanation
-2. Use ONLY inline styles
-3. For STOCK/FINANCIAL data: Use the Faibric API:
-   fetch('http://localhost:8000/api/stocks/?symbols=AAPL,GOOGL,MSFT,TSLA,AMZN')
-   Response: {{ stocks: [{{ symbol, price, change, changePercent, marketState }}] }}
-4. For OTHER data: hardcode realistic values in useState
-5. If user wants something completely different, generate a NEW component from scratch
-6. Always include loading states for API calls
+2. Use ONLY inline styles  
+3. KEEP all existing functionality and content unless explicitly asked to remove it
+4. Only change what the CURRENT MODIFICATION REQUEST asks for
+5. Maintain the website's original purpose and theme
+6. Use Apple San Francisco fonts: fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif"
 
-STOCK API PATTERN:
-const [stocks, setStocks] = useState([]);
-useEffect(() => {{
-  fetch('http://localhost:8000/api/stocks/?symbols=AAPL,GOOGL')
-    .then(r => r.json())
-    .then(d => setStocks(d.stocks));
-}}, []);
-
-Return ONLY the complete component code, starting with import and ending with export:"""
+Return ONLY the complete modified component code, starting with import and ending with export:"""
 
 
 def get_prompt_for_type(app_type: str) -> str:
