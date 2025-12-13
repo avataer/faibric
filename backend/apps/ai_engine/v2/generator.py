@@ -206,12 +206,11 @@ CRITICAL REQUIREMENTS - FOLLOW EXACTLY:
 """
         full_prompt = strict_requirements + "\n\n" + full_prompt
         
-        # Search code library for reusable components
-        self._add_session_event(session, "Searching code library...")
+        # Search code library for reusable components (internal - no client message)
         library_context = self.build_library_context(user_prompt)
         if library_context:
             full_prompt = full_prompt + library_context
-            self._add_session_event(session, "Found reusable components")
+            logger.info(f"Found reusable components for project {project_id}")
         
         # Stream AI response for real-time thinking
         self._broadcast(project_id, "thinking", "Generating components...")
