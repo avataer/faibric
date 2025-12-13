@@ -123,18 +123,42 @@ class CodeLibraryMixin:
 
 class AIGeneratorV2(CodeLibraryMixin):
     """
-    Single-shot app generator using Anthropic Claude Opus 4.5
+    Single-shot app generator using Anthropic Claude.
+    Uses smart model selection:
+    - Opus 4.5 for NEW code generation
+    - Haiku for classification, summaries, and reusing existing code
     """
+    
+    # Model tiers
+    EXPENSIVE_MODEL = "claude-sonnet-4-20250514"  # Opus 4.5 - for new code
+    CHEAP_MODEL = "claude-3-5-haiku-20241022"     # Haiku - for everything else
     
     def __init__(self, model: str = None):
         self.client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        self.model = model or "claude-sonnet-4-20250514"  # Claude Opus 4.5
+        self.model = model or self.EXPENSIVE_MODEL
+        self.session_token = None  # Set by caller for cost tracking
+    
+    def _track_usage(self, model: str, input_tokens: int, output_tokens: int, 
+                     task_type: str, success: bool = True):
+        """Track API usage for cost analysis."""
+        try:
+            from apps.analytics.cost_tracker import APIUsageTracker
+            APIUsageTracker.log_usage(
+                session_token=self.session_token,
+                model=model,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                task_type=task_type,
+                success=success,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to track usage: {e}")
     
     def classify_prompt(self, user_prompt: str) -> str:
-        """Quickly classify what type of app the user wants"""
+        """Quickly classify what type of app the user wants - uses CHEAP model"""
         try:
             response = self.client.messages.create(
-                model="claude-sonnet-4-20250514",  # Use Haiku for fast classification
+                model=self.CHEAP_MODEL,  # Use cheap model for classification
                 max_tokens=20,
                 messages=[
                     {"role": "user", "content": CLASSIFY_PROMPT.format(prompt=user_prompt)}
@@ -143,13 +167,21 @@ class AIGeneratorV2(CodeLibraryMixin):
             )
             result = response.content[0].text.strip().lower()
             
+            # Track usage
+            self._track_usage(
+                model=self.CHEAP_MODEL,
+                input_tokens=response.usage.input_tokens,
+                output_tokens=response.usage.output_tokens,
+                task_type='classify',
+            )
+            
             # Validate result
             valid_types = ['website', 'tool', 'dashboard', 'form', 'game', 'webapp']
             if result in valid_types:
                 return result
             return 'website'  # Default
         except Exception as e:
-            print(f"Classification error: {e}")
+            logger.error(f"Classification error: {e}")
             return 'website'
     
     def generate_app(
@@ -208,13 +240,26 @@ CRITICAL REQUIREMENTS - FOLLOW EXACTLY:
         
         # Search code library for reusable components (internal - no client message)
         library_context = self.build_library_context(user_prompt)
-        if library_context:
+        has_library_match = bool(library_context)
+        
+        if has_library_match:
             full_prompt = full_prompt + library_context
             logger.info(f"Found reusable components for project {project_id}")
         
+        # SMART MODEL SELECTION:
+        # - If library has similar code -> use cheap model to customize
+        # - If generating from scratch -> use expensive model
+        if has_library_match:
+            generation_model = self.CHEAP_MODEL
+            self._add_session_event(session, "Customizing existing components...")
+            logger.info(f"Using cheap model (library match found)")
+        else:
+            generation_model = self.EXPENSIVE_MODEL
+            self._add_session_event(session, "Generating new components...")
+            logger.info(f"Using expensive model (no library match)")
+        
         # Stream AI response for real-time thinking
         self._broadcast(project_id, "thinking", "Generating components...")
-        self._add_session_event(session, "Claude Opus 4.5 generating code...")
         
         try:
             # Use streaming to get real-time updates
@@ -222,7 +267,7 @@ CRITICAL REQUIREMENTS - FOLLOW EXACTLY:
             thinking_shown = False
             
             with self.client.messages.stream(
-                model=self.model,
+                model=generation_model,
                 max_tokens=16000,
                 system="""You are an expert React developer. 
 CRITICAL RULES:
@@ -257,6 +302,18 @@ CRITICAL RULES:
             
             result_text = full_response
             self._add_session_event(session, f"Generated {len(result_text)} characters")
+            
+            # Track API usage (estimate tokens from character count)
+            # Roughly 4 chars per token for code
+            estimated_input_tokens = len(full_prompt) // 4
+            estimated_output_tokens = len(result_text) // 4
+            self._track_usage(
+                model=generation_model,
+                input_tokens=estimated_input_tokens,
+                output_tokens=estimated_output_tokens,
+                task_type='generate_new' if not has_library_match else 'reuse',
+                success=True,
+            )
             
             # Clean and parse JSON
             result = self._parse_json_response(result_text)

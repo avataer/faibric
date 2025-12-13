@@ -221,3 +221,88 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.distinct_id} ({self.tenant.name})"
 
+
+class APIUsageLog(models.Model):
+    """
+    Track AI API usage for cost analysis.
+    Every API call is logged with tokens and cost.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Link to session/user
+    session_token = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    user_id = models.IntegerField(blank=True, null=True, db_index=True)
+    
+    # API call details
+    model = models.CharField(max_length=100)
+    task_type = models.CharField(max_length=50, db_index=True)  # generate_new, modify, summarize, etc.
+    
+    # Token usage
+    input_tokens = models.IntegerField(default=0)
+    output_tokens = models.IntegerField(default=0)
+    
+    # Cost in USD
+    cost = models.DecimalField(max_digits=10, decimal_places=6, default=0)
+    
+    # Success tracking
+    success = models.BooleanField(default=True)
+    error_message = models.TextField(blank=True)
+    
+    # Extra metadata
+    metadata = models.JSONField(default=dict, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['session_token', 'created_at']),
+            models.Index(fields=['user_id', 'created_at']),
+            models.Index(fields=['model', 'created_at']),
+            models.Index(fields=['task_type', 'created_at']),
+            models.Index(fields=['created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.model} - {self.task_type} - ${self.cost}"
+
+
+class UserSummary(models.Model):
+    """
+    AI-generated summary of user activity and preferences.
+    Updated periodically by cheap AI model.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Link to session
+    session_token = models.CharField(max_length=100, unique=True, db_index=True)
+    
+    # User info extracted from chats
+    user_type = models.CharField(max_length=100, blank=True)  # e.g., "stocks trader", "hairdresser"
+    user_needs = models.TextField(blank=True)  # What they want
+    preferences = models.JSONField(default=dict, blank=True)  # Extracted preferences
+    
+    # Experience summary
+    total_builds = models.IntegerField(default=0)
+    successful_builds = models.IntegerField(default=0)
+    total_modifications = models.IntegerField(default=0)
+    
+    # AI-generated summary of their journey
+    journey_summary = models.TextField(blank=True)
+    satisfaction_score = models.FloatField(null=True, blank=True)  # 0-100
+    
+    # All messages from this user (for context)
+    all_messages = models.JSONField(default=list)
+    
+    # Cost tracking
+    total_cost = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-updated_at']
+    
+    def __str__(self):
+        return f"{self.session_token} - {self.user_type}"
+
