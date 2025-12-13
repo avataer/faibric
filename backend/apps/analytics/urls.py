@@ -18,11 +18,46 @@ def admin_dashboard_view(request):
     return HttpResponse(generate_admin_dashboard_html(), content_type='text/html')
 
 
+def users_list_view(request):
+    """Render the users list page."""
+    from .admin_dashboard import generate_users_list_html
+    return HttpResponse(generate_users_list_html(), content_type='text/html')
+
+
+def user_detail_view(request, session_token):
+    """Render user detail page with all logs."""
+    from .admin_dashboard import generate_user_detail_html
+    return HttpResponse(generate_user_detail_html(session_token), content_type='text/html')
+
+
+def components_view(request):
+    """Render components gallery page."""
+    from .admin_dashboard import generate_components_html
+    return HttpResponse(generate_components_html(), content_type='text/html')
+
+
+def component_detail_view(request, component_id):
+    """Render single component detail page."""
+    from .admin_dashboard import generate_component_detail_html
+    return HttpResponse(generate_component_detail_html(component_id), content_type='text/html')
+
+
+def costs_view(request):
+    """Render costs analysis page."""
+    from .admin_dashboard import generate_costs_html
+    return HttpResponse(generate_costs_html(), content_type='text/html')
+
+
 urlpatterns = [
     path('', include(router.urls)),
     
     # FAIBRIC ADMIN DASHBOARD
     path('dashboard/', admin_dashboard_view, name='admin-dashboard'),
+    path('dashboard/users/', users_list_view, name='admin-users'),
+    path('dashboard/user/<str:session_token>', user_detail_view, name='admin-user-detail'),
+    path('dashboard/components/', components_view, name='admin-components'),
+    path('dashboard/component/<str:component_id>', component_detail_view, name='admin-component-detail'),
+    path('dashboard/costs/', costs_view, name='admin-costs'),
     
     # Config endpoints
     path('config/', AnalyticsConfigViewSet.as_view({'get': 'config'}), name='analytics-config'),
