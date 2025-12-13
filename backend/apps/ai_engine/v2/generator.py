@@ -1,17 +1,127 @@
 """
 V2 AI Generator - Single-shot generation with Anthropic Claude
+Uses code library for reusable components to save API costs.
 """
 import json
 import re
-from typing import Generator, Dict, Any, Optional
+import logging
+from typing import Generator, Dict, Any, Optional, List
 import anthropic
 from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 from .prompts import CLASSIFY_PROMPT, MODIFY_PROMPT, get_prompt_for_type
 
+logger = logging.getLogger(__name__)
 
-class AIGeneratorV2:
+
+class CodeLibraryMixin:
+    """
+    Mixin for searching and saving to the code library.
+    Prevents regenerating the same components over and over.
+    """
+    
+    def search_existing_components(self, query: str, limit: int = 5) -> List[dict]:
+        """Search for existing similar components in the library."""
+        try:
+            from apps.code_library.search import LibrarySearchService
+            service = LibrarySearchService()
+            results = service.keyword_search(
+                query=query,
+                item_type='component',
+                language='typescript',
+                limit=limit
+            )
+            return results
+        except Exception as e:
+            logger.warning(f"Code library search failed: {e}")
+            return []
+    
+    def get_component_code(self, component_id: str) -> Optional[str]:
+        """Get the actual code for a library component."""
+        try:
+            from apps.code_library.models import LibraryItem
+            item = LibraryItem.objects.get(id=component_id)
+            item.increment_usage()
+            return item.code
+        except Exception as e:
+            logger.warning(f"Failed to get component {component_id}: {e}")
+            return None
+    
+    def save_to_library(
+        self, 
+        code: str, 
+        name: str, 
+        description: str,
+        keywords: List[str],
+        project_id: int = None
+    ) -> Optional[str]:
+        """Save generated code to library for future reuse."""
+        try:
+            from apps.code_library.models import LibraryItem
+            import re
+            
+            # Generate slug from name
+            slug = re.sub(r'[^a-z0-9-]', '-', name.lower())[:100]
+            
+            # Check if similar already exists
+            existing = LibraryItem.objects.filter(slug=slug).first()
+            if existing:
+                # Update usage count instead of creating duplicate
+                existing.increment_usage()
+                return str(existing.id)
+            
+            item = LibraryItem.objects.create(
+                name=name,
+                slug=slug,
+                item_type='component',
+                language='typescript',
+                code=code,
+                description=description,
+                keywords=keywords,
+                tags=keywords[:5],
+                source='generated',
+                is_public=True,
+                quality_score=70.0,  # Default score for new items
+            )
+            logger.info(f"Saved component to library: {name}")
+            return str(item.id)
+        except Exception as e:
+            logger.warning(f"Failed to save to library: {e}")
+            return None
+    
+    def build_library_context(self, user_prompt: str) -> str:
+        """
+        Search library and build context string with relevant existing code.
+        This helps AI customize existing components instead of regenerating.
+        """
+        # Extract keywords from prompt
+        keywords = [w.lower() for w in user_prompt.split() if len(w) > 3][:10]
+        query = ' '.join(keywords)
+        
+        results = self.search_existing_components(query, limit=3)
+        
+        if not results:
+            return ""
+        
+        context_parts = ["\n\nEXISTING COMPONENTS IN LIBRARY (use as reference, customize as needed):"]
+        
+        for result in results:
+            code = self.get_component_code(result['id'])
+            if code and len(code) < 3000:  # Only include reasonably sized components
+                context_parts.append(f"\n--- {result['name']} ({result['item_type']}) ---")
+                context_parts.append(f"Description: {result.get('description', 'N/A')}")
+                context_parts.append(f"Keywords: {', '.join(result.get('keywords', []))}")
+                context_parts.append(f"```\n{code[:2000]}\n```")
+        
+        if len(context_parts) > 1:
+            context_parts.append("\nYou can use these as inspiration or customize them. Don't regenerate from scratch if a similar component exists.")
+            return "\n".join(context_parts)
+        
+        return ""
+
+
+class AIGeneratorV2(CodeLibraryMixin):
     """
     Single-shot app generator using Anthropic Claude Opus 4.5
     """
@@ -96,6 +206,13 @@ CRITICAL REQUIREMENTS - FOLLOW EXACTLY:
 """
         full_prompt = strict_requirements + "\n\n" + full_prompt
         
+        # Search code library for reusable components
+        self._add_session_event(session, "Searching code library...")
+        library_context = self.build_library_context(user_prompt)
+        if library_context:
+            full_prompt = full_prompt + library_context
+            self._add_session_event(session, "Found reusable components")
+        
         # Stream AI response for real-time thinking
         self._broadcast(project_id, "thinking", "Generating components...")
         self._add_session_event(session, "Claude Opus 4.5 generating code...")
@@ -157,6 +274,22 @@ CRITICAL RULES:
             result['app_type'] = app_type
             
             self._broadcast(project_id, "success", f"Generated {len(result['components'])} component(s)")
+            
+            # Save to library for future reuse (async, don't block)
+            try:
+                app_code = result['components'].get('App', '')
+                if app_code and len(app_code) > 500:  # Only save substantial code
+                    # Extract keywords from prompt
+                    keywords = [w.lower() for w in user_prompt.split() if len(w) > 3][:10]
+                    self.save_to_library(
+                        code=app_code,
+                        name=f"{app_type.title()} - {user_prompt[:50]}",
+                        description=user_prompt[:200],
+                        keywords=keywords,
+                        project_id=project_id
+                    )
+            except Exception as e:
+                logger.warning(f"Failed to save to library: {e}")
             
             return result
             
