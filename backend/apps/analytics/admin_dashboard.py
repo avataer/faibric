@@ -498,6 +498,7 @@ def generate_sidebar(active='overview'):
         ('alerts', 'Alerts', '/api/analytics/dashboard/alerts/'),
         ('reports', 'Reports', '/api/analytics/dashboard/reports/'),
         ('settings', 'Settings', '/api/analytics/dashboard/settings/'),
+        ('map', '🗺️ Project Map', '/api/analytics/dashboard/map/'),
     ]
     
     return f"""

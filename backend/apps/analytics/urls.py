@@ -66,6 +66,10 @@ def settings_view(request):
     from .admin_dashboard import generate_settings_html
     return HttpResponse(generate_settings_html(), content_type='text/html')
 
+def project_map_view(request):
+    from .project_map import generate_project_map_html
+    return HttpResponse(generate_project_map_html(), content_type='text/html')
+
 
 # Action Endpoints
 @csrf_exempt
@@ -172,6 +176,7 @@ urlpatterns = [
     path('dashboard/reports/', reports_view, name='admin-reports'),
     path('dashboard/report/<str:report_id>/', report_detail_view, name='admin-report-detail'),
     path('dashboard/settings/', settings_view, name='admin-settings'),
+    path('dashboard/map/', project_map_view, name='admin-project-map'),
     
     # Action Endpoints
     path('dashboard/health/recalculate/', recalculate_health, name='admin-recalculate-health'),
