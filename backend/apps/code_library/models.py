@@ -407,3 +407,36 @@ class CustomerMessage(models.Model):
             return msg.get_message()
         except cls.DoesNotExist:
             return default or f"Working on your project..."
+
+
+class ReuseLog(models.Model):
+    """
+    Log of reuse decisions for metrics tracking.
+    Used to calculate reuse ratio and monitor system health.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    session_token = models.CharField(max_length=100, db_index=True)
+    decision = models.CharField(
+        max_length=20,
+        choices=[
+            ('reused', 'Reused from library'),
+            ('generated', 'Generated new'),
+            ('gray_zone', 'Gray zone - manual review'),
+        ],
+        db_index=True
+    )
+    match_score = models.FloatField(default=0)
+    library_item_id = models.CharField(max_length=100, blank=True, null=True)
+    candidate_count = models.IntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['decision', 'created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.decision} (score={self.match_score:.1f})"

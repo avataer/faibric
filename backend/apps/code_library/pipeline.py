@@ -10,6 +10,9 @@ import re
 from typing import Optional, Dict, List, Tuple
 from django.conf import settings
 
+from . import constants
+from .metrics import ReuseMetrics, DuplicateDetector
+
 logger = logging.getLogger(__name__)
 
 
@@ -164,14 +167,14 @@ Only include sections and features actually mentioned or implied. Return ONLY va
             
             for kw in keywords:
                 if kw in item_keywords or kw in item_name or kw in item_desc:
-                    score += 2
+                    score += constants.KEYWORD_IN_TEXT_WEIGHT
                     matched_keywords.append(kw)
                 if kw in item_tags:
-                    score += 3
+                    score += constants.KEYWORD_IN_TAG_WEIGHT
                     matched_keywords.append(kw)
             
             # Boost by quality
-            score *= (0.5 + item.quality_score)
+            score *= (constants.QUALITY_SCORE_BOOST_FACTOR + item.quality_score)
             
             if score > 0:
                 matches.append({
@@ -198,8 +201,8 @@ class LibraryFirstPipeline:
     5. Verify the AI actually used library (if it should have)
     """
     
-    CHEAP_MODEL = "claude-3-5-haiku-20241022"
-    EXPENSIVE_MODEL = "claude-sonnet-4-20250514"
+    CHEAP_MODEL = constants.CHEAP_MODEL
+    EXPENSIVE_MODEL = constants.EXPENSIVE_MODEL
     
     def __init__(self, session):
         self.session = session
@@ -236,18 +239,39 @@ class LibraryFirstPipeline:
         rules_text = design_rules.get_full_rules() if design_rules else ""
         
         # Step 5: Decide path - reuse or generate
-        if matches and matches[0]['score'] >= 5:
+        top_score = matches[0]['score'] if matches else 0
+        candidate_count = len(matches)
+        
+        if matches and top_score >= constants.REUSE_THRESHOLD_HIGH:
             # Good match found - ADAPT existing code
-            logger.info(f"[Pipeline] Using library component: {matches[0]['item'].name}")
+            decision = 'reused'
+            logger.info(f"[Pipeline] REUSE: score={top_score:.1f} >= {constants.REUSE_THRESHOLD_HIGH} - using {matches[0]['item'].name}")
             self._library_was_used = True
             
             self.messenger.send('building_hero')
             code = self._adapt_from_library(
                 client, user_prompt, matches, requirements, rules_text
             )
+            library_item_id = str(matches[0]['item'].id)
+            
+        elif matches and top_score >= constants.GRAY_ZONE_MIN:
+            # Gray zone - generate new but log for review
+            decision = 'gray_zone'
+            logger.warning(f"[Pipeline] GRAY_ZONE: score={top_score:.1f} in [{constants.GRAY_ZONE_MIN}, {constants.REUSE_THRESHOLD_HIGH})")
+            self._generated_new_code = True
+            
+            self.messenger.send('building_hero')
+            code = self._generate_new(
+                client, user_prompt, requirements, rules_text
+            )
+            self.messenger.send('polishing')
+            self._save_to_library(code, user_prompt, requirements, project)
+            library_item_id = None
+            
         else:
             # No good match - GENERATE new code
-            logger.info("[Pipeline] No library match, generating new code")
+            decision = 'generated'
+            logger.info(f"[Pipeline] GENERATE: score={top_score:.1f} < {constants.GRAY_ZONE_MIN}")
             self._generated_new_code = True
             
             self.messenger.send('building_hero')
@@ -258,6 +282,17 @@ class LibraryFirstPipeline:
             # Save new code to library for future use
             self.messenger.send('polishing')
             self._save_to_library(code, user_prompt, requirements, project)
+            library_item_id = None
+        
+        # Log the decision for metrics
+        ReuseMetrics.log_decision(
+            session_token=self.session.session_token,
+            decision=decision,
+            match_score=top_score,
+            library_item_id=library_item_id,
+            candidate_count=candidate_count,
+            threshold_used=constants.REUSE_THRESHOLD_HIGH,
+        )
         
         self.messenger.send('finalizing')
         
@@ -374,8 +409,17 @@ Return the complete App.tsx code. Start with import, end with export default App
         from apps.code_library.models import LibraryItem
         
         # Only save if code is substantial
-        if len(code) < 500:
-            logger.info("[Pipeline] Code too short, not saving to library")
+        if len(code) < constants.MIN_CODE_LENGTH_FOR_LIBRARY:
+            logger.info(f"[Pipeline] Code too short ({len(code)} < {constants.MIN_CODE_LENGTH_FOR_LIBRARY}), not saving")
+            return
+        
+        # Check for near-duplicates before saving
+        duplicate_check = DuplicateDetector.check_for_duplicate(code)
+        if duplicate_check:
+            logger.warning(
+                f"[Pipeline] DUPLICATE BLOCKED: {duplicate_check['similarity']:.0%} similar to "
+                f"{duplicate_check['matching_item_name']} ({duplicate_check['matching_item_id']})"
+            )
             return
         
         try:
@@ -385,7 +429,7 @@ Return the complete App.tsx code. Start with import, end with export default App
             keywords.append(requirements.get('industry', ''))
             keywords.extend(requirements.get('sections_needed', []))
             keywords.extend(requirements.get('features', []))
-            keywords = [k for k in keywords if k and k != 'other']
+            keywords = [k for k in keywords if k and k != 'other'][:constants.MAX_KEYWORDS]
             
             # Create library item (unapproved - admin must approve)
             item = LibraryItem.objects.create(
@@ -394,8 +438,8 @@ Return the complete App.tsx code. Start with import, end with export default App
                 item_type='template',
                 code=code,
                 keywords=', '.join(keywords),
-                tags=keywords[:10],
-                quality_score=0.5,  # Default, admin can adjust
+                tags=keywords[:constants.MAX_TAGS],
+                quality_score=constants.DEFAULT_AI_QUALITY_SCORE,
                 is_approved=False,  # REQUIRES ADMIN APPROVAL
                 is_active=False,    # Not active until approved
                 source_project=project,
