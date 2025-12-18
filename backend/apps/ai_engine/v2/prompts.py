@@ -101,42 +101,49 @@ Generate now:"""
 
 
 # Single-shot dashboard generator  
-DASHBOARD_PROMPT = """You are an expert React developer. Create a data dashboard with REAL live data.
+DASHBOARD_PROMPT = """You are an expert React developer. Create a data dashboard with live-updating data.
 
 USER REQUEST:
 {user_prompt}
 
-""" + BASE_RULES.replace("3. NEVER use fetch(), axios, or any HTTP requests - browsers block CORS", "3. For stock data ONLY: use fetch('http://localhost:8000/api/stocks/?symbols=AAPL,GOOGL,MSFT,TSLA,AMZN')") + """
+""" + BASE_RULES + """
 
 DASHBOARD-SPECIFIC RULES:
-1. For STOCK dashboards: Fetch REAL data from Faibric API:
-   - URL: http://localhost:8000/api/stocks/?symbols=AAPL,GOOGL,MSFT,TSLA,AMZN
-   - Response format: {{ stocks: [{{ symbol, price, change, changePercent, marketState }}] }}
-   - Refresh every 30 seconds (API has rate limits)
-2. Show loading state while fetching
-3. Show green for positive change, red for negative
-4. Display marketState (REGULAR, PRE, POST, CLOSED)
-5. Create charts using colored DIVs (bar charts)
-6. Dark theme: background #0f0f0f or #1a1a2e
+1. NEVER use fetch() or any external API calls - they will fail due to CORS
+2. Generate REALISTIC stock data as initial state in useState
+3. Use useEffect + setInterval to simulate live updates (random price changes every 2-5 seconds)
+4. Show green for positive change, red for negative
+5. Include realistic price ranges for each stock (AAPL ~150-200, NVDA ~400-500, etc.)
+6. Create mini charts using colored DIVs as bar charts showing price history
+7. Dark theme preferred: background #0f0f0f or #1a1a2e
+8. Display current time/date, market status (OPEN/CLOSED based on time)
 
-EXAMPLE PATTERN FOR REAL STOCK DATA (MUST include imports!):
+EXAMPLE PATTERN FOR LIVE STOCK DASHBOARD:
 import React, {{ useState, useEffect }} from 'react';
 
 function App() {{
-  const [stocks, setStocks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [stocks, setStocks] = useState([
+    {{ symbol: 'AAPL', price: 178.52, change: 2.34, changePercent: 1.33, volume: 52340000, history: [175, 176, 177, 178, 178.52] }},
+    {{ symbol: 'NVDA', price: 467.23, change: 12.45, changePercent: 2.74, volume: 41200000, history: [455, 458, 462, 465, 467.23] }},
+    {{ symbol: 'TSLA', price: 251.80, change: -3.20, changePercent: -1.25, volume: 89100000, history: [255, 254, 253, 252, 251.80] }},
+  ]);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
 
   useEffect(() => {{
-    const fetchStocks = async () => {{
-      try {{
-        const res = await fetch('http://localhost:8000/api/stocks/?symbols=AAPL,GOOGL,MSFT,TSLA,AMZN');
-        const data = await res.json();
-        setStocks(data.stocks);
-        setLoading(false);
-      }} catch (err) {{ console.error(err); }}
-    }};
-    fetchStocks();
-    const interval = setInterval(fetchStocks, 30000);
+    const interval = setInterval(() => {{
+      setStocks(prev => prev.map(stock => {{
+        const change = (Math.random() - 0.5) * 2;
+        const newPrice = Math.max(1, stock.price + change);
+        return {{
+          ...stock,
+          price: Math.round(newPrice * 100) / 100,
+          change: Math.round(change * 100) / 100,
+          changePercent: Math.round((change / stock.price) * 10000) / 100,
+          history: [...stock.history.slice(-9), newPrice]
+        }};
+      }}));
+      setLastUpdate(new Date());
+    }}, 3000);
     return () => clearInterval(interval);
   }}, []);
 
@@ -148,7 +155,7 @@ OUTPUT FORMAT (strict JSON):
 {{
     "title": "Dashboard Title",
     "components": {{
-        "App": "// Complete dashboard using the real stock API pattern above"
+        "App": "// Complete dashboard with simulated live data as shown above"
     }}
 }}
 
