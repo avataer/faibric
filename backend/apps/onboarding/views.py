@@ -430,12 +430,12 @@ class ModifyBuildView(APIView):
                     follow_ups = UserInput.objects.filter(
                         session=session,
                         input_type='follow_up'
-                    ).order_by('created_at')
+                    ).order_by('timestamp')
                     
                     if follow_ups.exists():
                         context_parts.append("PREVIOUS MESSAGES FROM CLIENT:")
                         for fu in follow_ups:
-                            context_parts.append(f"  - {fu.content}")
+                            context_parts.append(f"  - {fu.input_text}")
                     
                     # 4. Current modification request
                     context_parts.append(f"CURRENT MODIFICATION REQUEST: {user_request}")
