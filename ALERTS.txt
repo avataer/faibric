@@ -49,3 +49,17 @@ Error: Backend not responding (connection refused)
 Time: 2025-12-13 11:17:29.883708
 
 Attempting auto-restart...
+
+============================================================
+[2025-12-17 20:13:15.130729] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-17 20:13:15.011392
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-17 20:16:06.374005] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-17 20:16:06.305701

@@ -56,22 +56,26 @@ class BuildService:
             else:
                 project = session.converted_to_project
             
-            cls._add_event(session, 'Starting build...')
             log_activity('build_started', f'Build started: {project.name[:40]}', session)
             
-            # Step 2: Generate with AI (streaming)
-            cls._add_event(session, 'AI analyzing request...')
+            # Step 2: Generate with Library-First Pipeline
+            # This handles: library search → adapt or generate → save new code
+            # Customer sees only friendly messages, not the internal operations
+            from apps.code_library.pipeline import LibraryFirstPipeline
             
-            generator = AIGeneratorV2()
-            result = generator.generate_app(
+            pipeline = LibraryFirstPipeline(session)
+            app_code = pipeline.build(
                 user_prompt=project.user_prompt or project.description,
-                project_id=project.id,
-                session=session
+                project=project
             )
             
-            # Store generated code
+            # Store the generated code
+            result = {'components': {'App.tsx': app_code}}
             cls._store_generated_code(project, result)
-            cls._add_event(session, 'Code generation complete')
+            
+            # Log pipeline stats (hidden from customer)
+            stats = pipeline.get_stats()
+            logger.info(f"[Build] Pipeline stats: {stats}")
             
             # Step 3: Deploy to Render
             cls._add_event(session, 'Deploying to Render...')
