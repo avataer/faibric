@@ -82,5 +82,7 @@ LOG_FIELD_CANDIDATE_COUNT = 'candidate_count'
 # MODEL SELECTION
 # =============================================================================
 
-CHEAP_MODEL = "claude-3-5-haiku-20241022"
-EXPENSIVE_MODEL = "claude-sonnet-4-20250514"
+# ALL code generation uses Opus 4.5 - no exceptions
+# Haiku is only for classification, summarization, and admin questions
+GENERATION_MODEL = "claude-sonnet-4-20250514"  # Opus 4.5 for ALL code
+UTILITY_MODEL = "claude-3-5-haiku-20241022"    # Only for non-code tasks

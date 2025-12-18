@@ -84,7 +84,8 @@ class LibrarySearcher:
     """
     
     def __init__(self):
-        self.cheap_model = "claude-3-5-haiku-20241022"
+        # Utility model for classification/extraction (not code generation)
+        self.utility_model = constants.UTILITY_MODEL
     
     def extract_requirements(self, user_prompt: str) -> Dict:
         """
@@ -112,7 +113,7 @@ Only include sections and features actually mentioned or implied. Return ONLY va
 
         try:
             response = client.messages.create(
-                model=self.cheap_model,
+                model=self.utility_model,  # Haiku for classification only
                 max_tokens=500,
                 messages=[{"role": "user", "content": extraction_prompt}]
             )
@@ -196,13 +197,18 @@ class LibraryFirstPipeline:
     Flow:
     1. Extract requirements from user prompt
     2. MANDATORY: Search library for matches
-    3. If good matches found → adapt existing code (cheap AI)
-    4. If no matches → generate new code (expensive AI) → save to library
+    3. If good matches found → adapt existing code (Opus 4.5)
+    4. If no matches → generate new code (Opus 4.5) → auto-save to library
     5. Verify the AI actually used library (if it should have)
+    
+    ALL code generation uses Opus 4.5 - no exceptions.
+    Items are auto-approved for immediate reuse.
+    Admin reviews happen AFTER, not as a gate.
     """
     
-    CHEAP_MODEL = constants.CHEAP_MODEL
-    EXPENSIVE_MODEL = constants.EXPENSIVE_MODEL
+    # ALL code generation uses Opus 4.5
+    GENERATION_MODEL = constants.GENERATION_MODEL
+    UTILITY_MODEL = constants.UTILITY_MODEL
     
     def __init__(self, session):
         self.session = session
@@ -351,8 +357,8 @@ INSTRUCTIONS:
 Return ONLY the code, no markdown, no explanation. Start with import, end with export default."""
 
         response = client.messages.create(
-            model=self.CHEAP_MODEL,  # Cheap model for adaptation
-            max_tokens=8000,
+            model=self.GENERATION_MODEL,  # Opus 4.5 for ALL code generation
+            max_tokens=12000,
             messages=[{"role": "user", "content": prompt}]
         )
         
@@ -393,7 +399,7 @@ CRITICAL RULES:
 Return the complete App.tsx code. Start with import, end with export default App;"""
 
         response = client.messages.create(
-            model=self.EXPENSIVE_MODEL,  # Expensive model for new generation
+            model=self.GENERATION_MODEL,  # Opus 4.5 for ALL code generation
             max_tokens=12000,
             messages=[{"role": "user", "content": prompt}]
         )
@@ -431,7 +437,8 @@ Return the complete App.tsx code. Start with import, end with export default App
             keywords.extend(requirements.get('features', []))
             keywords = [k for k in keywords if k and k != 'other'][:constants.MAX_KEYWORDS]
             
-            # Create library item (unapproved - admin must approve)
+            # Create library item - AUTO-APPROVED for immediate reuse
+            # Admin reviews AFTER, not as a gate
             item = LibraryItem.objects.create(
                 name=f"Generated: {user_prompt[:50]}...",
                 description=f"Auto-generated for: {user_prompt[:200]}",
@@ -440,13 +447,17 @@ Return the complete App.tsx code. Start with import, end with export default App
                 keywords=', '.join(keywords),
                 tags=keywords[:constants.MAX_TAGS],
                 quality_score=constants.DEFAULT_AI_QUALITY_SCORE,
-                is_approved=False,  # REQUIRES ADMIN APPROVAL
-                is_active=False,    # Not active until approved
+                is_approved=True,   # AUTO-APPROVED - no gate
+                is_active=True,     # Immediately available for reuse
+                needs_review=True,  # Flag for admin to review later
                 source_project=project,
                 created_by='ai'
             )
             
-            logger.info(f"[Pipeline] Saved to library as {item.id} (pending approval)")
+            logger.info(f"[Pipeline] Saved to library as {item.id} (auto-approved, pending review)")
+            
+            # Queue admin feedback question
+            self._queue_admin_feedback(item, user_prompt, requirements)
             
         except Exception as e:
             logger.warning(f"[Pipeline] Failed to save to library: {e}")
@@ -507,6 +518,64 @@ Return the complete App.tsx code. Start with import, end with export default App
                 code = code[import_match.start():]
         
         return code
+    
+    def _queue_admin_feedback(self, item, user_prompt: str, requirements: Dict):
+        """
+        Generate questions for admin to review this item later.
+        Uses LLM to create natural language questions.
+        """
+        import anthropic
+        from apps.code_library.models import AdminFeedbackQuestion
+        
+        try:
+            client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+            
+            prompt = f"""You are helping an admin review AI-generated code.
+
+The code was generated for this request: "{user_prompt[:200]}"
+Site type: {requirements.get('site_type', 'unknown')}
+Industry: {requirements.get('industry', 'unknown')}
+
+Generate 2-3 SHORT questions for the admin to answer later.
+Questions should help improve future generations.
+
+Format as JSON array:
+[
+  {{"question": "...", "type": "quality|like_dislike|improvement|categorization"}}
+]
+
+Examples:
+- "Does this salon website have the right sections for a typical beauty business?"
+- "Rate the visual design quality from 1-5"
+- "What would you change about the hero section?"
+
+Return ONLY the JSON array, no explanation."""
+
+            response = client.messages.create(
+                model=self.UTILITY_MODEL,  # Haiku for generating questions
+                max_tokens=500,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            
+            result_text = response.content[0].text.strip()
+            if result_text.startswith('```'):
+                result_text = re.sub(r'^```\w*\n?', '', result_text)
+                result_text = re.sub(r'\n?```$', '', result_text)
+            
+            questions = json.loads(result_text)
+            
+            for q in questions[:3]:  # Max 3 questions
+                AdminFeedbackQuestion.objects.create(
+                    library_item=item,
+                    question=q.get('question', ''),
+                    question_type=q.get('type', 'quality'),
+                    context=f"Generated for: {user_prompt[:100]}",
+                )
+            
+            logger.info(f"[Pipeline] Queued {len(questions)} feedback questions for admin")
+            
+        except Exception as e:
+            logger.warning(f"[Pipeline] Failed to queue feedback questions: {e}")
     
     def get_stats(self) -> Dict:
         """Return stats about this build for logging."""
