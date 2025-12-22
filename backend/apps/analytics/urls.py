@@ -1,6 +1,7 @@
 from django.urls import path, include
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.admin.views.decorators import staff_member_required
 from rest_framework.routers import DefaultRouter
 from .views import (
     AnalyticsConfigViewSet, TrackEventView, IdentifyUserView,
@@ -13,65 +14,80 @@ router.register(r'funnels', FunnelViewSet, basename='funnel')
 router.register(r'users', UserProfileViewSet, basename='user-profile')
 
 
-# Dashboard Views
+# Dashboard Views - Protected with staff_member_required
+@staff_member_required
 def dashboard_view(request):
     from .admin_dashboard import generate_admin_dashboard_html
     return HttpResponse(generate_admin_dashboard_html(), content_type='text/html')
 
+@staff_member_required
 def activity_view(request):
     from .admin_dashboard import generate_activity_html
     return HttpResponse(generate_activity_html(), content_type='text/html')
 
+@staff_member_required
 def users_list_view(request):
     from .admin_dashboard import generate_users_list_html
     return HttpResponse(generate_users_list_html(), content_type='text/html')
 
+@staff_member_required
 def user_detail_view(request, session_token):
     from .admin_dashboard import generate_user_detail_html
     return HttpResponse(generate_user_detail_html(session_token), content_type='text/html')
 
+@staff_member_required
 def health_view(request):
     from .admin_dashboard import generate_health_html
     return HttpResponse(generate_health_html(), content_type='text/html')
 
+@staff_member_required
 def funnel_view(request):
     from .admin_dashboard import generate_funnel_html
     return HttpResponse(generate_funnel_html(), content_type='text/html')
 
+@staff_member_required
 def cohorts_view(request):
     from .admin_dashboard import generate_cohorts_html
     return HttpResponse(generate_cohorts_html(), content_type='text/html')
 
+@staff_member_required
 def costs_view(request):
     from .admin_dashboard import generate_costs_html
     return HttpResponse(generate_costs_html(), content_type='text/html')
 
+@staff_member_required
 def components_view(request):
     from .admin_dashboard import generate_components_html
     return HttpResponse(generate_components_html(), content_type='text/html')
 
+@staff_member_required
 def prompts_view(request):
     from .admin_dashboard import generate_prompts_html
     return HttpResponse(generate_prompts_html(), content_type='text/html')
 
+@staff_member_required
 def alerts_view(request):
     from .admin_dashboard import generate_alerts_html
     return HttpResponse(generate_alerts_html(), content_type='text/html')
 
+@staff_member_required
 def reports_view(request):
     from .admin_dashboard import generate_reports_html
     return HttpResponse(generate_reports_html(), content_type='text/html')
 
+@staff_member_required
 def settings_view(request):
     from .admin_dashboard import generate_settings_html
     return HttpResponse(generate_settings_html(), content_type='text/html')
 
+@staff_member_required
 def project_map_view(request):
     from .project_map import generate_project_map_html
     return HttpResponse(generate_project_map_html(), content_type='text/html')
 
 
-# Action Endpoints
+# Action Endpoints - Protected with staff_member_required
+@staff_member_required
 @csrf_exempt
 def recalculate_health(request):
     if request.method == 'POST':
@@ -80,6 +96,7 @@ def recalculate_health(request):
         return HttpResponseRedirect('/api/analytics/dashboard/health/')
     return HttpResponse("Method not allowed", status=405)
 
+@staff_member_required
 @csrf_exempt
 def generate_report(request):
     if request.method == 'POST':
@@ -89,6 +106,7 @@ def generate_report(request):
         return HttpResponseRedirect('/api/analytics/dashboard/reports/')
     return HttpResponse("Method not allowed", status=405)
 
+@staff_member_required
 @csrf_exempt
 def run_daily_tasks(request):
     if request.method == 'POST':
@@ -97,6 +115,7 @@ def run_daily_tasks(request):
         return HttpResponse("Daily tasks completed", status=200)
     return HttpResponse("Method not allowed", status=405)
 
+@staff_member_required
 @csrf_exempt
 def retry_build(request, session_token):
     """Retry a failed build."""
@@ -122,6 +141,7 @@ def retry_build(request, session_token):
             return HttpResponse("Session not found", status=404)
     return HttpResponse("Method not allowed", status=405)
 
+@staff_member_required
 @csrf_exempt
 def force_redeploy(request, session_token):
     """Force redeploy an existing project."""
@@ -149,6 +169,7 @@ def force_redeploy(request, session_token):
             return HttpResponse("Session not found", status=404)
     return HttpResponse("Method not allowed", status=405)
 
+@staff_member_required
 def report_detail_view(request, report_id):
     from .models_dashboard import GeneratedReport
     try:
