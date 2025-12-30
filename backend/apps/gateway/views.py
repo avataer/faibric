@@ -213,6 +213,7 @@ def handle_service_request(data: dict) -> JsonResponse:
     method = data.get('method', 'GET').upper()
     body = data.get('body')
     cache_ttl = data.get('cache_ttl', 60)  # Default 60 seconds
+    project_id = data.get('project_id')  # Optional: customer's project ID
     
     # Get service config
     service_config = get_service(service_name)
@@ -222,8 +223,8 @@ def handle_service_request(data: dict) -> JsonResponse:
             'available_services': list(SERVICES.keys())
         }, status=400)
     
-    # Get API key
-    api_key = get_api_key(service_config)
+    # Get API key (checks customer key first, then platform key)
+    api_key = get_api_key(service_config, project_id)
     auth_type = service_config.get('auth_type', 'none')
     
     if auth_type != 'none' and not api_key:
@@ -233,9 +234,9 @@ def handle_service_request(data: dict) -> JsonResponse:
             'docs': service_config.get('docs', '')
         }, status=503)
     
-    # Check cache for GET requests
+    # Check cache for all requests (apps use POST to gateway, but we cache by service+endpoint)
     cache_key = get_cache_key(service_name, endpoint, params)
-    if method == 'GET' and cache_ttl > 0:
+    if cache_ttl > 0:
         cached = cache.get(cache_key)
         if cached:
             cached['_cached'] = True
@@ -281,9 +282,14 @@ def handle_service_request(data: dict) -> JsonResponse:
             '_cached': False
         }
         
-        # Cache successful GET responses
-        if method == 'GET' and response.ok and cache_ttl > 0:
-            cache.set(cache_key, gateway_response, cache_ttl)
+        # Cache successful responses (both GET and POST that fetch data)
+        # CoinGecko and other rate-limited APIs need aggressive caching
+        if response.ok and cache_ttl > 0:
+            # Extend cache for rate-limited services
+            effective_ttl = cache_ttl
+            if service_name in ['coingecko', 'alpha_vantage', 'finnhub']:
+                effective_ttl = max(cache_ttl, 120)  # At least 2 minutes for rate-limited APIs
+            cache.set(cache_key, gateway_response, effective_ttl)
         
         return JsonResponse(gateway_response, status=200 if response.ok else response.status_code)
         
