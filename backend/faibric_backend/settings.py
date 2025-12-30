@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     'apps.admin_builder',  # Drag & drop admin panel builder
     'apps.marketing',  # Marketing analysis and competitor tracking
     'apps.code_library',  # Code library and reuse system
+    'apps.project_services',  # Database, Auth, Domains, Analytics, Versions
     'apps.recommendations',  # Recommendation engine
     'apps.credits',  # Credits and usage tracking
     'apps.platform_admin',  # Faibric admin dashboard

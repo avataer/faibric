@@ -43,6 +43,7 @@ urlpatterns = [
     path('api/insights/', include('apps.insights.urls')),  # Customer insights
     path('api/onboarding/', include('apps.onboarding.urls')),  # Landing & onboarding
     path('api/services/', include('apps.external_services.urls')),  # External service status
+    path('api/project-services/', include('apps.project_services.urls')),  # Database, Auth, Domains, etc.
 ]
 
 if settings.DEBUG:
