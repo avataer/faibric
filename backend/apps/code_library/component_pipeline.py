@@ -929,75 +929,20 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
                      'tracker', 'live', 'real-time', 'monitor', 'dashboard']
     needs_data = needs_data or any(kw in prompt.lower() for kw in data_keywords)
     
-    # Gateway API setup for data apps - WITH FUNCTIONAL SETTINGS AND RETRY LOGIC
+    # DIRECT API calls - No gateway needed for free APIs
     gateway_code = ""
     if needs_data:
         gateway_code = """
-  // GATEWAY API - Fetch real data with retry logic and caching
-  const GATEWAY_URL = window.location.hostname === "localhost" 
-    ? "http://localhost:8000/api/gateway/"
-    : "https://faibric-api.onrender.com/api/gateway/";
-  
-  // FUNCTIONAL: Load saved settings from localStorage
+  // DIRECT API CALLS - Free APIs, no key needed, no gateway
   const savedInterval = localStorage.getItem("refreshInterval");
   const [refreshInterval, setRefreshIntervalState] = React.useState(
-    savedInterval ? parseInt(savedInterval) : 60000  // Default 1 minute to avoid rate limits
+    savedInterval ? parseInt(savedInterval) : 30000
   );
   const [connectionStatus, setConnectionStatus] = React.useState("checking");
   const [lastUpdated, setLastUpdated] = React.useState(null);
   const [errorMessage, setErrorMessage] = React.useState(null);
   const intervalRef = React.useRef(null);
-  const retryCount = React.useRef(0);
   
-  const fetchFromGateway = async (service, endpoint, retries = 2) => {
-    try {
-      const response = await fetch(GATEWAY_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ service, endpoint })
-      });
-      
-      const result = await response.json();
-      
-      // Check for rate limit
-      if (response.status === 429 || result.status_code === 429) {
-        setConnectionStatus("rate_limited");
-        setErrorMessage("Rate limited - using cached data");
-        // Use cached data if available
-        const cached = localStorage.getItem("cached_" + service);
-        if (cached) return JSON.parse(cached);
-        return null;
-      }
-      
-      if (!response.ok) throw new Error(result.error || "API error");
-      
-      // Cache successful response
-      localStorage.setItem("cached_" + service, JSON.stringify(result));
-      setConnectionStatus("connected");
-      setErrorMessage(null);
-      setLastUpdated(new Date().toLocaleTimeString());
-      retryCount.current = 0;
-      return result;
-    } catch (err) {
-      console.error("Gateway error:", err);
-      // Retry with exponential backoff
-      if (retries > 0) {
-        await new Promise(r => setTimeout(r, 1000 * (3 - retries)));
-        return fetchFromGateway(service, endpoint, retries - 1);
-      }
-      setConnectionStatus("error");
-      setErrorMessage(err.message);
-      // Try cached data
-      const cached = localStorage.getItem("cached_coingecko");
-      if (cached) {
-        setConnectionStatus("cached");
-        return JSON.parse(cached);
-      }
-      return null;
-    }
-  };
-  
-  // FUNCTIONAL: Refresh interval that actually works
   const updateRefreshInterval = (newInterval) => {
     setRefreshIntervalState(newInterval);
     localStorage.setItem("refreshInterval", newInterval.toString());
@@ -1007,39 +952,66 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
   
   const loadData = async () => {
     setLoading(true);
+    setConnectionStatus("checking");
     
-    // Try CoinGecko first, fallback to CoinDesk (no rate limit)
-    let result = await fetchFromGateway(
-      "coingecko", 
-      "/simple/price?ids=bitcoin,ethereum,solana,cardano&vs_currencies=usd&include_24hr_change=true"
-    );
-    
-    // If CoinGecko failed, try CoinDesk for at least Bitcoin
-    if (!result || !result.data || result.status_code === 429) {
-      const coindesk = await fetch("https://api.coindesk.com/v1/bpi/currentprice.json");
-      if (coindesk.ok) {
-        const cd = await coindesk.json();
-        const btcPrice = cd.bpi?.USD?.rate_float || 0;
-        result = {
-          data: {
+    try {
+      // Call CoinGecko DIRECTLY - free API, no key needed
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,cardano&vs_currencies=usd&include_24hr_change=true"
+      );
+      
+      if (response.ok) {
+        const result = await response.json();
+        setData(result);
+        setConnectionStatus("connected");
+        setLastUpdated(new Date().toLocaleTimeString());
+        setErrorMessage(null);
+        localStorage.setItem("cached_crypto", JSON.stringify(result));
+      } else if (response.status === 429) {
+        // Rate limited - try cache
+        const cached = localStorage.getItem("cached_crypto");
+        if (cached) {
+          setData(JSON.parse(cached));
+          setConnectionStatus("cached");
+          setErrorMessage("Using cached data (rate limited)");
+        } else {
+          throw new Error("Rate limited, no cache");
+        }
+      } else {
+        throw new Error("API error");
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+      // Try CoinDesk as backup (Bitcoin only)
+      try {
+        const backup = await fetch("https://api.coindesk.com/v1/bpi/currentprice.json");
+        if (backup.ok) {
+          const cd = await backup.json();
+          const btcPrice = cd.bpi?.USD?.rate_float || 0;
+          setData({
             bitcoin: { usd: btcPrice },
             ethereum: { usd: null },
             solana: { usd: null },
             cardano: { usd: null }
-          }
-        };
-        setConnectionStatus("connected");
-        setErrorMessage("Using CoinDesk (backup)");
+          });
+          setConnectionStatus("connected");
+          setErrorMessage("Using CoinDesk backup");
+        }
+      } catch (e2) {
+        // Use cache as last resort
+        const cached = localStorage.getItem("cached_crypto");
+        if (cached) {
+          setData(JSON.parse(cached));
+          setConnectionStatus("cached");
+        } else {
+          setConnectionStatus("error");
+          setErrorMessage("Could not fetch prices");
+        }
       }
-    }
-    
-    if (result && result.data) {
-      setData(result.data);
     }
     setLoading(false);
   };
   
-  // Load data on mount with actual interval
   React.useEffect(() => {
     loadData();
     intervalRef.current = setInterval(loadData, refreshInterval);
