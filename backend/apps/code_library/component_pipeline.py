@@ -484,12 +484,12 @@ FORBIDDEN PATTERNS (do NOT use these):
 - useState([{ name: "...", value: ... }])
 - Any array with sample/mock/fake values
 
-REQUIRED: Start with EMPTY state, fetch REAL data:
+REQUIRED: Start with EMPTY state, fetch REAL data (NO TypeScript - plain JavaScript only):
 
-const [prices, setPrices] = useState<Record<string, number>>({});
-const [loading, setLoading] = useState(true);
+const [prices, setPrices] = React.useState({});
+const [loading, setLoading] = React.useState(true);
 
-useEffect(() => {
+React.useEffect(() => {
   const fetchPrices = async () => {
     try {
       const response = await fetch("https://faibric-api.onrender.com/api/gateway/", {
@@ -514,7 +514,7 @@ useEffect(() => {
 }, []);
 
 // PLACEHOLDER COMPONENT - use this when data is loading or unavailable:
-const DataPlaceholder = ({ symbol = "$", onActivate }: { symbol?: string; onActivate?: () => void }) => (
+const DataPlaceholder = ({ symbol = "$", onActivate }) => (
   <span className="inline-flex items-center gap-1">
     <span className="text-gray-400 font-mono">{symbol}---</span>
     <button 
@@ -654,25 +654,12 @@ CRITICAL JSX RULES - MUST FOLLOW:
    );
 
 PLACEHOLDER PATTERN (use when data fails to load):
-When fetch fails or data is unavailable, show a placeholder:
-```
-// Placeholder component - ALWAYS include this
-const DataPlaceholder = ({{ symbol = "$" }}: {{ symbol?: string }}) => (
-  <span className="inline-flex items-center gap-2 text-gray-400">
-    <span className="font-mono">{{symbol}}---</span>
-    <button 
-      onClick={{() => setCurrentView("settings")}}
-      className="text-xs text-blue-500 hover:underline"
-    >
-      Turn On Real Values
-    </button>
-  </span>
-);
+When fetch fails or data is unavailable, show a placeholder with animated pulse.
+Just use a simple span with className="animate-pulse text-gray-400" showing "---" when loading.
 
-// Usage: show placeholder when loading or error
-{{loading ? <DataPlaceholder symbol="$" /> : <span>${{data.price}}</span>}}
-{{error && <DataPlaceholder symbol="°" />}}
-```
+Example:
+const Placeholder = () => <span className="animate-pulse text-gray-400">$---</span>;
+Use: loading ? <Placeholder /> : <span>${{data.price}}</span>
 
 REQUIREMENTS:
 1. Create a SINGLE complete App.tsx file
@@ -1020,10 +1007,32 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
   
   const loadData = async () => {
     setLoading(true);
-    const result = await fetchFromGateway(
+    
+    // Try CoinGecko first, fallback to CoinDesk (no rate limit)
+    let result = await fetchFromGateway(
       "coingecko", 
       "/simple/price?ids=bitcoin,ethereum,solana,cardano&vs_currencies=usd&include_24hr_change=true"
     );
+    
+    // If CoinGecko failed, try CoinDesk for at least Bitcoin
+    if (!result || !result.data || result.status_code === 429) {
+      const coindesk = await fetch("https://api.coindesk.com/v1/bpi/currentprice.json");
+      if (coindesk.ok) {
+        const cd = await coindesk.json();
+        const btcPrice = cd.bpi?.USD?.rate_float || 0;
+        result = {
+          data: {
+            bitcoin: { usd: btcPrice },
+            ethereum: { usd: null },
+            solana: { usd: null },
+            cardano: { usd: null }
+          }
+        };
+        setConnectionStatus("connected");
+        setErrorMessage("Using CoinDesk (backup)");
+      }
+    }
+    
     if (result && result.data) {
       setData(result.data);
     }
