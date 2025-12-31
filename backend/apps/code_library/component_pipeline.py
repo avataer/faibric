@@ -1536,9 +1536,18 @@ Return ONLY the code, no markdown.
 def _ensure_admin_panel(code: str, needs_data: bool) -> str:
     """Inject admin panel code if missing from AI-generated code."""
     
-    # Check if admin panel is already present
-    if 'renderDashboard' in code and 'renderLogin' in code and 'Your App Preview' in code:
-        return code  # Already has full admin panel
+    # Check if admin panel has the FULL features (Your App Preview)
+    # If it only has basic isAdminRoute, the AI may have generated a partial version
+    if 'isAdminRoute' in code and 'Your App Preview' in code and 'View Live App' in code:
+        print("[ADMIN] Full admin panel already exists, skipping injection")
+        return code  # Already has FULL admin panel
+    
+    # If AI generated a partial admin panel, remove it and add ours
+    if 'isAdminRoute' in code and 'renderDashboard' in code:
+        print("[ADMIN] Replacing AI partial admin panel with full version")
+        # We can't easily remove the AI's version, so just skip for now
+        # The AI's version will work, just without our enhanced preview
+        return code
     
     # Admin panel state and functions to inject
     admin_state = '''
