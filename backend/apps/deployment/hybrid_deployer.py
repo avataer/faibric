@@ -186,10 +186,9 @@ class HybridDeployer:
         # But we need to ensure it has the code stored
         if project and app_code:
             # Store the code in project before deploying
-            from apps.projects.models import Project
-            if not project.generated_code:
-                project.generated_code = {'components': {'App.tsx': app_code}}
-                project.save(update_fields=['generated_code'])
+            if not project.frontend_code:
+                project.frontend_code = app_code
+                project.save(update_fields=['frontend_code'])
         
         result = self.render.deploy_react_app(project)
         
