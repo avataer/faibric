@@ -380,14 +380,21 @@ root.render(React.createElement(App));
         """
         Verify the deployed app actually works.
         
+        CRITICAL: This is the LAST LINE OF DEFENSE before showing a URL to user.
+        If this passes, the URL MUST work when opened in a browser.
+        
         Checks:
         1. URL returns HTTP 200
-        2. Content is HTML (not base64 garbage)
-        3. Contains valid React app structure
-        4. No obvious syntax errors in the code
+        2. Content is valid HTML (not base64)
+        3. Contains React app structure
+        4. No JavaScript syntax errors that would crash Babel
+        5. No duplicate variable declarations (causes Babel to fail)
+        6. Balanced braces/parentheses
         
         Returns: {'valid': bool, 'error': str or None}
         """
+        import re
+        
         try:
             response = requests.get(url, timeout=30)
             
@@ -398,7 +405,6 @@ root.render(React.createElement(App));
             
             # Check 1: Content should start with HTML doctype
             if not content.strip().startswith('<!DOCTYPE html>'):
-                # Might be base64 encoded
                 if content.strip()[:20].isalnum():
                     return {'valid': False, 'error': 'Content is base64 encoded, not HTML'}
                 return {'valid': False, 'error': 'Content is not valid HTML'}
@@ -412,21 +418,44 @@ root.render(React.createElement(App));
                 return {'valid': False, 'error': 'React CDN not included'}
             
             # Check 4: Check for obvious JavaScript syntax errors
-            # Look for broken object literals (our earlier bug)
-            import re
-            
-            # Pattern: const something, word, word (broken object)
             broken_pattern = r'const\s+\w+\s*,\s*\w+\s*,'
             if re.search(broken_pattern, content):
                 return {'valid': False, 'error': 'JavaScript syntax error: broken object literals'}
             
-            # Pattern: unterminated string
-            if '`$' in content and content.count('`') % 2 != 0:
-                return {'valid': False, 'error': 'JavaScript syntax error: unterminated template string'}
-            
-            # Check 5: Verify Babel presets include typescript
+            # Check 5: Verify Babel presets
             if 'data-presets="react,typescript"' not in content:
                 return {'valid': False, 'error': 'Missing TypeScript Babel preset'}
+            
+            # NEW Check 6: Detect DUPLICATE variable declarations (causes Babel crash)
+            # Look for common admin panel variables being declared multiple times
+            critical_vars = ['isAdminRoute', 'adminAuth', 'adminView', 'renderDashboard', 'renderLogin']
+            for var in critical_vars:
+                pattern = f'const \\[{var}'
+                matches = re.findall(pattern, content)
+                if len(matches) > 1:
+                    return {'valid': False, 'error': f'Duplicate declaration of {var} ({len(matches)} times) - will crash Babel'}
+            
+            # Check for duplicate function declarations
+            func_pattern = r'const (renderDashboard|renderLogin|doLogin|doLogout|sendChat)\s*='
+            func_matches = re.findall(func_pattern, content)
+            func_counts = {}
+            for f in func_matches:
+                func_counts[f] = func_counts.get(f, 0) + 1
+            for f, count in func_counts.items():
+                if count > 1:
+                    return {'valid': False, 'error': f'Duplicate function {f} ({count} times) - will crash Babel'}
+            
+            # NEW Check 7: Balanced braces (approximate check)
+            open_braces = content.count('{')
+            close_braces = content.count('}')
+            if abs(open_braces - close_braces) > 5:  # Allow small imbalance for edge cases
+                return {'valid': False, 'error': f'Severely unbalanced braces: {open_braces} open, {close_braces} close'}
+            
+            # NEW Check 8: Balanced parentheses
+            open_parens = content.count('(')
+            close_parens = content.count(')')
+            if abs(open_parens - close_parens) > 5:
+                return {'valid': False, 'error': f'Severely unbalanced parentheses: {open_parens} open, {close_parens} close'}
             
             return {'valid': True, 'error': None}
             

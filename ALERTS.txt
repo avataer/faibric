@@ -604,3 +604,8 @@ Error: Backend timed out
 Time: 2025-12-31 12:57:05.574497
 
 Attempting auto-restart...
+
+============================================================
+[2025-12-31 13:07:32.296524] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-31 13:07:32.172224

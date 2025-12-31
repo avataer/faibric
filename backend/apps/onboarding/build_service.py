@@ -190,15 +190,21 @@ class BuildService:
                 logger.info(f"Build VERIFIED complete: {url}")
                 return {'success': True, 'url': url, 'verified': True}
             else:
-                # Deployment failed verification
-                project.status = 'build_pending'
+                # CRITICAL: Deployment failed verification - DO NOT SHOW URL
+                # This is the OWNER RULE: Never show a URL that doesn't work
+                project.status = 'verification_failed'
+                project.deployment_url = ''  # Clear the URL - it doesn't work
                 project.save()
-                session.status = 'build_pending'
+                session.status = 'verification_failed'
                 session.save()
-                cls._add_event(session, f"[wait] Build pending: {url} - check in 3-5 mins")
-                logger.warning(f"Build not verified in time: {url}")
-                return {'success': True, 'url': url, 'verified': False, 
-                        'note': 'Build queued but not verified. Check in 3-5 minutes.'}
+                
+                error_msg = deploy_result.error if hasattr(deploy_result, 'error') and deploy_result.error else 'Verification failed'
+                cls._add_event(session, f"[BLOCKED] URL not shown - verification failed: {error_msg}")
+                logger.error(f"Build BLOCKED - verification failed: {url} - {error_msg}")
+                
+                # Return error, NOT the URL
+                return {'success': False, 'url': None, 'verified': False, 
+                        'error': f'Deployment verification failed: {error_msg}'}
             
         except Exception as e:
             logger.exception(f"Build failed: {e}")
