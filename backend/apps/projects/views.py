@@ -355,3 +355,132 @@ class ProjectViewSet(viewsets.ModelViewSet):
             'total_count': len(sources),
         })
 
+
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import hashlib
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PublicBuilderView(APIView):
+    """
+    Public API for the embedded builder in deployed apps.
+    
+    Uses a project token for authentication (embedded in deployed app).
+    Allows customers to modify their apps through the admin panel.
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        """
+        Modify and redeploy a project.
+        
+        Request body:
+        {
+            "project_token": "sha256 hash of project id + secret",
+            "project_id": 123,
+            "modification": "make the background red"
+        }
+        
+        Returns:
+        {
+            "status": "building" | "complete" | "error",
+            "message": "...",
+            "url": "new deployment URL"
+        }
+        """
+        from apps.onboarding.models import LandingSession
+        from apps.code_library.component_pipeline import build_compact_app
+        from apps.deployment.vercel_deployer import get_vercel_deployer
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        project_id = request.data.get('project_id')
+        project_token = request.data.get('project_token')
+        modification = request.data.get('modification', '').strip()
+        
+        if not project_id or not modification:
+            return Response({
+                'status': 'error',
+                'message': 'project_id and modification are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate project token
+        # Token = sha256(project_id + "faibric_builder_secret")
+        expected_token = hashlib.sha256(
+            f"{project_id}faibric_builder_secret".encode()
+        ).hexdigest()[:16]
+        
+        if project_token != expected_token:
+            return Response({
+                'status': 'error',
+                'message': 'Invalid project token'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            # Find the project by ID
+            project = Project.objects.get(id=project_id)
+            
+            # Update the prompt with the modification
+            original_prompt = project.user_prompt or project.name
+            new_prompt = f"{original_prompt}\n\nMODIFICATION REQUEST: {modification}"
+            
+            logger.info(f"[BUILDER] Modifying project {project_id}: {modification}")
+            
+            # Determine if this needs real data
+            data_keywords = ['stock', 'crypto', 'bitcoin', 'price', 'weather', 'api', 
+                             'tracker', 'live', 'real-time', 'monitor', 'dashboard']
+            needs_data = any(kw in new_prompt.lower() for kw in data_keywords)
+            
+            # Generate new code with the modification
+            app_code = build_compact_app(new_prompt, needs_data)
+            
+            # Save the new code
+            project.frontend_code = app_code
+            project.user_prompt = new_prompt
+            project.status = 'deploying'
+            project.save()
+            
+            # Redeploy to Vercel
+            vercel = get_vercel_deployer()
+            project_name = project.name.lower().replace(' ', '-')[:50]
+            
+            result = vercel.deploy(project_name, app_code, str(project.id))
+            
+            if result.success:
+                # Update project with new URL
+                project.deployment_url = result.url
+                project.status = 'deployed'
+                project.save()
+                
+                logger.info(f"[BUILDER] Redeployed project {project_id}: {result.url}")
+                
+                return Response({
+                    'status': 'complete',
+                    'message': f'Applied: {modification}',
+                    'url': result.url
+                })
+            else:
+                project.status = 'failed'
+                project.save()
+                
+                return Response({
+                    'status': 'error',
+                    'message': f'Deployment failed: {result.error}'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+        except Project.DoesNotExist:
+            return Response({
+                'status': 'error',
+                'message': 'Project not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"[BUILDER] Error modifying project {project_id}: {e}")
+            return Response({
+                'status': 'error',
+                'message': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

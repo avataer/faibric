@@ -1126,7 +1126,7 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
   const [building, setBuilding] = React.useState(false);
   const chatRef = React.useRef(null);
   
-  const sendChat = () => {
+  const sendChat = async () => {
     const txt = chatRef.current?.value?.trim();
     if (!txt) return;
     
@@ -1134,13 +1134,59 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
     chatRef.current.value = "";
     setBuilding(true);
     
-    setTimeout(() => {
+    // Get project ID and token from URL or localStorage
+    const projectId = window.FAIBRIC_PROJECT_ID || localStorage.getItem("faibric_project_id");
+    const projectToken = window.FAIBRIC_PROJECT_TOKEN || localStorage.getItem("faibric_project_token");
+    
+    if (!projectId || !projectToken) {
       setChatMsgs(prev => [...prev, { 
         from: "ai", 
-        text: "I understand: " + txt + ". This feature requires the Faibric backend connection. Use Settings for manual edits."
+        text: "Builder not connected. Set project ID in Settings or contact support."
       }]);
       setBuilding(false);
-    }, 1500);
+      return;
+    }
+    
+    try {
+      // Call Faibric Builder API
+      const response = await fetch("https://faibric-api.onrender.com/api/projects/builder/modify/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          project_id: projectId,
+          project_token: projectToken,
+          modification: txt
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.status === "complete") {
+        setChatMsgs(prev => [...prev, { 
+          from: "ai", 
+          text: "Done! " + result.message + " Reloading preview..."
+        }]);
+        
+        // Reload iframe after 2 seconds
+        setTimeout(() => {
+          const frame = document.getElementById("preview-frame");
+          if (frame) frame.src = result.url || frame.src;
+          setBuilding(false);
+        }, 2000);
+      } else {
+        setChatMsgs(prev => [...prev, { 
+          from: "ai", 
+          text: "Error: " + (result.message || "Failed to apply changes")
+        }]);
+        setBuilding(false);
+      }
+    } catch (err) {
+      setChatMsgs(prev => [...prev, { 
+        from: "ai", 
+        text: "Connection error. Check your internet and try again."
+      }]);
+      setBuilding(false);
+    }
   };
   
   // Render admin dashboard
@@ -1589,16 +1635,44 @@ def _ensure_admin_panel(code: str, needs_data: bool) -> str:
   };
   const doLogout = () => { localStorage.removeItem("faibric_admin_token"); setAdminAuth(false); };
   const exitAdmin = () => { window.location.href = previewUrl; };
-  const sendChat = () => {
+  const sendChat = async () => {
     const txt = chatRef.current?.value?.trim();
     if (!txt) return;
     setChatMsgs(prev => [...prev, {from: "user", text: txt}]);
     chatRef.current.value = "";
     setBuilding(true);
-    setTimeout(() => {
-      setChatMsgs(prev => [...prev, {from: "ai", text: "I understand: " + txt + ". Connect to faibric.com/api for live updates."}]);
+    
+    const projectId = window.FAIBRIC_PROJECT_ID || localStorage.getItem("faibric_project_id");
+    const projectToken = window.FAIBRIC_PROJECT_TOKEN || localStorage.getItem("faibric_project_token");
+    
+    if (!projectId || !projectToken) {
+      setChatMsgs(prev => [...prev, {from: "ai", text: "Builder not connected. Configure in Settings."}]);
       setBuilding(false);
-    }, 1500);
+      return;
+    }
+    
+    try {
+      const response = await fetch("https://faibric-api.onrender.com/api/projects/builder/modify/", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({project_id: projectId, project_token: projectToken, modification: txt})
+      });
+      const result = await response.json();
+      if (result.status === "complete") {
+        setChatMsgs(prev => [...prev, {from: "ai", text: "Done! " + result.message}]);
+        setTimeout(() => {
+          const f = document.getElementById("preview-frame");
+          if (f) f.src = result.url || f.src;
+          setBuilding(false);
+        }, 2000);
+      } else {
+        setChatMsgs(prev => [...prev, {from: "ai", text: "Error: " + result.message}]);
+        setBuilding(false);
+      }
+    } catch (e) {
+      setChatMsgs(prev => [...prev, {from: "ai", text: "Connection error. Try again."}]);
+      setBuilding(false);
+    }
   };
   
   const renderLogin = () => (

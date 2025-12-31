@@ -114,7 +114,8 @@ class VercelDeployer:
         
         try:
             # Step 1: Generate all files for the React app
-            files = self._generate_files(app_code, project_name)
+            # Pass project_id to inject builder config
+            files = self._generate_files(app_code, project_name, project_id)
             
             # Step 2: Create deployment via Vercel API
             deployment = self._create_deployment(project_name, files)
@@ -175,7 +176,7 @@ class VercelDeployer:
                 'provider': 'vercel'
             }
     
-    def _generate_files(self, app_code: str, project_name: str) -> list:
+    def _generate_files(self, app_code: str, project_name: str, project_id: str = None) -> list:
         """
         Generate files for instant static deployment.
         
@@ -184,13 +185,23 @@ class VercelDeployer:
         
         The app runs exactly the same - just loaded from CDN instead of bundled.
         """
+        import hashlib
+        
         files = []
         
         # Convert TypeScript-style React to browser-compatible JSX
         # The app_code uses TypeScript syntax, we need to adapt it for browser
         browser_app = self._convert_to_browser_react(app_code)
         
+        # Generate project token for builder API
+        project_token = ""
+        if project_id:
+            project_token = hashlib.sha256(
+                f"{project_id}faibric_builder_secret".encode()
+            ).hexdigest()[:16]
+        
         # index.html with CDN React + Tailwind + TypeScript support
+        # INJECT: Project ID and token for the builder to work
         index_html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -201,6 +212,11 @@ class VercelDeployer:
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script>
+        // Faibric Builder Configuration
+        window.FAIBRIC_PROJECT_ID = "{project_id or ''}";
+        window.FAIBRIC_PROJECT_TOKEN = "{project_token}";
+    </script>
     <style>
         body {{ margin: 0; font-family: system-ui, -apple-system, sans-serif; }}
     </style>

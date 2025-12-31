@@ -623,3 +623,17 @@ Attempting auto-restart...
 [2025-12-31 13:30:40.465247] Backend Service RECOVERED
 The Faibric backend has been automatically restarted and is now healthy.
 Time: 2025-12-31 13:30:40.356888
+
+============================================================
+[2025-12-31 13:50:46.323704] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-31 13:50:46.215525
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-31 13:52:50.576275] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-31 13:52:50.474814
