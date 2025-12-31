@@ -15,11 +15,33 @@ import {
   DialogActions,
   Alert,
   LinearProgress,
+  Tabs,
+  Tab,
 } from '@mui/material'
 import RefreshIcon from '@mui/icons-material/Refresh'
+import BarChartIcon from '@mui/icons-material/BarChart'
+import HistoryIcon from '@mui/icons-material/History'
+import LanguageIcon from '@mui/icons-material/Language'
+import SettingsIcon from '@mui/icons-material/Settings'
 import { useDispatch } from 'react-redux'
 import { setCurrentProject } from '../features/projects/projectsSlice'
 import { projectsService, ProjectDetail as ProjectDetailType } from '../services/projects'
+import { AnalyticsDashboard, VersionsPanel, DomainsPanel, SettingsPanel } from '../components/project'
+
+interface TabPanelProps {
+  children?: React.ReactNode
+  index: number
+  value: number
+}
+
+const TabPanel = (props: TabPanelProps) => {
+  const { children, value, index, ...other } = props
+  return (
+    <div role="tabpanel" hidden={value !== index} {...other}>
+      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+    </div>
+  )
+}
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -29,11 +51,12 @@ const ProjectDetail = () => {
   const [loading, setLoading] = useState(true)
   const [regenerating, setRegenerating] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState(false)
-  const [progress, setProgress] = useState<{step: number, message: string, progress: number} | null>(null)
+  const [progress, setProgress] = useState<{ step: number; message: string; progress: number } | null>(null)
+  const [activeTab, setActiveTab] = useState(0)
 
   useEffect(() => {
     loadProject()
-    
+
     // Poll for progress if project is generating
     let progressInterval: NodeJS.Timeout
     if (project?.status === 'generating') {
@@ -41,11 +64,11 @@ const ProjectDetail = () => {
         try {
           const progressData = await projectsService.getProgress(project.id)
           setProgress(progressData)
-          
+
           // Also refresh project to check if status changed
           const updatedProject = await projectsService.getProject(project.id)
           setProject(updatedProject)
-          
+
           if (updatedProject.status !== 'generating') {
             clearInterval(progressInterval)
             setProgress(null)
@@ -55,7 +78,7 @@ const ProjectDetail = () => {
         }
       }, 1000) // Poll every second
     }
-    
+
     return () => {
       if (progressInterval) clearInterval(progressInterval)
     }
@@ -145,6 +168,7 @@ const ProjectDetail = () => {
 
   return (
     <Container maxWidth="lg">
+      {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h4" fontWeight={600}>
@@ -163,10 +187,7 @@ const ProjectDetail = () => {
             )}
             {project.status === 'deployed' && project.deployment_url && (
               <>
-                <Button
-                  variant="contained"
-                  onClick={() => window.open(project.deployment_url, '_blank')}
-                >
+                <Button variant="contained" onClick={() => window.open(project.deployment_url, '_blank')}>
                   View Live App
                 </Button>
                 <Button
@@ -198,14 +219,25 @@ const ProjectDetail = () => {
             </Button>
           </Box>
         </Box>
-        <Chip label={project.status} color={getStatusColor(project.status)} />
-        
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Chip label={project.status} color={getStatusColor(project.status)} />
+          {project.deployment_url && (
+            <Typography
+              variant="body2"
+              sx={{ color: 'primary.main', cursor: 'pointer' }}
+              onClick={() => window.open(project.deployment_url, '_blank')}
+            >
+              {project.deployment_url}
+            </Typography>
+          )}
+        </Box>
+
         {/* Real-time generation progress */}
         {project.status === 'generating' && progress && (
           <Paper sx={{ mt: 2, p: 3, bgcolor: '#f0f7ff', border: '1px solid #2196f3' }}>
             <Box sx={{ mb: 2 }}>
               <Typography variant="h6" fontWeight={600} color="primary.main" gutterBottom>
-                🤖 AI is Building Your App
+                AI is Building Your App
               </Typography>
               <Typography variant="body1" sx={{ mb: 2, fontSize: '1.1rem' }}>
                 {progress.message}
@@ -213,18 +245,18 @@ const ProjectDetail = () => {
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Box sx={{ flexGrow: 1 }}>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={progress.progress} 
-                  sx={{ 
-                    height: 10, 
+                <LinearProgress
+                  variant="determinate"
+                  value={progress.progress}
+                  sx={{
+                    height: 10,
                     borderRadius: 5,
                     bgcolor: '#e3f2fd',
                     '& .MuiLinearProgress-bar': {
                       bgcolor: '#2196f3',
                       borderRadius: 5,
-                    }
-                  }} 
+                    },
+                  }}
                 />
               </Box>
               <Typography variant="body2" fontWeight={600} color="primary.main" sx={{ minWidth: 45 }}>
@@ -232,137 +264,138 @@ const ProjectDetail = () => {
               </Typography>
             </Box>
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Step {progress.step} of 10 • This usually takes 30-90 seconds
+              Step {progress.step} of 10 - This usually takes 30-90 seconds
             </Typography>
           </Paper>
-        )}
-
-        {/* Regenerating status */}
-        {project.status === 'generating' && !progress && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <CircularProgress size={20} />
-              <Box>
-                <Typography variant="subtitle2" fontWeight={600}>Generating Your App</Typography>
-                <Typography variant="body2">
-                  AI is creating your application. This usually takes 20-60 seconds...
-                </Typography>
-              </Box>
-            </Box>
-          </Alert>
         )}
 
         {/* Error message display */}
         {project.status === 'failed' && project.ai_analysis?.error && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            <Typography variant="subtitle2" fontWeight={600}>Generation Failed</Typography>
-            <Typography variant="body2" sx={{ mb: 1 }}>{project.ai_analysis.error}</Typography>
-            {project.ai_analysis.error.includes('API key') && (
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                Please configure your OpenAI API key in the backend.
-              </Typography>
-            )}
+            <Typography variant="subtitle2" fontWeight={600}>
+              Generation Failed
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              {project.ai_analysis.error}
+            </Typography>
             <Typography variant="body2" color="text.secondary">
-              Click the "Re-run Generation" button above to try again with the same prompt.
+              Click the "Re-run Generation" button above to try again.
             </Typography>
           </Alert>
         )}
       </Box>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Description
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              {project.description}
-            </Typography>
-          </Paper>
+      {/* Tabs */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(_, newValue) => setActiveTab(newValue)}
+          sx={{ borderBottom: 1, borderColor: 'divider' }}
+        >
+          <Tab label="Overview" />
+          <Tab icon={<BarChartIcon />} iconPosition="start" label="Analytics" />
+          <Tab icon={<HistoryIcon />} iconPosition="start" label="Versions" />
+          <Tab icon={<LanguageIcon />} iconPosition="start" label="Domains" />
+          <Tab icon={<SettingsIcon />} iconPosition="start" label="Settings" />
+        </Tabs>
+      </Paper>
 
-          {project.user_prompt && (
+      {/* Tab Panels */}
+      <TabPanel value={activeTab} index={0}>
+        {/* Overview Tab */}
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
             <Paper sx={{ p: 3, mb: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Original Prompt
+                Description
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {project.user_prompt}
+              <Typography variant="body1" color="text.secondary">
+                {project.description}
               </Typography>
             </Paper>
-          )}
 
-          {project.models && project.models.length > 0 && (
-            <Paper sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Database Models
-              </Typography>
-              {project.models.map((model: any) => (
-                <Box key={model.id} sx={{ mb: 2 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {model.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {model.fields.length} fields
-                  </Typography>
-                </Box>
-              ))}
-            </Paper>
-          )}
+            {project.user_prompt && (
+              <Paper sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Original Prompt
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {project.user_prompt}
+                </Typography>
+              </Paper>
+            )}
 
-          {project.apis && project.apis.length > 0 && (
+            {project.models && project.models.length > 0 && (
+              <Paper sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Database Models
+                </Typography>
+                {project.models.map((model: any) => (
+                  <Box key={model.id} sx={{ mb: 2 }}>
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      {model.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {model.fields.length} fields
+                    </Typography>
+                  </Box>
+                ))}
+              </Paper>
+            )}
+          </Grid>
+
+          <Grid item xs={12} md={4}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
-                API Endpoints
+                Project Info
               </Typography>
-              {project.apis.map((api: any) => (
-                <Box key={api.id} sx={{ mb: 1 }}>
-                  <Typography variant="body2">
-                    <strong>{api.method}</strong> {api.path}
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Created
+                </Typography>
+                <Typography variant="body1">{new Date(project.created_at).toLocaleDateString()}</Typography>
+              </Box>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Last Updated
+                </Typography>
+                <Typography variant="body1">{new Date(project.updated_at).toLocaleDateString()}</Typography>
+              </Box>
+              {project.deployment_url && (
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Deployment URL
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ wordBreak: 'break-all', color: '#2196f3', fontFamily: 'monospace' }}
+                  >
+                    {project.deployment_url}
                   </Typography>
                 </Box>
-              ))}
+              )}
             </Paper>
-          )}
+          </Grid>
         </Grid>
+      </TabPanel>
 
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Project Info
-            </Typography>
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Created
-              </Typography>
-              <Typography variant="body1">
-                {new Date(project.created_at).toLocaleDateString()}
-              </Typography>
-            </Box>
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Last Updated
-              </Typography>
-              <Typography variant="body1">
-                {new Date(project.updated_at).toLocaleDateString()}
-              </Typography>
-            </Box>
-            {project.deployment_url && (
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Deployment URL
-                </Typography>
-                <Typography variant="body2" sx={{ wordBreak: 'break-all', color: '#2196f3', fontFamily: 'monospace' }}>
-                  {project.deployment_url}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                  Live and accessible via Traefik reverse proxy
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </Grid>
-      </Grid>
+      <TabPanel value={activeTab} index={1}>
+        <AnalyticsDashboard projectId={project.id} />
+      </TabPanel>
 
+      <TabPanel value={activeTab} index={2}>
+        <VersionsPanel projectId={project.id} onRollback={loadProject} />
+      </TabPanel>
+
+      <TabPanel value={activeTab} index={3}>
+        <DomainsPanel projectId={project.id} />
+      </TabPanel>
+
+      <TabPanel value={activeTab} index={4}>
+        <SettingsPanel projectId={project.id} />
+      </TabPanel>
+
+      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialog} onClose={() => setDeleteDialog(false)}>
         <DialogTitle>Delete Project?</DialogTitle>
         <DialogContent>
@@ -382,4 +415,3 @@ const ProjectDetail = () => {
 }
 
 export default ProjectDetail
-
