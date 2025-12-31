@@ -122,7 +122,7 @@ export const projectServicesApi = {
   // Payments
   connectStripe: async (projectId: number | string, email?: string) => {
     const response = await api.post(`/api/project-services/payments/${projectId}/connect/`, { 
-      email: email || 'admin@faibric.io' 
+      email: email || 'admin@faibric.com' 
     })
     return response.data
   },

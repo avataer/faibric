@@ -565,7 +565,7 @@ def upload_file(request, project_id):
     # For now, return a mock response
     return JsonResponse({
         'success': True,
-        'url': f'https://storage.faibric.io/{project_id}/files/uploaded_file.png',
+        'url': f'https://storage.faibric.com/{project_id}/files/uploaded_file.png',
         'size': request.META.get('CONTENT_LENGTH', 0)
     })
 

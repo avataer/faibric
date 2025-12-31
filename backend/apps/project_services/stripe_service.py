@@ -69,8 +69,8 @@ class StripeService:
         try:
             link = stripe.AccountLink.create(
                 account=account_id,
-                refresh_url='https://faibric.io/stripe/refresh',
-                return_url='https://faibric.io/stripe/complete',
+                refresh_url='https://faibric.com/stripe/refresh',
+                return_url='https://faibric.com/stripe/complete',
                 type='account_onboarding',
             )
             return link.url

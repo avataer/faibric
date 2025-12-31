@@ -1137,7 +1137,7 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
     setTimeout(() => {
       setChatMsgs(prev => [...prev, { 
         from: "ai", 
-        text: "I understand: " + txt + ". Connect to faibric.io/api for live changes. Use Settings tab for manual edits."
+        text: "I understand: " + txt + ". This feature requires the Faibric backend connection. Use Settings for manual edits."
       }]);
       setBuilding(false);
     }, 1500);
@@ -1166,13 +1166,13 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
         </div>
       </nav>
       
-      {/* BUILDER - Chat + Preview */}
+      {/* BUILDER - Chat + Live App Preview */}
       {adminView === "builder" && (
         <div className="flex-1 flex overflow-hidden">
           <div className="w-1/3 bg-white border-r flex flex-col">
             <div className="p-4 border-b bg-gray-50">
               <h2 className="font-semibold">Faibric Builder</h2>
-              <p className="text-xs text-gray-500">Make changes through chat</p>
+              <p className="text-xs text-gray-500">Describe changes to your app</p>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {chatMsgs.map((m, i) => (
@@ -1194,14 +1194,26 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
               </div>
             </div>
           </div>
-          <div className="flex-1 bg-gray-200 flex flex-col">
-            <div className="p-3 bg-white border-b flex items-center justify-between">
+          <div className="flex-1 bg-gray-100 flex flex-col overflow-auto">
+            <div className="p-3 bg-white border-b flex items-center justify-between sticky top-0 z-10">
               <span className="text-sm font-medium">Live Preview</span>
-              <a href={previewUrl} target="_blank" rel="noopener" className="text-blue-600 text-sm hover:underline">Open in new tab</a>
+              <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Open App</a>
             </div>
-            <div className="flex-1 p-4">
-              <div className="bg-white rounded-lg shadow-lg h-full overflow-hidden">
-                <iframe src={previewUrl} className="w-full h-full border-0" title="Preview" />
+            <div className="flex-1 p-4 min-h-0">
+              <div className="bg-white rounded-lg shadow-lg p-6 h-full overflow-auto">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <div className="text-6xl mb-4">&#128187;</div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Your App Preview</h3>
+                  <p className="text-gray-600 mb-4">Click "Open App" to view your live application in a new tab.</p>
+                  <div className="space-y-2 text-left max-w-md mx-auto bg-gray-50 p-4 rounded">
+                    <p className="text-sm"><span className="font-medium">Status:</span> <span className="text-green-600">Deployed</span></p>
+                    <p className="text-sm"><span className="font-medium">URL:</span> <a href={previewUrl} className="text-blue-600 hover:underline break-all">{previewUrl}</a></p>
+                    <p className="text-sm"><span className="font-medium">Data:</span> <span className={connectionStatus === "connected" ? "text-green-600" : "text-yellow-600"}>{connectionStatus === "connected" ? "Live" : "Cached"}</span></p>
+                  </div>
+                  <button onClick={() => window.open(previewUrl, "_blank")} className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">
+                    View Live App
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1511,11 +1523,143 @@ Return ONLY the code, no markdown.
             print("[COMPACT] ERROR: No App function generated")
             code = _fallback_compact_app(prompt, needs_data)
         
+        # ALWAYS inject admin panel if missing
+        code = _ensure_admin_panel(code, needs_data)
+        
         return code.strip()
         
     except Exception as e:
         print(f"[COMPACT] Generation error: {e}")
         return _fallback_compact_app(prompt, needs_data)
+
+
+def _ensure_admin_panel(code: str, needs_data: bool) -> str:
+    """Inject admin panel code if missing from AI-generated code."""
+    
+    # Check if admin panel is already present
+    if 'renderDashboard' in code and 'renderLogin' in code and 'Your App Preview' in code:
+        return code  # Already has full admin panel
+    
+    # Admin panel state and functions to inject
+    admin_state = '''
+  // FAIBRIC ADMIN - Injected
+  const [isAdminRoute, setIsAdminRoute] = React.useState(
+    window.location.pathname.endsWith("/faibric") || window.location.pathname.endsWith("/faibric/")
+  );
+  const [adminAuth, setAdminAuth] = React.useState(!!localStorage.getItem("faibric_admin_token"));
+  const [adminView, setAdminView] = React.useState("builder");
+  const [previewUrl] = React.useState(window.location.origin + window.location.pathname.replace("/faibric", "").replace(/\\/$/, ""));
+  const passwordInputRef = React.useRef(null);
+  const [loginError, setLoginError] = React.useState("");
+  const chatRef = React.useRef(null);
+  const [chatMsgs, setChatMsgs] = React.useState([{from: "ai", text: "Welcome to Faibric Builder! Describe changes you want."}]);
+  const [building, setBuilding] = React.useState(false);
+  
+  const doLogin = () => {
+    const pass = passwordInputRef.current?.value || "";
+    if (pass === (localStorage.getItem("faibric_admin_pass") || "faibric123")) {
+      localStorage.setItem("faibric_admin_token", Date.now().toString());
+      setAdminAuth(true);
+    } else { setLoginError("Invalid password"); }
+  };
+  const doLogout = () => { localStorage.removeItem("faibric_admin_token"); setAdminAuth(false); };
+  const exitAdmin = () => { window.location.href = previewUrl; };
+  const sendChat = () => {
+    const txt = chatRef.current?.value?.trim();
+    if (!txt) return;
+    setChatMsgs(prev => [...prev, {from: "user", text: txt}]);
+    chatRef.current.value = "";
+    setBuilding(true);
+    setTimeout(() => {
+      setChatMsgs(prev => [...prev, {from: "ai", text: "I understand: " + txt + ". Use Settings for manual edits."}]);
+      setBuilding(false);
+    }, 1500);
+  };
+  
+  const renderLogin = () => (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+        <h1 className="text-2xl font-bold text-center mb-4">Faibric Admin</h1>
+        <input ref={passwordInputRef} type="password" defaultValue="" onKeyDown={(e) => e.key === "Enter" && doLogin()} placeholder="Password" className="w-full px-4 py-3 border rounded-lg mb-4" autoFocus />
+        {loginError && <p className="text-red-500 text-sm mb-4">{loginError}</p>}
+        <button onClick={doLogin} className="w-full py-3 bg-blue-600 text-white rounded-lg mb-2">Login</button>
+        <button onClick={exitAdmin} className="w-full py-2 text-gray-500 text-sm">Back to App</button>
+        <p className="text-xs text-gray-400 text-center mt-4">Default: faibric123</p>
+      </div>
+    </div>
+  );
+  
+  const renderDashboard = () => (
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <nav className="bg-gray-900 text-white p-3">
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2">
+            <span className="font-bold mr-4">Faibric Admin</span>
+            {["builder", "overview", "settings"].map(v => (
+              <button key={v} onClick={() => setAdminView(v)} className={adminView === v ? "px-3 py-1 bg-blue-600 rounded text-sm" : "px-3 py-1 hover:bg-gray-700 rounded text-sm"}>
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-4">
+            <button onClick={exitAdmin} className="text-sm">View App</button>
+            <button onClick={doLogout} className="text-sm text-red-400">Logout</button>
+          </div>
+        </div>
+      </nav>
+      {adminView === "builder" && (
+        <div className="flex-1 flex">
+          <div className="w-1/3 bg-white border-r flex flex-col">
+            <div className="p-4 border-b"><h2 className="font-semibold">Builder</h2></div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {chatMsgs.map((m, i) => (<div key={i} className={"flex " + (m.from === "user" ? "justify-end" : "justify-start")}><div className={"max-w-[85%] p-3 rounded-lg text-sm " + (m.from === "user" ? "bg-blue-600 text-white" : "bg-gray-100")}>{m.text}</div></div>))}
+              {building && <div className="bg-gray-100 p-3 rounded-lg w-fit text-gray-500 text-sm">Building...</div>}
+            </div>
+            <div className="p-4 border-t flex gap-2">
+              <input ref={chatRef} type="text" placeholder="Describe changes..." onKeyDown={(e) => e.key === "Enter" && sendChat()} className="flex-1 px-3 py-2 border rounded-lg text-sm" />
+              <button onClick={sendChat} disabled={building} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm disabled:bg-gray-300">Send</button>
+            </div>
+          </div>
+          <div className="flex-1 bg-gray-100 flex flex-col">
+            <div className="p-3 bg-white border-b flex justify-between items-center">
+              <span className="font-medium">Preview</span>
+              <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-blue-600 text-white rounded text-sm">Open App</a>
+            </div>
+            <div className="flex-1 p-4">
+              <div className="bg-white rounded-lg shadow p-6 h-full flex flex-col items-center justify-center text-center">
+                <h3 className="text-xl font-bold mb-2">Your App Preview</h3>
+                <p className="text-gray-600 mb-4">Click "Open App" to view your live app in a new tab.</p>
+                <div className="bg-gray-50 p-4 rounded text-left text-sm mb-4 w-full max-w-md">
+                  <p><strong>Status:</strong> <span className="text-green-600">Deployed</span></p>
+                  <p><strong>URL:</strong> <a href={previewUrl} className="text-blue-600 break-all">{previewUrl}</a></p>
+                </div>
+                <button onClick={() => window.open(previewUrl, "_blank")} className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium">View Live App</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {adminView === "overview" && (
+        <main className="flex-1 p-6"><div className="max-w-4xl mx-auto"><h2 className="text-2xl font-bold mb-4">Overview</h2><div className="grid grid-cols-3 gap-4">{["Views", "Sessions", "API Calls"].map(s => (<div key={s} className="bg-white p-6 rounded shadow"><p className="text-gray-500 text-sm">{s}</p><p className="text-3xl font-bold">{localStorage.getItem("faibric_" + s.toLowerCase().replace(" ", "_")) || "0"}</p></div>))}</div></div></main>
+      )}
+      {adminView === "settings" && (
+        <main className="flex-1 p-6"><div className="max-w-md mx-auto"><h2 className="text-2xl font-bold mb-4">Settings</h2><div className="bg-white p-6 rounded shadow"><label className="block text-sm font-medium mb-1">Admin Password</label><input type="password" placeholder="New password" onBlur={(e) => {if(e.target.value){localStorage.setItem("faibric_admin_pass",e.target.value);e.target.value="";alert("Updated!")}}} className="w-full p-2 border rounded" /></div></div></main>
+      )}
+    </div>
+  );
+  
+  if (isAdminRoute) { return adminAuth ? renderDashboard() : renderLogin(); }
+'''
+    
+    # Find where to inject - after the first line of function App()
+    import re
+    match = re.search(r'function App\s*\([^)]*\)\s*\{', code)
+    if match:
+        insert_pos = match.end()
+        # Inject the admin state after the opening brace
+        code = code[:insert_pos] + '\n' + admin_state + '\n' + code[insert_pos:]
+    
+    return code
 
 
 def _fallback_compact_app(prompt: str, needs_data: bool) -> str:
