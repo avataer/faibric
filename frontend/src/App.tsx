@@ -14,6 +14,7 @@ import FaibricAdmin from './pages/FaibricAdmin'
 import CustomerDashboard from './pages/CustomerDashboard'
 import AdminPanelBuilder from './pages/AdminPanelBuilder'
 import ServiceStatus from './pages/ServiceStatus'
+import Features from './pages/Features'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 
@@ -27,6 +28,7 @@ function App() {
           <Route path="/" element={<LandingFlow />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/features" element={<Features />} />
 
           {/* Protected Routes - Full Screen */}
           <Route element={<ProtectedRoute />}>

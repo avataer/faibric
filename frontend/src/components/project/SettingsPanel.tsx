@@ -28,15 +28,76 @@ export const SettingsPanel = ({ projectId }: SettingsPanelProps) => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  // OAuth credentials (only shown if enabled)
+  // OAuth credentials
   const [googleClientId, setGoogleClientId] = useState('')
   const [googleClientSecret, setGoogleClientSecret] = useState('')
   const [githubClientId, setGithubClientId] = useState('')
   const [githubClientSecret, setGithubClientSecret] = useState('')
 
+  // Database state
+  const [dbProvisioned, setDbProvisioned] = useState(false)
+  const [provisioningDb, setProvisioningDb] = useState(false)
+  const [dbTables, setDbTables] = useState<string[]>([])
+
+  // Stripe state
+  const [stripeConnected, setStripeConnected] = useState(false)
+  const [stripeProducts, setStripeProducts] = useState<any[]>([])
+
   useEffect(() => {
     fetchAuthConfig()
+    fetchTables()
+    fetchStripeStatus()
   }, [projectId])
+
+  const fetchTables = async () => {
+    try {
+      const result = await projectServicesApi.getTables(projectId)
+      if (result.tables) {
+        setDbTables(result.tables)
+        setDbProvisioned(true)
+      }
+    } catch {
+      setDbProvisioned(false)
+    }
+  }
+
+  const handleProvisionDatabase = async () => {
+    setProvisioningDb(true)
+    try {
+      await projectServicesApi.provisionDatabase(projectId, 'app_db')
+      setDbProvisioned(true)
+      alert('Database provisioned successfully!')
+    } catch (error) {
+      console.error('Failed to provision database:', error)
+      alert('Failed to provision database. Check Supabase credentials.')
+    }
+    setProvisioningDb(false)
+  }
+
+  const fetchStripeStatus = async () => {
+    try {
+      const result = await projectServicesApi.getProducts(projectId)
+      if (result.products) {
+        setStripeProducts(result.products)
+        setStripeConnected(true)
+      }
+    } catch {
+      setStripeConnected(false)
+    }
+  }
+
+  const handleConnectStripe = async () => {
+    try {
+      const result = await projectServicesApi.connectStripe(projectId)
+      if (result.success) {
+        setStripeConnected(true)
+        alert('Stripe connected!')
+      }
+    } catch (error) {
+      console.error('Failed to connect Stripe:', error)
+      alert('Failed to connect Stripe. Check API keys.')
+    }
+  }
 
   const fetchAuthConfig = async () => {
     setLoading(true)
@@ -251,33 +312,98 @@ export const SettingsPanel = ({ projectId }: SettingsPanelProps) => {
       {/* Database Section */}
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            Database
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="subtitle1" fontWeight={600}>
+              Database (Supabase)
+            </Typography>
+            <Chip
+              label={dbProvisioned ? 'Connected' : 'Not connected'}
+              size="small"
+              color={dbProvisioned ? 'success' : 'default'}
+            />
+          </Box>
         </AccordionSummary>
         <AccordionDetails>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Your app can use Supabase for data storage. Database is auto-provisioned when your app
-            needs it.
-          </Alert>
-          <Button variant="outlined" onClick={() => projectServicesApi.provisionDatabase(projectId, 'app')}>
-            Provision Database
-          </Button>
+          {!dbProvisioned ? (
+            <>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Provision a Supabase database to store data for your app.
+              </Alert>
+              <Button 
+                variant="contained" 
+                onClick={handleProvisionDatabase}
+                disabled={provisioningDb}
+              >
+                {provisioningDb ? 'Provisioning...' : 'Provision Database'}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Alert severity="success" sx={{ mb: 2 }}>
+                Database is connected and ready!
+              </Alert>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                <strong>Tables:</strong> {dbTables.length > 0 ? dbTables.join(', ') : 'No tables yet'}
+              </Typography>
+              <Button variant="outlined" onClick={fetchTables}>
+                Refresh Tables
+              </Button>
+            </>
+          )}
         </AccordionDetails>
       </Accordion>
 
       {/* Payments Section */}
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="subtitle1" fontWeight={600}>
+              Payments (Stripe)
+            </Typography>
+            <Chip
+              label={stripeConnected ? 'Connected' : 'Not connected'}
+              size="small"
+              color={stripeConnected ? 'success' : 'default'}
+            />
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          {!stripeConnected ? (
+            <>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Connect Stripe to accept payments in your app.
+              </Alert>
+              <Button variant="contained" onClick={handleConnectStripe}>
+                Connect Stripe
+              </Button>
+            </>
+          ) : (
+            <>
+              <Alert severity="success" sx={{ mb: 2 }}>
+                Stripe is connected!
+              </Alert>
+              <Typography variant="body2">
+                <strong>Products:</strong> {stripeProducts.length}
+              </Typography>
+            </>
+          )}
+        </AccordionDetails>
+      </Accordion>
+
+      {/* Storage Section */}
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography variant="subtitle1" fontWeight={600}>
-            Payments (Stripe)
+            File Storage
           </Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Alert severity="info" sx={{ mb: 2 }}>
-            Connect Stripe to accept payments in your app.
+            Use Supabase Storage for file uploads in your app.
           </Alert>
-          <Button variant="outlined">Connect Stripe</Button>
+          <Button variant="outlined" onClick={() => projectServicesApi.getBuckets(projectId)}>
+            View Buckets
+          </Button>
         </AccordionDetails>
       </Accordion>
 

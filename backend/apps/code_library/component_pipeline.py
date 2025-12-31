@@ -1040,6 +1040,342 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
   );
 """
 
+    # FAIBRIC ADMIN PANEL - Accessible at /faibric
+    # Detects URL path and shows admin login/dashboard with BUILDER
+    admin_panel_code = '''
+  // FAIBRIC ADMIN PANEL - Check URL for /faibric path
+  const [isAdminRoute, setIsAdminRoute] = React.useState(false);
+  const [adminAuth, setAdminAuth] = React.useState(false);
+  const [adminError, setAdminError] = React.useState("");
+  const [adminView, setAdminView] = React.useState("builder");
+  const [chatMessages, setChatMessages] = React.useState([
+    { role: "assistant", content: "Welcome to Faibric Builder! How would you like to modify your app?" }
+  ]);
+  const [chatInput, setChatInput] = React.useState("");
+  const [isBuilding, setIsBuilding] = React.useState(false);
+  const passwordRef = React.useRef(null);
+  const chatInputRef = React.useRef(null);
+  
+  // Check URL on mount
+  React.useEffect(() => {
+    const path = window.location.pathname;
+    if (path.endsWith("/faibric") || path.endsWith("/faibric/")) {
+      setIsAdminRoute(true);
+      const token = localStorage.getItem("faibric_admin_token");
+      if (token) setAdminAuth(true);
+    }
+  }, []);
+  
+  const handleAdminLogin = (password) => {
+    const storedPass = localStorage.getItem("faibric_admin_pass") || "faibric123";
+    if (password === storedPass) {
+      localStorage.setItem("faibric_admin_token", Date.now().toString());
+      setAdminAuth(true);
+      setAdminError("");
+    } else {
+      setAdminError("Invalid password");
+    }
+  };
+  
+  const handleAdminLogout = () => {
+    localStorage.removeItem("faibric_admin_token");
+    setAdminAuth(false);
+  };
+  
+  const exitAdmin = () => {
+    window.history.pushState({}, "", window.location.pathname.replace("/faibric", ""));
+    setIsAdminRoute(false);
+  };
+  
+  const sendChatMessage = () => {
+    if (!chatInput.trim()) return;
+    
+    const userMsg = { role: "user", content: chatInput };
+    setChatMessages(prev => [...prev, userMsg]);
+    setChatInput("");
+    setIsBuilding(true);
+    
+    // Simulate AI response (in production, call Faibric API)
+    setTimeout(() => {
+      const aiMsg = { 
+        role: "assistant", 
+        content: "I understand you want to: " + chatInput + ". To make changes, connect this app to Faibric backend at faibric.io/api. For now, you can manually edit settings in the Settings tab."
+      };
+      setChatMessages(prev => [...prev, aiMsg]);
+      setIsBuilding(false);
+    }, 1500);
+  };
+'''
+
+    admin_login_view = '''
+  // Admin Login View - Using uncontrolled input to prevent focus loss
+  const AdminLogin = () => {
+    const [localPassword, setLocalPassword] = React.useState("");
+    const inputRef = React.useRef(null);
+    
+    React.useEffect(() => {
+      if (inputRef.current) inputRef.current.focus();
+    }, []);
+    
+    const handleSubmit = () => {
+      handleAdminLogin(localPassword);
+    };
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Faibric Admin</h1>
+            <p className="text-gray-500 mt-2">Enter your admin password</p>
+          </div>
+          
+          <div className="space-y-4">
+            <input
+              ref={inputRef}
+              type="password"
+              value={localPassword}
+              onChange={(e) => setLocalPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              placeholder="Admin password"
+              className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              autoFocus
+            />
+            {adminError && <p className="text-red-500 text-sm">{adminError}</p>}
+            <button
+              onClick={handleSubmit}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+            >
+              Login
+            </button>
+            <button onClick={exitAdmin} className="w-full py-2 text-gray-500 hover:text-gray-700 text-sm">
+              Back to App
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-6">Default password: faibric123</p>
+        </div>
+      </div>
+    );
+  };
+'''
+
+    admin_dashboard_view = '''
+  // Admin Dashboard View with BUILDER
+  const AdminDashboard = () => (
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <nav className="bg-gray-900 text-white p-3 flex-shrink-0">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-bold">Faibric Admin</h1>
+            <div className="flex gap-1">
+              {["builder", "overview", "analytics", "settings"].map(view => (
+                <button
+                  key={view}
+                  onClick={() => setAdminView(view)}
+                  className={adminView === view 
+                    ? "px-3 py-1 bg-blue-600 rounded text-sm"
+                    : "px-3 py-1 hover:bg-gray-700 rounded text-sm"
+                  }
+                >
+                  {view.charAt(0).toUpperCase() + view.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <button onClick={exitAdmin} className="text-sm hover:text-blue-400">View App</button>
+            <button onClick={handleAdminLogout} className="text-sm text-red-400 hover:text-red-300">Logout</button>
+          </div>
+        </div>
+      </nav>
+      
+      {/* BUILDER VIEW - Chat Left, Preview Right */}
+      {adminView === "builder" && (
+        <div className="flex-1 flex overflow-hidden">
+          {/* Chat Panel - Left */}
+          <div className="w-1/3 bg-white border-r flex flex-col">
+            <div className="p-4 border-b bg-gray-50">
+              <h2 className="font-semibold">Faibric Builder</h2>
+              <p className="text-xs text-gray-500">Make changes to your app through chat</p>
+            </div>
+            
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {chatMessages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[85%] p-3 rounded-lg ${
+                    msg.role === "user" 
+                      ? "bg-blue-600 text-white" 
+                      : "bg-gray-100 text-gray-800"
+                  }`}>
+                    <p className="text-sm">{msg.content}</p>
+                  </div>
+                </div>
+              ))}
+              {isBuilding && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 p-3 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-gray-500">Building...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Chat Input */}
+            <div className="p-4 border-t">
+              <div className="flex gap-2">
+                <input
+                  ref={chatInputRef}
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendChatMessage()}
+                  placeholder="Describe changes you want..."
+                  className="flex-1 px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+                <button
+                  onClick={sendChatMessage}
+                  disabled={isBuilding || !chatInput.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:bg-gray-300"
+                >
+                  Send
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                Try: "Add a dark mode toggle" or "Change the header color to green"
+              </p>
+            </div>
+          </div>
+          
+          {/* Preview Panel - Right */}
+          <div className="flex-1 bg-gray-200 flex flex-col">
+            <div className="p-3 bg-white border-b flex items-center justify-between">
+              <span className="text-sm font-medium">Live Preview</span>
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${connectionStatus === "connected" ? "bg-green-500" : "bg-yellow-500"}`}></span>
+                <span className="text-xs text-gray-500">{connectionStatus === "connected" ? "Live" : "Cached"}</span>
+              </div>
+            </div>
+            <div className="flex-1 p-4">
+              <div className="bg-white rounded-lg shadow-lg h-full overflow-hidden">
+                <iframe 
+                  src={window.location.href.replace("/faibric", "")} 
+                  className="w-full h-full border-0"
+                  title="App Preview"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Overview View */}
+      {adminView === "overview" && (
+        <main className="flex-1 overflow-auto p-6">
+          <div className="max-w-5xl mx-auto space-y-6">
+            <h2 className="text-2xl font-bold">Dashboard Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white p-6 rounded-lg shadow">
+                <p className="text-gray-500 text-sm">Total Views</p>
+                <p className="text-3xl font-bold">{localStorage.getItem("faibric_views") || "0"}</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <p className="text-gray-500 text-sm">Sessions</p>
+                <p className="text-3xl font-bold">{localStorage.getItem("faibric_sessions") || "0"}</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <p className="text-gray-500 text-sm">API Calls</p>
+                <p className="text-3xl font-bold">{localStorage.getItem("faibric_api_calls") || "0"}</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <p className="text-gray-500 text-sm">Status</p>
+                <p className="text-xl font-bold text-green-600">{connectionStatus === "connected" ? "Live" : connectionStatus}</p>
+              </div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="font-semibold mb-4">Quick Actions</h3>
+              <div className="flex gap-3">
+                <button onClick={loadData} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Refresh Data</button>
+                <button onClick={() => localStorage.clear()} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Clear Cache</button>
+              </div>
+            </div>
+          </div>
+        </main>
+      )}
+      
+      {/* Analytics View */}
+      {adminView === "analytics" && (
+        <main className="flex-1 overflow-auto p-6">
+          <div className="max-w-5xl mx-auto space-y-6">
+            <h2 className="text-2xl font-bold">Analytics</h2>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <p className="text-gray-500 mb-4">Connect to Faibric backend for full analytics.</p>
+              <div className="h-48 bg-gray-100 rounded flex items-center justify-center text-gray-400">
+                Analytics charts appear here when connected
+              </div>
+            </div>
+          </div>
+        </main>
+      )}
+      
+      {/* Settings View */}
+      {adminView === "settings" && (
+        <main className="flex-1 overflow-auto p-6">
+          <div className="max-w-2xl mx-auto space-y-6">
+            <h2 className="text-2xl font-bold">App Settings</h2>
+            <div className="bg-white p-6 rounded-lg shadow space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Refresh Interval</label>
+                <select 
+                  value={refreshInterval}
+                  onChange={(e) => updateRefreshInterval && updateRefreshInterval(parseInt(e.target.value))}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="10000">10 seconds</option>
+                  <option value="30000">30 seconds</option>
+                  <option value="60000">1 minute</option>
+                  <option value="300000">5 minutes</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Connection Status</label>
+                <div className="flex items-center gap-2">
+                  <span className={`w-3 h-3 rounded-full ${connectionStatus === "connected" ? "bg-green-500" : "bg-yellow-500"}`}></span>
+                  <span className="capitalize">{connectionStatus}</span>
+                </div>
+              </div>
+              <div className="pt-4 border-t">
+                <label className="block text-sm font-medium mb-1">Change Admin Password</label>
+                <input
+                  type="password"
+                  placeholder="New password"
+                  onBlur={(e) => {
+                    if (e.target.value) {
+                      localStorage.setItem("faibric_admin_pass", e.target.value);
+                      e.target.value = "";
+                      alert("Password updated!");
+                    }
+                  }}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+            </div>
+          </div>
+        </main>
+      )}
+          </div>
+        )}
+    </div>
+  );
+'''
+
     # Settings view - FUNCTIONAL, not fake
     settings_view = """
       {currentView === "settings" && (
@@ -1132,10 +1468,11 @@ Create a compact React app for this request: {prompt}
 CRITICAL RULES (for browser Babel compatibility):
 1. Use ONLY plain JavaScript - NO TypeScript (no interfaces, no type annotations, no generics like <T>)
 2. Use React.useState, React.useEffect (not destructured imports)
-3. Keep code under 300 lines
+3. Keep code under 400 lines (extra for admin panel)
 4. Include functional navigation with Settings view
 5. DO NOT use emojis anywhere
 6. Use double quotes for all strings
+7. INCLUDE the Faibric admin panel at /faibric route
 
 REQUIRED STRUCTURE:
 ```javascript
@@ -1148,12 +1485,23 @@ function App() {{
 
 {placeholder_code if needs_data else ""}
 
+{admin_panel_code}
+
+{admin_login_view}
+
+{admin_dashboard_view}
+
   // Navigation items - ALWAYS include Settings
   const navItems = [
     {{ id: "dashboard", label: "Dashboard" }},
     {{ id: "analytics", label: "Analytics" }},
     {{ id: "settings", label: "Settings" }},
   ];
+
+  // ADMIN ROUTE CHECK - Show admin panel if URL ends with /faibric
+  if (isAdminRoute) {{
+    return adminAuth ? <AdminDashboard /> : <AdminLogin />;
+  }}
 
   return (
     <div className="min-h-screen bg-gray-100">
