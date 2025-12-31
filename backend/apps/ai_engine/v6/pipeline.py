@@ -20,6 +20,25 @@ from ..models_config import CODE_MODEL
 
 logger = logging.getLogger(__name__)
 
+# Cache for column check
+_has_is_approved = None
+
+def _check_has_is_approved_column():
+    """Check if is_approved column exists."""
+    global _has_is_approved
+    if _has_is_approved is None:
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'code_library_libraryitem' AND column_name = 'is_approved'
+                """)
+                _has_is_approved = cursor.fetchone() is not None
+        except Exception:
+            _has_is_approved = False
+    return _has_is_approved
+
 
 @dataclass
 class GenerationRequest:
@@ -309,21 +328,25 @@ if __name__ == "__main__":
         keywords = [w.lower() for w in request.description.split() if len(w) > 3][:10]
         
         # Create new item with ONLY fields that exist in Django model
-        item = LibraryItem.objects.create(
-            name=request.description[:200],
-            item_type=request.item_type or 'component',
-            language=request.language or 'tsx',
-            code=code,
-            description=f"Auto-generated: {request.description}",
-            keywords=keywords,  # JSONField - pass as list
-            tags=keywords[:5],  # JSONField - pass as list
-            embedding=embedding,
-            created_by='ai',
-            is_public=True,
-            is_approved=True,
-            needs_review=True,
-            quality_score=70.0,
-        )
+        # Handle missing is_approved column gracefully
+        create_kwargs = {
+            'name': request.description[:200],
+            'item_type': request.item_type or 'component',
+            'language': request.language or 'tsx',
+            'code': code,
+            'description': f"Auto-generated: {request.description}",
+            'keywords': keywords,  # JSONField - pass as list
+            'tags': keywords[:5],  # JSONField - pass as list
+            'embedding': embedding,
+            'created_by': 'ai',
+            'is_public': True,
+            'needs_review': True,
+            'quality_score': 70.0,
+        }
+        if _check_has_is_approved_column():
+            create_kwargs['is_approved'] = True
+        
+        item = LibraryItem.objects.create(**create_kwargs)
         
         # Create initial version
         try:

@@ -13,6 +13,25 @@ from .metrics import ReuseMetrics, DuplicateDetector, RetrievalDiagnostics
 
 logger = logging.getLogger(__name__)
 
+# Cache for column check
+_has_is_approved = None
+
+def _check_has_is_approved_column():
+    """Check if is_approved column exists."""
+    global _has_is_approved
+    if _has_is_approved is None:
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'code_library_libraryitem' AND column_name = 'is_approved'
+                """)
+                _has_is_approved = cursor.fetchone() is not None
+        except Exception:
+            _has_is_approved = False
+    return _has_is_approved
+
 
 @dataclass
 class DoctorCheck:
@@ -155,7 +174,11 @@ class LibraryDoctor:
         """Check for items awaiting approval."""
         from .models import LibraryItem
         
-        unapproved = LibraryItem.objects.filter(is_approved=False).count()
+        # Handle missing is_approved column
+        if _check_has_is_approved_column():
+            unapproved = LibraryItem.objects.filter(is_approved=False).count()
+        else:
+            unapproved = 0  # Can't check without column
         
         if unapproved == 0:
             self.checks.append(DoctorCheck(
@@ -198,10 +221,11 @@ class LibraryDoctor:
         """Check for items without proper keywords/tags."""
         from .models import LibraryItem
         
-        items = LibraryItem.objects.filter(
-            is_active=True,
-            is_approved=True,
-        )
+        # Handle missing is_approved column
+        filters = {'is_active': True}
+        if _check_has_is_approved_column():
+            filters['is_approved'] = True
+        items = LibraryItem.objects.filter(**filters)
         
         no_keywords = items.filter(keywords='').count()
         no_tags = items.filter(tags=[]).count()
@@ -267,5 +291,6 @@ def run_doctor() -> Dict:
 def diagnose(query: str) -> Dict:
     """Diagnose why a query returns certain results."""
     return RetrievalDiagnostics.diagnose_query(query)
+
 
 

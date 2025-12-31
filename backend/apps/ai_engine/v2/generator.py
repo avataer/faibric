@@ -17,6 +17,25 @@ from ..models_config import CODE_MODEL, CHAT_MODEL
 
 logger = logging.getLogger(__name__)
 
+# Cache for column check
+_has_is_approved = None
+
+def _check_has_is_approved_column():
+    """Check if is_approved column exists."""
+    global _has_is_approved
+    if _has_is_approved is None:
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'code_library_libraryitem' AND column_name = 'is_approved'
+                """)
+                _has_is_approved = cursor.fetchone() is not None
+        except Exception:
+            _has_is_approved = False
+    return _has_is_approved
+
 
 class CodeLibraryMixin:
     """
@@ -83,21 +102,25 @@ class CodeLibraryMixin:
             kw_list = keywords if isinstance(keywords, list) else []
             
             # Create with ONLY fields that exist in Django model
-            item = LibraryItem.objects.create(
-                name=name[:200],
-                item_type='component',
-                language='tsx',
-                code=code,
-                description=description[:500] if description else 'Auto-generated component',
-                keywords=kw_list,  # JSONField - pass as list
-                tags=kw_list[:5],  # JSONField - pass as list
-                source_project=source_project,
-                created_by='ai',
-                is_public=True,
-                is_approved=True,
-                needs_review=True,
-                quality_score=0.7,
-            )
+            # Handle missing is_approved column
+            create_kwargs = {
+                'name': name[:200],
+                'item_type': 'component',
+                'language': 'tsx',
+                'code': code,
+                'description': description[:500] if description else 'Auto-generated component',
+                'keywords': kw_list,  # JSONField - pass as list
+                'tags': kw_list[:5],  # JSONField - pass as list
+                'source_project': source_project,
+                'created_by': 'ai',
+                'is_public': True,
+                'needs_review': True,
+                'quality_score': 0.7,
+            }
+            if _check_has_is_approved_column():
+                create_kwargs['is_approved'] = True
+            
+            item = LibraryItem.objects.create(**create_kwargs)
             logger.info(f"Saved component to library: {name}")
             return str(item.id)
         except Exception as e:
