@@ -82,6 +82,35 @@ def feedback_api(request):
     return HttpResponse(json.dumps(data, indent=2), content_type='application/json')
 
 
+@csrf_exempt
+def fix_schema(request):
+    """
+    Emergency endpoint to fix missing database columns.
+    Call: POST /api/library/fix-schema/
+    """
+    from django.db import connection
+    
+    results = []
+    sql_commands = [
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT TRUE;",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS interface JSONB;",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS validated_connections JSONB;",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS admin_notes TEXT DEFAULT '';",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS improvement_notes TEXT DEFAULT '';",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP;",
+    ]
+    
+    with connection.cursor() as cursor:
+        for sql in sql_commands:
+            try:
+                cursor.execute(sql)
+                results.append({"sql": sql[:60], "status": "OK"})
+            except Exception as e:
+                results.append({"sql": sql[:60], "status": f"Error: {e}"})
+    
+    return HttpResponse(json.dumps({"results": results}, indent=2), content_type='application/json')
+
+
 urlpatterns = [
     path('', include(router.urls)),
     # Admin feedback interface
@@ -95,6 +124,8 @@ urlpatterns = [
     # Alerts
     path('alerts/', alerts_view, name='alerts'),
     path('alerts/<int:alert_id>/read/', mark_alert_read, name='mark-alert-read'),
+    # Schema fix endpoint
+    path('fix-schema/', fix_schema, name='fix-schema'),
 ]
 
 
