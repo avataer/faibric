@@ -15,6 +15,25 @@ from .metrics import ReuseMetrics, DuplicateDetector
 
 logger = logging.getLogger(__name__)
 
+# Cache for column check
+_has_is_approved = None
+
+def _check_has_is_approved_column():
+    """Check if is_approved column exists."""
+    global _has_is_approved
+    if _has_is_approved is None:
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'code_library_libraryitem' AND column_name = 'is_approved'
+                """)
+                _has_is_approved = cursor.fetchone() is not None
+        except Exception:
+            _has_is_approved = False
+    return _has_is_approved
+
 
 class CustomerMessenger:
     """
@@ -150,11 +169,11 @@ Only include sections and features actually mentioned or implied. Return ONLY va
         keywords.extend(requirements.get('features', []))
         keywords = [k.lower() for k in keywords if k]
         
-        # Search active, approved items
-        items = LibraryItem.objects.filter(
-            is_active=True,
-            is_approved=True
-        ).order_by('-quality_score', '-usage_count')
+        # Search active, approved items - handle missing column
+        filters = {'is_active': True}
+        if _check_has_is_approved_column():
+            filters['is_approved'] = True
+        items = LibraryItem.objects.filter(**filters).order_by('-quality_score', '-usage_count')
         
         for item in items:
             # Handle keywords as list (JSONField) or legacy string
@@ -470,11 +489,12 @@ the specific data endpoints and styling while keeping the core structure.
 """
             
             # Create library item with comprehensive metadata
-            item = LibraryItem.objects.create(
-                name=f"Generated: {user_prompt[:50]}...",
-                slug=slug,
-                description=f"Auto-generated for: {user_prompt[:200]}",
-                usage_example=f'''
+            # Handle missing columns gracefully
+            create_kwargs = {
+                'name': f"Generated: {user_prompt[:50]}...",
+                'slug': slug,
+                'description': f"Auto-generated for: {user_prompt[:200]}",
+                'usage_example': f'''
 // Import and use this component
 import App from './App';
 
@@ -483,26 +503,30 @@ import App from './App';
 
 // Original prompt: {user_prompt[:100]}
 ''',
-                documentation=doc,
-                item_type='template',
-                language='tsx',
-                code=code,
-                keywords=keywords,
-                tags=keywords[:constants.MAX_TAGS],
-                embedding_model='',
-                dependencies=[],
-                source='generated',
-                source_url='',
-                quality_score=constants.DEFAULT_AI_QUALITY_SCORE,
-                is_approved=True,
-                is_active=True,
-                is_public=True,
-                is_deprecated=False,
-                deprecation_note='',
-                needs_review=True,  # Flag for admin to review later
-                source_project=project,
-                created_by='ai'
-            )
+                'documentation': doc,
+                'item_type': 'template',
+                'language': 'tsx',
+                'code': code,
+                'keywords': keywords,
+                'tags': keywords[:constants.MAX_TAGS],
+                'embedding_model': '',
+                'dependencies': [],
+                'source': 'generated',
+                'source_url': '',
+                'quality_score': constants.DEFAULT_AI_QUALITY_SCORE,
+                'is_active': True,
+                'is_public': True,
+                'is_deprecated': False,
+                'deprecation_note': '',
+                'needs_review': True,  # Flag for admin to review later
+                'source_project': project,
+                'created_by': 'ai'
+            }
+            
+            if _check_has_is_approved_column():
+                create_kwargs['is_approved'] = True
+            
+            item = LibraryItem.objects.create(**create_kwargs)
             
             print(f"[LIBRARY] [OK] SAVED: {item.id} - {item.name} (keywords: {keywords})")
             

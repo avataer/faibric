@@ -18,6 +18,34 @@ from . import constants
 
 logger = logging.getLogger(__name__)
 
+# Cache for column check
+_has_is_approved = None
+
+def _check_has_is_approved_column():
+    """Check if is_approved column exists."""
+    global _has_is_approved
+    if _has_is_approved is None:
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'code_library_libraryitem' AND column_name = 'is_approved'
+                """)
+                _has_is_approved = cursor.fetchone() is not None
+        except Exception:
+            _has_is_approved = False
+    return _has_is_approved
+
+
+def _get_active_items():
+    """Get active items queryset, handling missing is_approved column."""
+    from .models import LibraryItem
+    filters = {'is_active': True}
+    if _check_has_is_approved_column():
+        filters['is_approved'] = True
+    return LibraryItem.objects.filter(**filters)
+
 
 class ReuseMetrics:
     """
@@ -158,9 +186,7 @@ class DuplicateDetector:
         Check if new code is a duplicate of existing library item.
         Returns the matching item if duplicate found, None otherwise.
         """
-        from .models import LibraryItem
-        
-        items = LibraryItem.objects.filter(is_active=True, is_approved=True)
+        items = _get_active_items()
         
         for item in items:
             similarity = cls.compute_similarity(new_code, item.code)
@@ -200,10 +226,7 @@ class RetrievalDiagnostics:
         keywords.extend(requirements.get('features', []))
         keywords = [k.lower() for k in keywords if k]
         
-        items = LibraryItem.objects.filter(
-            is_active=True,
-            is_approved=True
-        ).order_by('-quality_score', '-usage_count')
+        items = _get_active_items().order_by('-quality_score', '-usage_count')
         
         diagnostics = []
         
@@ -271,5 +294,6 @@ def _get_decision(score: float) -> str:
         return 'GRAY_ZONE (review needed)'
     else:
         return 'GENERATE (no match)'
+
 
 

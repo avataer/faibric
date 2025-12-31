@@ -37,6 +37,26 @@ from enum import Enum
 
 logger = logging.getLogger(__name__)
 
+# Cache for column existence check
+_has_is_approved = None
+
+def _check_has_is_approved_column():
+    """Check if is_approved column exists in LibraryItem table."""
+    global _has_is_approved
+    if _has_is_approved is None:
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name = 'code_library_libraryitem' 
+                    AND column_name = 'is_approved'
+                """)
+                _has_is_approved = cursor.fetchone() is not None
+        except Exception:
+            _has_is_approved = False
+    return _has_is_approved
+
 
 class ComponentType(Enum):
     """Standard building block types."""
@@ -520,11 +540,12 @@ class ComponentLibrary:
         - reason: Why this was/wasn't a good match
         """
         # Search by component_type + variant
-        items = self.model.objects.filter(
-            is_active=True,
-            is_approved=True,
-            item_type='component',  # Only components, not templates
-        ).order_by('-quality_score', '-usage_count')
+        # Build filter - handle missing is_approved column
+        filters = {'is_active': True, 'item_type': 'component'}
+        if _check_has_is_approved_column():
+            filters['is_approved'] = True
+        
+        items = self.model.objects.filter(**filters).order_by('-quality_score', '-usage_count')
         
         best_match = None
         best_score = 0
@@ -636,30 +657,36 @@ import {component_type.value.title()}{variant.title()} from './components/{compo
 This component can be customized by passing props or modifying styles.
 """
         
-        item = self.model.objects.create(
-            name=name,
-            slug=slug,
-            description=description,
-            usage_example=f'<{component_type.value.title()}{variant.title()} />',
-            documentation=doc,
-            item_type='component',  # COMPONENT, not template
-            language='tsx',
-            code=code,
-            keywords=[component_type.value, variant, 'building-block'],
-            tags=[component_type.value, variant],
-            embedding_model='',
-            dependencies=[],
-            source='generated',
-            source_url='',
-            quality_score=0.7,  # Default quality
-            is_approved=True,
-            is_active=True,
-            is_public=True,
-            is_deprecated=False,
-            deprecation_note='',
-            needs_review=True,
-            created_by='ai'
-        )
+        # Build creation kwargs - handle missing columns
+        create_kwargs = {
+            'name': name,
+            'slug': slug,
+            'description': description,
+            'usage_example': f'<{component_type.value.title()}{variant.title()} />',
+            'documentation': doc,
+            'item_type': 'component',  # COMPONENT, not template
+            'language': 'tsx',
+            'code': code,
+            'keywords': [component_type.value, variant, 'building-block'],
+            'tags': [component_type.value, variant],
+            'embedding_model': '',
+            'dependencies': [],
+            'source': 'generated',
+            'source_url': '',
+            'quality_score': 0.7,  # Default quality
+            'is_active': True,
+            'is_public': True,
+            'is_deprecated': False,
+            'deprecation_note': '',
+            'needs_review': True,
+            'created_by': 'ai'
+        }
+        
+        # Add is_approved only if column exists
+        if _check_has_is_approved_column():
+            create_kwargs['is_approved'] = True
+        
+        item = self.model.objects.create(**create_kwargs)
         
         print(f"[LIBRARY] [OK] Saved component: {name} v{version} ({item.id})")
         

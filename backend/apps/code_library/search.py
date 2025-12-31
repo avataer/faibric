@@ -6,11 +6,40 @@ import logging
 from typing import List, Optional
 
 from django.db.models import Q
+from django.db import connection
 
 from .models import LibraryItem, LibraryCategory
 from .embeddings import EmbeddingService, embed_query_sync
 
 logger = logging.getLogger(__name__)
+
+# Cache for column existence check
+_has_is_approved_column = None
+
+
+def _check_has_is_approved():
+    """Check if is_approved column exists (cached)."""
+    global _has_is_approved_column
+    if _has_is_approved_column is None:
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name = 'code_library_libraryitem' 
+                    AND column_name = 'is_approved'
+                """)
+                _has_is_approved_column = cursor.fetchone() is not None
+        except Exception:
+            _has_is_approved_column = False
+    return _has_is_approved_column
+
+
+def get_active_items_queryset():
+    """Get queryset of active library items, handling missing columns."""
+    if _check_has_is_approved():
+        return LibraryItem.objects.filter(is_active=True, is_approved=True)
+    else:
+        return LibraryItem.objects.filter(is_active=True)
 
 
 class LibrarySearchService:
@@ -25,7 +54,7 @@ class LibrarySearchService:
     
     def _get_base_queryset(self):
         """Get base queryset filtered by visibility."""
-        return LibraryItem.objects.filter(is_active=True, is_approved=True)
+        return get_active_items_queryset()
     
     def keyword_search(
         self,
@@ -317,7 +346,7 @@ class AutoComplete:
         if len(prefix) < 2:
             return []
         
-        qs = LibraryItem.objects.filter(is_active=True, is_approved=True)
+        qs = get_active_items_queryset()
         
         # Get matching names
         names = list(
