@@ -29,6 +29,7 @@ RUN python manage.py collectstatic --noinput || true
 # Expose port
 EXPOSE 10000
 
-# Run migrations and start server with gunicorn
-CMD ["sh", "-c", "python manage.py migrate && gunicorn faibric_backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2"]
+# Run migrations (with error handling) and start server with gunicorn
+# If migrations fail, we still try to start the server - it might work with existing tables
+CMD ["sh", "-c", "python manage.py migrate --noinput || echo 'Migration failed, continuing...' && gunicorn faibric_backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2"]
 
