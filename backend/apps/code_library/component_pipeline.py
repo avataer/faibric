@@ -1690,34 +1690,72 @@ def _ensure_admin_panel(code: str, needs_data: bool) -> str:
         </main>
       )}
       
-      {/* BUILDER TAB */}
+      {/* BUILDER TAB - Live Preview with Iframe */}
       {adminView === "builder" && (
-        <div className="flex-1 flex">
+        <div className="flex-1 flex overflow-hidden">
+          {/* Chat Panel - Left */}
           <div className="w-1/3 bg-white border-r flex flex-col">
-            <div className="p-4 border-b"><h2 className="font-semibold">Builder</h2><p className="text-xs text-gray-500">Describe changes in natural language</p></div>
+            <div className="p-4 border-b bg-gray-50">
+              <h2 className="font-semibold">Builder</h2>
+              <p className="text-xs text-gray-500">Describe changes in natural language</p>
+            </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {chatMsgs.map((m, i) => (<div key={i} className={"flex " + (m.from === "user" ? "justify-end" : "justify-start")}><div className={"max-w-[85%] p-3 rounded-lg text-sm " + (m.from === "user" ? "bg-blue-600 text-white" : "bg-gray-100")}>{m.text}</div></div>))}
-              {building && <div className="bg-gray-100 p-3 rounded-lg w-fit text-gray-500 text-sm">Building...</div>}
+              {chatMsgs.map((m, i) => (
+                <div key={i} className={"flex " + (m.from === "user" ? "justify-end" : "justify-start")}>
+                  <div className={"max-w-[85%] p-3 rounded-lg text-sm " + (m.from === "user" ? "bg-blue-600 text-white" : "bg-gray-100")}>
+                    {m.text}
+                  </div>
+                </div>
+              ))}
+              {building && (
+                <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-yellow-700 text-sm font-medium">Rebuilding your app...</span>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="p-4 border-t flex gap-2">
-              <input ref={chatRef} type="text" placeholder="Describe changes..." onKeyDown={(e) => e.key === "Enter" && sendChat()} className="flex-1 px-3 py-2 border rounded-lg text-sm" />
-              <button onClick={sendChat} disabled={building} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm disabled:bg-gray-300">Send</button>
+              <input ref={chatRef} type="text" placeholder="Describe changes..." 
+                onKeyDown={(e) => e.key === "Enter" && sendChat()} 
+                className="flex-1 px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+              <button onClick={sendChat} disabled={building} 
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                Send
+              </button>
             </div>
           </div>
-          <div className="flex-1 bg-gray-100 flex flex-col">
-            <div className="p-3 bg-white border-b flex justify-between items-center">
-              <span className="font-medium">Preview</span>
-              <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-blue-600 text-white rounded text-sm">Open App</a>
+          
+          {/* Live Preview - Right */}
+          <div className="flex-1 bg-gray-200 flex flex-col">
+            <div className="p-2 bg-white border-b flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <span className="font-medium text-sm">Live Preview</span>
+                <span className={"text-xs px-2 py-0.5 rounded " + (building ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700")}>
+                  {building ? "Updating..." : "Live"}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => { const f = document.getElementById("preview-frame"); if(f) f.src = f.src; }} 
+                  className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded text-sm">
+                  Refresh
+                </button>
+                <a href={previewUrl} target="_blank" rel="noopener noreferrer" 
+                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                  Open in New Tab
+                </a>
+              </div>
             </div>
-            <div className="flex-1 p-4">
-              <div className="bg-white rounded-lg shadow p-6 h-full flex flex-col items-center justify-center text-center">
-                <h3 className="text-xl font-bold mb-2">Your App Preview</h3>
-                <p className="text-gray-600 mb-4">Click "Open App" to view your live app in a new tab.</p>
-                <div className="bg-gray-50 p-4 rounded text-left text-sm mb-4 w-full max-w-md">
-                  <p><strong>Status:</strong> <span className="text-green-600">Deployed</span></p>
-                  <p><strong>URL:</strong> <a href={previewUrl} className="text-blue-600 break-all">{previewUrl}</a></p>
-                </div>
-                <button onClick={() => window.open(previewUrl, "_blank")} className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium">View Live App</button>
+            <div className="flex-1 p-2">
+              <div className="bg-white rounded-lg shadow-lg h-full overflow-hidden">
+                <iframe 
+                  id="preview-frame"
+                  src={previewUrl}
+                  className="w-full h-full border-0"
+                  title="App Preview"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                />
               </div>
             </div>
           </div>
