@@ -201,6 +201,13 @@ class ComponentGenerationPipeline:
             self.stats['components_reused'] += 1
             self.stats['reused_from'].append(match.component.id)
             
+            # INCREMENT USAGE COUNT - track component reuse
+            try:
+                match.component.increment_usage()
+                print(f"    Usage count: {match.component.usage_count}")
+            except Exception as e:
+                print(f"    [WARN] Failed to increment usage: {e}")
+            
             # Adapt the component for this specific use case
             adapted = self._adapt_component(match.component.code, requirement, full_prompt)
             return adapted
