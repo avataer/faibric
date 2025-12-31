@@ -62,7 +62,7 @@ class LandingSessionAdmin(admin.ModelAdmin):
     def email_changes_display(self, obj):
         if obj.email_change_count > 0:
             return format_html(
-                '<span style="color: orange;">⚠️ {}</span>',
+                '<span style="color: orange;">[WARN] {}</span>',
                 obj.email_change_count
             )
         return '0'
@@ -170,6 +170,8 @@ class AdminNotificationAdmin(admin.ModelAdmin):
     
     def mark_as_read(self, request, queryset):
         queryset.update(is_read=True)
+
+
 
 
 

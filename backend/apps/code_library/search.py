@@ -3,17 +3,9 @@ Search service for code library.
 Supports semantic search, keyword search, and hybrid search.
 """
 import logging
-import re
 from typing import List, Optional
 
-from django.db.models import Q, F, Value
-from django.db.models.functions import Greatest
-from django.contrib.postgres.search import (
-    SearchQuery,
-    SearchRank,
-    SearchVector,
-    TrigramSimilarity,
-)
+from django.db.models import Q
 
 from .models import LibraryItem, LibraryCategory
 from .embeddings import EmbeddingService, embed_query_sync
@@ -27,34 +19,24 @@ class LibrarySearchService:
     """
     
     def __init__(self, tenant_id: str = None):
+        # tenant_id kept for API compatibility but not used currently
         self.tenant_id = tenant_id
         self.embedding_service = EmbeddingService()
     
     def _get_base_queryset(self):
-        """Get base queryset filtered by tenant and visibility."""
-        qs = LibraryItem.objects.filter(is_active=True)
-        
-        if self.tenant_id:
-            # Include tenant-specific and public items
-            qs = qs.filter(
-                Q(tenant_id=self.tenant_id) | Q(is_public=True) | Q(tenant__isnull=True)
-            )
-        else:
-            # Only public/global items
-            qs = qs.filter(Q(is_public=True) | Q(tenant__isnull=True))
-        
-        return qs.exclude(is_deprecated=True)
+        """Get base queryset filtered by visibility."""
+        return LibraryItem.objects.filter(is_active=True, is_approved=True)
     
     def keyword_search(
         self,
         query: str,
         item_type: str = None,
         language: str = None,
-        category_id: str = None,
+        category_id: int = None,
         limit: int = 20
     ) -> List[dict]:
         """
-        Search using keywords and trigram similarity.
+        Search using keywords.
         """
         qs = self._get_base_queryset()
         
@@ -77,8 +59,7 @@ class LibrarySearchService:
         for keyword in keywords:
             q_filter |= Q(name__icontains=keyword)
             q_filter |= Q(description__icontains=keyword)
-            q_filter |= Q(keywords__contains=[keyword])
-            q_filter |= Q(tags__contains=[keyword])
+            q_filter |= Q(keywords__icontains=keyword)  # keywords is a text field
             q_filter |= Q(code__icontains=keyword)
         
         results = qs.filter(q_filter).order_by('-quality_score', '-usage_count')[:limit]
@@ -87,7 +68,6 @@ class LibrarySearchService:
             {
                 'id': str(item.id),
                 'name': item.name,
-                'slug': item.slug,
                 'item_type': item.item_type,
                 'language': item.language,
                 'description': item.description[:200] if item.description else '',
@@ -104,7 +84,7 @@ class LibrarySearchService:
         query: str,
         item_type: str = None,
         language: str = None,
-        category_id: str = None,
+        category_id: int = None,
         limit: int = 20,
         min_score: float = 0.5
     ) -> List[dict]:
@@ -112,11 +92,15 @@ class LibrarySearchService:
         Search using semantic similarity (embeddings).
         """
         # Get query embedding
-        query_embedding = embed_query_sync(query)
+        try:
+            query_embedding = embed_query_sync(query)
+        except Exception as e:
+            logger.warning(f"Failed to generate query embedding: {e}")
+            return self.keyword_search(query, item_type, language, category_id, limit)
         
         if not query_embedding:
-            logger.warning("Failed to generate query embedding")
-            return []
+            logger.warning("Empty query embedding, falling back to keyword search")
+            return self.keyword_search(query, item_type, language, category_id, limit)
         
         qs = self._get_base_queryset()
         
@@ -133,10 +117,13 @@ class LibrarySearchService:
         
         # Get all candidates
         candidates = list(qs.values(
-            'id', 'name', 'slug', 'item_type', 'language',
+            'id', 'name', 'item_type', 'language',
             'description', 'quality_score', 'usage_count',
             'keywords', 'embedding'
         ))
+        
+        if not candidates:
+            return self.keyword_search(query, item_type, language, category_id, limit)
         
         # Calculate similarities
         results = self.embedding_service.find_similar(
@@ -151,14 +138,13 @@ class LibrarySearchService:
             {
                 'id': str(r['id']),
                 'name': r['name'],
-                'slug': r['slug'],
                 'item_type': r['item_type'],
                 'language': r['language'],
                 'description': r['description'][:200] if r['description'] else '',
                 'quality_score': r['quality_score'],
                 'usage_count': r['usage_count'],
                 'keywords': r['keywords'],
-                'similarity_score': r['similarity_score'],
+                'similarity_score': r.get('similarity_score', 0.5),
                 'match_type': 'semantic',
             }
             for r in results
@@ -169,7 +155,7 @@ class LibrarySearchService:
         query: str,
         item_type: str = None,
         language: str = None,
-        category_id: str = None,
+        category_id: int = None,
         limit: int = 20,
         semantic_weight: float = 0.6,
         keyword_weight: float = 0.4
@@ -231,12 +217,16 @@ class LibrarySearchService:
         """
         Main search entry point.
         """
-        if method == 'semantic':
-            return self.semantic_search(query, **kwargs)
-        elif method == 'keyword':
-            return self.keyword_search(query, **kwargs)
-        else:
-            return self.hybrid_search(query, **kwargs)
+        try:
+            if method == 'semantic':
+                return self.semantic_search(query, **kwargs)
+            elif method == 'keyword':
+                return self.keyword_search(query, **kwargs)
+            else:
+                return self.hybrid_search(query, **kwargs)
+        except Exception as e:
+            logger.error(f"Search error: {e}")
+            return []
     
     def get_related_items(
         self,
@@ -256,35 +246,39 @@ class LibrarySearchService:
             qs = self._get_base_queryset().exclude(id=item_id)
             
             candidates = list(qs.exclude(embedding__isnull=True).values(
-                'id', 'name', 'slug', 'item_type', 'language',
+                'id', 'name', 'item_type', 'language',
                 'description', 'quality_score', 'usage_count',
                 'keywords', 'embedding'
             ))
             
-            results = self.embedding_service.find_similar(
-                item.embedding,
-                candidates,
-                top_k=limit,
-                min_score=0.6
-            )
-            
-            return [
-                {
-                    'id': str(r['id']),
-                    'name': r['name'],
-                    'item_type': r['item_type'],
-                    'similarity_score': r['similarity_score'],
-                }
-                for r in results
-            ]
+            if candidates:
+                results = self.embedding_service.find_similar(
+                    item.embedding,
+                    candidates,
+                    top_k=limit,
+                    min_score=0.6
+                )
+                
+                return [
+                    {
+                        'id': str(r['id']),
+                        'name': r['name'],
+                        'item_type': r['item_type'],
+                        'similarity_score': r.get('similarity_score', 0.5),
+                    }
+                    for r in results
+                ]
         
         # Fallback to keyword-based
         qs = self._get_base_queryset().exclude(id=item_id)
         
         # Match by keywords or category
         q_filter = Q()
-        for keyword in (item.keywords or []):
-            q_filter |= Q(keywords__contains=[keyword])
+        if item.keywords:
+            for keyword in item.keywords.split(','):
+                kw = keyword.strip()
+                if kw:
+                    q_filter |= Q(keywords__icontains=kw)
         
         if item.category_id:
             q_filter |= Q(category_id=item.category_id)
@@ -298,7 +292,7 @@ class LibrarySearchService:
                 'id': str(r.id),
                 'name': r.name,
                 'item_type': r.item_type,
-                'similarity_score': 0.5,  # Placeholder
+                'similarity_score': 0.5,
             }
             for r in results
         ]
@@ -323,12 +317,7 @@ class AutoComplete:
         if len(prefix) < 2:
             return []
         
-        qs = LibraryItem.objects.filter(is_active=True)
-        
-        if self.tenant_id:
-            qs = qs.filter(
-                Q(tenant_id=self.tenant_id) | Q(is_public=True) | Q(tenant__isnull=True)
-            )
+        qs = LibraryItem.objects.filter(is_active=True, is_approved=True)
         
         # Get matching names
         names = list(
@@ -336,9 +325,6 @@ class AutoComplete:
             .values_list('name', flat=True)
             .distinct()[:limit]
         )
-        
-        # Get matching keywords
-        # Note: This is a simplified approach; a proper solution would use a dedicated search index
         
         return names[:limit]
 
@@ -353,12 +339,3 @@ def search_library_sync(
     """
     service = LibrarySearchService(tenant_id)
     return service.search(query, **kwargs)
-
-
-
-
-
-
-
-
-

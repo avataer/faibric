@@ -7,13 +7,16 @@ import re
 import anthropic
 from django.conf import settings
 
+# Import from centralized config - SINGLE SOURCE OF TRUTH
+from .models_config import CODE_MODEL, CHAT_MODEL
+
 
 class AIClient:
     """Wrapper for Anthropic Claude API"""
     
     def __init__(self):
         self.client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        self.model = "claude-sonnet-4-20250514"  # Using Claude Opus 4.5 for best results
+        self.model = CODE_MODEL  # From models_config.py - Claude Opus 4.5
     
     def chat_completion(self, messages, temperature=0.7, response_format=None, project_id=None, step_description="Processing"):
         """
@@ -35,24 +38,24 @@ class AIClient:
             from django.utils import timezone
             import json
             
-            print(f"🔥 BROADCASTING: {step_description} for project {project_id}")
+            print(f"[fire] BROADCASTING: {step_description} for project {project_id}")
             
             # Get existing messages
             messages_key = f'project_messages_{project_id}'
             existing = cache.get(messages_key, [])
             
-            print(f"🔥 Existing messages: {len(existing)}")
+            print(f"[fire] Existing messages: {len(existing)}")
             
             # Add new message
             existing.append({
                 'id': f'{project_id}_{len(existing)}',
                 'type': 'thinking',
-                'content': f'🤖 {step_description}...',
+                'content': f'[bot] {step_description}...',
                 'timestamp': timezone.now().isoformat()
             })
             
             cache.set(messages_key, existing, timeout=3600)
-            print(f"🔥 Saved {len(existing)} messages to cache")
+            print(f"[fire] Saved {len(existing)} messages to cache")
 
         # Convert messages to Anthropic format
         # Extract system message if present
@@ -69,9 +72,10 @@ class AIClient:
                 })
         
         # Build request kwargs
+        # Use 16K tokens to avoid truncation on complex apps
         kwargs = {
             "model": self.model,
-            "max_tokens": 8192,
+            "max_tokens": 16384,
             "messages": anthropic_messages,
         }
         
@@ -103,7 +107,7 @@ class AIClient:
             existing.append({
                 'id': f'{project_id}_{len(existing)}',
                 'type': 'success',
-                'content': f'✅ {step_description}: {preview}',
+                'content': f'[OK] {step_description}: {preview}',
                 'timestamp': timezone.now().isoformat()
             })
             

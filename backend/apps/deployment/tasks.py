@@ -50,7 +50,7 @@ def deploy_app_task(self, project_id, use_v2=True):
         project.status = 'deploying'
         project.save()
         
-        broadcast_deploy_message(project_id, '🚀 Starting deployment...')
+        broadcast_deploy_message(project_id, '[launch] Starting deployment...')
         
         # Check if we should use Render or Docker
         if use_render_deployer():
@@ -63,7 +63,7 @@ def deploy_app_task(self, project_id, use_v2=True):
             result = deployer.deploy_react_app(project)
             deployment_url = result['url']
             
-            broadcast_deploy_message(project_id, f'✅ Deployed at {deployment_url}')
+            broadcast_deploy_message(project_id, f'[OK] Deployed at {deployment_url}')
             
             # Update project
             project.deployment_url = deployment_url
@@ -101,7 +101,7 @@ def deploy_app_task(self, project_id, use_v2=True):
             subdomain = domain_mgr.assign_subdomain(project)
             deployment_url = domain_mgr.get_full_url(subdomain)
             
-            broadcast_deploy_message(project_id, f'✅ Deployed at {deployment_url}')
+            broadcast_deploy_message(project_id, f'[OK] Deployed at {deployment_url}')
             
             # Update project
             project.container_id = container_id
@@ -119,7 +119,7 @@ def deploy_app_task(self, project_id, use_v2=True):
         
     except Exception as e:
         error_msg = str(e)[:200]
-        broadcast_deploy_message(project_id, f'❌ Deployment failed: {error_msg}')
+        broadcast_deploy_message(project_id, f'[ERROR] Deployment failed: {error_msg}')
         
         try:
             project = Project.objects.get(id=project_id)

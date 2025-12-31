@@ -22,7 +22,7 @@ def send_progress(project_id: int, message: str, status: str = 'building'):
         'timestamp': __import__('datetime').datetime.now().isoformat()
     })
     cache.set(cache_key, messages, timeout=3600)
-    logger.warning(f"📢 [{project_id}] {message}")
+    logger.warning(f"[EVENT] [{project_id}] {message}")
 
 
 @shared_task(bind=True, max_retries=2)
@@ -38,7 +38,7 @@ def generate_app_v3_task(self, project_id: int):
         project.status = 'building'
         project.save()
         
-        send_progress(project_id, "🚀 Starting generation...")
+        send_progress(project_id, "[launch] Starting generation...")
         
         generator = UniversalGenerator()
         
@@ -55,7 +55,7 @@ def generate_app_v3_task(self, project_id: int):
         send_progress(project_id, f"📋 Building a {app_type}...")
         
         # Generate
-        send_progress(project_id, "🎨 Generating components...")
+        send_progress(project_id, "[art] Generating components...")
         result = generator.generate(project.user_prompt, project_id)
         
         # Store code
@@ -71,10 +71,10 @@ def generate_app_v3_task(self, project_id: int):
         project.status = 'ready'
         project.save()
         
-        send_progress(project_id, f"✅ Generated {len(components)} component(s)")
+        send_progress(project_id, f"[OK] Generated {len(components)} component(s)")
         
         # Deploy
-        send_progress(project_id, "🚀 Deploying...")
+        send_progress(project_id, "[launch] Deploying...")
         deploy_app_task.delay(project_id)
         
         return {
@@ -90,7 +90,7 @@ def generate_app_v3_task(self, project_id: int):
         
     except Exception as e:
         logger.error(f"Generation failed for {project_id}: {e}", exc_info=True)
-        send_progress(project_id, f"❌ Error: {str(e)}", 'error')
+        send_progress(project_id, f"[ERROR] Error: {str(e)}", 'error')
         
         try:
             project = Project.objects.get(id=project_id)
@@ -110,7 +110,7 @@ def quick_modify_v3_task(project_id: int, user_request: str):
     try:
         project = Project.objects.get(id=project_id)
         
-        send_progress(project_id, "✏️ Modifying app...")
+        send_progress(project_id, "[edit] Modifying app...")
         
         # Get current code
         import ast
@@ -121,7 +121,7 @@ def quick_modify_v3_task(project_id: int, user_request: str):
             current_code = project.frontend_code or ''
         
         if not current_code:
-            send_progress(project_id, "⚠️ No existing code, generating from scratch...")
+            send_progress(project_id, "[WARN] No existing code, generating from scratch...")
             return generate_app_v3_task(project_id)
         
         # Modify
@@ -138,10 +138,10 @@ def quick_modify_v3_task(project_id: int, user_request: str):
         project.status = 'ready'
         project.save()
         
-        send_progress(project_id, "✅ Code updated!")
+        send_progress(project_id, "[OK] Code updated!")
         
         # Redeploy
-        send_progress(project_id, "🚀 Redeploying...")
+        send_progress(project_id, "[launch] Redeploying...")
         
         # Stop old container first (if exists)
         import docker
@@ -164,6 +164,6 @@ def quick_modify_v3_task(project_id: int, user_request: str):
         
     except Exception as e:
         logger.error(f"Modification failed: {e}", exc_info=True)
-        send_progress(project_id, f"❌ Error: {str(e)}", 'error')
+        send_progress(project_id, f"[ERROR] Error: {str(e)}", 'error')
         return {'status': 'error', 'message': str(e)}
 

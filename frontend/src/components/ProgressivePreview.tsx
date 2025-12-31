@@ -193,17 +193,18 @@ const ProgressivePreview = ({ progress, phase, projectName, userRequest = '' }: 
   // Get contextual content based on user request
   const siteContent = useMemo(() => detectSiteType(userRequest || projectName || ''), [userRequest, projectName])
 
-  // Progressive reveal based on build progress
+  // Progressive reveal based on build progress - more granular thresholds
   useEffect(() => {
-    if (progress >= 10) setShowHeader(true)
-    if (progress >= 25) setShowHero(true)
-    if (progress >= 40) setShowFeatures(true)
-    if (progress >= 55) setShowContent(true)
-    if (progress >= 70) setShowFooter(true)
+    if (progress >= 5) setShowHeader(true)
+    if (progress >= 15) setShowHero(true)
+    if (progress >= 30) setShowFeatures(true)
+    if (progress >= 45) setShowContent(true)
+    if (progress >= 60) setShowFooter(true)
     
-    if (progress >= 60) setColorPhase(1)
-    if (progress >= 75) setColorPhase(2)
-    if (progress >= 90) setColorPhase(3)
+    // Smoother color transitions
+    if (progress >= 40) setColorPhase(1)
+    if (progress >= 65) setColorPhase(2)
+    if (progress >= 85) setColorPhase(3)
   }, [progress])
 
   const { colors } = siteContent
@@ -593,3 +594,8 @@ const ProgressivePreview = ({ progress, phase, projectName, userRequest = '' }: 
 }
 
 export default ProgressivePreview
+
+
+
+
+

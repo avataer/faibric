@@ -21,7 +21,7 @@ TEMPLATES = {
                 'name': 'Dashboard',
                 'slug': 'dashboard',
                 'title': 'Dashboard',
-                'icon': '📊',
+                'icon': '[chart]',
                 'page_type': 'dashboard',
                 'nav_order': 0,
                 'layout': {
@@ -48,10 +48,10 @@ TEMPLATES = {
                     ]
                 },
                 'widgets': [
-                    {'id': 'total_revenue', 'name': 'Total Revenue', 'widget_type': 'stat_card', 'config': {'label': 'Total Revenue', 'prefix': '$', 'value_key': 'total_revenue', 'change_key': 'revenue_change', 'icon': '💰'}},
-                    {'id': 'total_orders', 'name': 'Total Orders', 'widget_type': 'stat_card', 'config': {'label': 'Total Orders', 'value_key': 'total_orders', 'icon': '📦'}},
+                    {'id': 'total_revenue', 'name': 'Total Revenue', 'widget_type': 'stat_card', 'config': {'label': 'Total Revenue', 'prefix': '$', 'value_key': 'total_revenue', 'change_key': 'revenue_change', 'icon': '[money]'}},
+                    {'id': 'total_orders', 'name': 'Total Orders', 'widget_type': 'stat_card', 'config': {'label': 'Total Orders', 'value_key': 'total_orders', 'icon': '[box]'}},
                     {'id': 'total_customers', 'name': 'Customers', 'widget_type': 'stat_card', 'config': {'label': 'Customers', 'value_key': 'total_customers', 'icon': '👥'}},
-                    {'id': 'avg_order_value', 'name': 'Avg Order Value', 'widget_type': 'stat_card', 'config': {'label': 'Avg Order', 'prefix': '$', 'value_key': 'avg_order_value', 'icon': '📈'}},
+                    {'id': 'avg_order_value', 'name': 'Avg Order Value', 'widget_type': 'stat_card', 'config': {'label': 'Avg Order', 'prefix': '$', 'value_key': 'avg_order_value', 'icon': '[trend]'}},
                     {'id': 'revenue_chart', 'name': 'Revenue Over Time', 'widget_type': 'chart_area', 'config': {'title': 'Revenue', 'x_axis': 'date', 'y_axis': 'revenue'}},
                     {'id': 'top_products', 'name': 'Top Products', 'widget_type': 'list', 'config': {'title': 'Top Selling Products', 'limit': 5}},
                     {'id': 'recent_orders', 'name': 'Recent Orders', 'widget_type': 'table', 'config': {'columns': ['order_number', 'customer', 'total', 'status', 'date']}}
@@ -61,7 +61,7 @@ TEMPLATES = {
                 'name': 'Orders',
                 'slug': 'orders',
                 'title': 'Orders',
-                'icon': '📦',
+                'icon': '[box]',
                 'page_type': 'list',
                 'nav_order': 1,
                 'data_source': 'checkout_orders'
@@ -111,7 +111,7 @@ TEMPLATES = {
                 'name': 'Overview',
                 'slug': 'overview',
                 'title': 'Analytics Overview',
-                'icon': '📈',
+                'icon': '[trend]',
                 'page_type': 'dashboard',
                 'nav_order': 0,
                 'layout': {
@@ -172,7 +172,7 @@ TEMPLATES = {
                 'name': 'Dashboard',
                 'slug': 'dashboard',
                 'title': 'Sales Dashboard',
-                'icon': '💼',
+                'icon': '[brief]',
                 'page_type': 'dashboard',
                 'nav_order': 0
             },
@@ -188,7 +188,7 @@ TEMPLATES = {
                 'name': 'Deals',
                 'slug': 'deals',
                 'title': 'Deals Pipeline',
-                'icon': '💰',
+                'icon': '[money]',
                 'page_type': 'custom',
                 'nav_order': 2
             },
@@ -281,7 +281,7 @@ TEMPLATES = {
                 'name': 'Dashboard',
                 'slug': 'dashboard',
                 'title': 'Content Dashboard',
-                'icon': '📝',
+                'icon': '[note]',
                 'page_type': 'dashboard',
                 'nav_order': 0
             },
@@ -331,7 +331,7 @@ TEMPLATES = {
                 'name': 'Dashboard',
                 'slug': 'dashboard',
                 'title': 'Project Overview',
-                'icon': '📊',
+                'icon': '[chart]',
                 'page_type': 'dashboard',
                 'nav_order': 0
             },
@@ -347,7 +347,7 @@ TEMPLATES = {
                 'name': 'Tasks',
                 'slug': 'tasks',
                 'title': 'All Tasks',
-                'icon': '✅',
+                'icon': '[OK]',
                 'page_type': 'list',
                 'nav_order': 2
             },
@@ -429,7 +429,7 @@ TEMPLATES = {
                 'name': 'Dashboard',
                 'slug': 'dashboard',
                 'title': 'Financial Overview',
-                'icon': '💰',
+                'icon': '[money]',
                 'page_type': 'dashboard',
                 'nav_order': 0
             },
@@ -453,7 +453,7 @@ TEMPLATES = {
                 'name': 'Reports',
                 'slug': 'reports',
                 'title': 'Reports',
-                'icon': '📊',
+                'icon': '[chart]',
                 'page_type': 'custom',
                 'nav_order': 3
             }
@@ -498,7 +498,7 @@ TEMPLATES = {
                 'name': 'Settings',
                 'slug': 'settings',
                 'title': 'Settings',
-                'icon': '⚙️',
+                'icon': '[gear]',
                 'page_type': 'form',
                 'nav_order': 1
             }
@@ -531,7 +531,7 @@ TEMPLATES = {
                 'name': 'Posts',
                 'slug': 'posts',
                 'title': 'Posts',
-                'icon': '📝',
+                'icon': '[note]',
                 'page_type': 'list',
                 'nav_order': 1
             },
@@ -539,7 +539,7 @@ TEMPLATES = {
                 'name': 'Analytics',
                 'slug': 'analytics',
                 'title': 'Analytics',
-                'icon': '📈',
+                'icon': '[trend]',
                 'page_type': 'custom',
                 'nav_order': 2
             },
@@ -569,6 +569,8 @@ def get_template(slug: str):
 def get_templates_by_category(category: str):
     """Get templates filtered by category."""
     return [t for t in TEMPLATES.values() if t['category'] == category]
+
+
 
 
 

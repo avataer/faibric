@@ -63,3 +63,521 @@ Attempting auto-restart...
 [2025-12-17 20:16:06.374005] Backend Service RECOVERED
 The Faibric backend is now healthy.
 Time: 2025-12-17 20:16:06.305701
+
+============================================================
+[2025-12-18 10:24:44.119504] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-18 10:24:44.001545
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-18 10:24:51.281551] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-18 10:24:51.168329
+
+============================================================
+[2025-12-18 11:30:23.320812] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-18 11:30:23.203354
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-18 11:30:30.467304] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-18 11:30:30.366107
+
+============================================================
+[2025-12-18 11:37:00.814447] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-18 11:37:00.696735
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-18 11:43:52.278680] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-18 11:43:52.152716
+
+============================================================
+[2025-12-18 12:03:22.981662] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-18 12:03:22.866267
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-18 12:03:30.135986] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-18 12:03:30.024091
+
+============================================================
+[2025-12-18 12:34:31.138247] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-18 12:34:31.028839
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-18 12:34:38.289590] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-18 12:34:38.190361
+
+============================================================
+[2025-12-18 14:29:03.462316] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-18 14:29:03.373095
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-18 14:29:10.612544] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-18 14:29:10.502344
+
+============================================================
+[2025-12-18 15:54:33.070219] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-18 15:54:32.986917
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-18 15:54:40.213268] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-18 15:54:40.112926
+
+============================================================
+[2025-12-22 12:53:27.551485] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-22 12:53:27.450942
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-22 14:17:51.197023] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-22 14:17:51.090067
+
+============================================================
+[2025-12-22 14:19:26.360311] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-22 14:19:26.249394
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-22 14:25:37.763626] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-22 14:25:37.668376
+
+============================================================
+[2025-12-22 17:59:12.879632] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-22 17:59:12.773882
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-22 17:59:20.060079] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-22 17:59:19.933791
+
+============================================================
+[2025-12-23 00:17:46.142609] Frontend Service DOWN
+The Faibric frontend is not responding.
+
+Error: Frontend not responding (connection refused)
+Time: 2025-12-23 00:17:46.019049
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-23 00:17:53.297272] Frontend Service RECOVERED
+The Faibric frontend has been automatically restarted and is now healthy.
+Time: 2025-12-23 00:17:53.213112
+
+============================================================
+[2025-12-23 00:20:28.515939] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-23 00:20:28.415202
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-23 00:20:35.691301] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-23 00:20:35.569365
+
+============================================================
+[2025-12-24 17:13:03.218145] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-24 17:13:03.113783
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-24 17:13:10.384923] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-24 17:13:10.264052
+
+============================================================
+[2025-12-24 19:43:16.590893] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-24 19:43:16.495390
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-24 19:43:23.740468] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-24 19:43:23.631645
+
+============================================================
+[2025-12-24 19:55:52.653301] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-24 19:55:52.545079
+
+============================================================
+[2025-12-24 19:58:52.857945] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-24 19:58:52.774014
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-24 20:14:05.625672] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-24 20:14:05.538451
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-24 20:25:42.247048] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-24 20:25:42.134530
+
+============================================================
+[2025-12-24 21:12:44.323889] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-24 21:12:44.229669
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-24 21:12:51.475404] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-24 21:12:51.372325
+
+============================================================
+[2025-12-24 22:13:24.167548] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-24 22:13:24.049639
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-24 22:13:31.333536] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-24 22:13:31.217965
+
+============================================================
+[2025-12-24 22:19:17.804805] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-24 22:19:17.682540
+
+============================================================
+[2025-12-24 22:29:53.350090] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-24 22:29:53.227471
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-24 22:32:32.635863] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-24 22:32:32.521775
+
+============================================================
+[2025-12-24 23:06:09.097084] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-24 23:06:08.974395
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-24 23:07:33.329694] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-24 23:07:33.231764
+
+============================================================
+[2025-12-25 09:22:59.817634] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-25 09:22:59.702880
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-25 09:23:06.992406] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-25 09:23:06.871325
+
+============================================================
+[2025-12-25 19:00:15.683849] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-25 19:00:15.567729
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-25 19:00:22.837471] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-25 19:00:22.728613
+
+============================================================
+[2025-12-25 19:12:23.370831] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-25 19:12:23.265681
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-25 19:12:30.539818] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-25 19:12:30.421548
+
+============================================================
+[2025-12-26 23:35:43.797116] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-26 23:35:43.694607
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-26 23:35:50.929169] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-26 23:35:50.837994
+
+============================================================
+[2025-12-27 17:47:12.928300] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-27 17:47:12.813668
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-27 19:32:47.182469] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-27 19:32:47.047448
+
+============================================================
+[2025-12-27 20:24:49.389232] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-27 20:24:49.268992
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-27 20:25:56.589424] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-27 20:25:56.473741
+
+============================================================
+[2025-12-29 11:33:12.319304] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-29 11:33:12.204863
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-29 11:34:56.586765] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-29 11:34:56.480235
+
+============================================================
+[2025-12-29 12:40:51.720935] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-29 12:40:51.624468
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-29 12:40:58.892961] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-29 12:40:58.772355
+
+============================================================
+[2025-12-29 13:39:43.999553] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-29 13:39:43.870957
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-29 14:48:17.179597] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-29 14:48:17.048553
+
+============================================================
+[2025-12-29 14:48:52.309309] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-29 14:48:52.195300
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-29 16:09:56.694214] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-29 16:09:56.584798
+
+============================================================
+[2025-12-30 14:26:47.760592] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-30 14:26:47.640775
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-30 14:33:09.305827] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-30 14:33:09.200253
+
+============================================================
+[2025-12-30 15:43:42.956796] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-30 15:43:42.843102
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-30 15:47:34.346921] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-30 15:47:34.247294
+
+============================================================
+[2025-12-30 15:49:34.525735] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-30 15:49:34.419748
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-30 18:59:25.144856] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-30 18:59:25.029575
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-30 19:00:42.336175] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-30 19:00:42.228219
+
+============================================================
+[2025-12-30 19:27:40.500967] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-30 19:27:40.402542
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-30 19:27:47.646797] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-30 19:27:47.544629
+
+============================================================
+[2025-12-30 19:57:49.909423] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend not responding (connection refused)
+Time: 2025-12-30 19:57:49.809819
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-30 19:57:57.070601] Backend Service RECOVERED
+The Faibric backend has been automatically restarted and is now healthy.
+Time: 2025-12-30 19:57:56.955620
+
+============================================================
+[2025-12-31 11:43:46.067321] Backend Service DOWN
+The Faibric backend is not responding.
+
+Error: Backend timed out
+Time: 2025-12-31 11:43:45.937387
+
+Attempting auto-restart...
+
+============================================================
+[2025-12-31 11:45:50.332725] Backend Service RECOVERED
+The Faibric backend is now healthy.
+Time: 2025-12-31 11:45:50.252824

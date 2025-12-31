@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from .models import Project, ProjectVersion
+from .models import Project, ProjectVersion, CustomerAPIKey
 from .serializers import (
     ProjectSerializer, ProjectListSerializer, 
     ProjectCreateSerializer, ProjectVersionSerializer
@@ -227,4 +227,131 @@ class ProjectViewSet(viewsets.ModelViewSet):
         
         serializer = ProjectVersionSerializer(version_obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['get', 'post'])
+    def api_keys(self, request, pk=None):
+        """
+        Manage customer API keys for data integrations.
+        
+        GET: List all API keys for this project (masked)
+        POST: Add a new API key
+        """
+        project = self.get_object()
+        
+        if request.method == 'GET':
+            keys = CustomerAPIKey.objects.filter(project=project)
+            return Response({
+                'api_keys': [
+                    {
+                        'id': key.id,
+                        'service': key.service,
+                        'service_name': key.service_name or key.get_service_display(),
+                        'status': key.status,
+                        'masked_key': key.mask_key(),
+                        'last_used': key.last_used_at,
+                        'call_count': key.call_count,
+                    }
+                    for key in keys
+                ],
+                'available_services': [
+                    {'id': s[0], 'name': s[1]} 
+                    for s in CustomerAPIKey.SERVICE_CHOICES
+                ]
+            })
+        
+        elif request.method == 'POST':
+            service = request.data.get('service')
+            api_key = request.data.get('api_key')
+            
+            if not service or not api_key:
+                return Response(
+                    {'error': 'service and api_key are required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Create or update
+            key_obj, created = CustomerAPIKey.objects.update_or_create(
+                project=project,
+                service=service,
+                defaults={
+                    'api_key': api_key,
+                    'service_name': request.data.get('service_name', ''),
+                    'base_url': request.data.get('base_url', ''),
+                    'status': 'pending',
+                }
+            )
+            
+            # TODO: Verify the key works by making a test call
+            key_obj.status = 'active'
+            key_obj.save()
+            
+            return Response({
+                'success': True,
+                'message': f'API key for {service} {"added" if created else "updated"}',
+                'key': {
+                    'id': key_obj.id,
+                    'service': key_obj.service,
+                    'status': key_obj.status,
+                    'masked_key': key_obj.mask_key(),
+                }
+            }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['delete'], url_path='api_keys/(?P<key_id>[^/.]+)')
+    def delete_api_key(self, request, pk=None, key_id=None):
+        """Delete an API key"""
+        project = self.get_object()
+        
+        try:
+            key = CustomerAPIKey.objects.get(id=key_id, project=project)
+            service = key.service
+            key.delete()
+            return Response({
+                'success': True,
+                'message': f'API key for {service} deleted'
+            })
+        except CustomerAPIKey.DoesNotExist:
+            return Response(
+                {'error': 'API key not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    @action(detail=True, methods=['get'])
+    def data_sources(self, request, pk=None):
+        """
+        Get status of all data sources for this project.
+        
+        Used by the frontend Settings view to show connection status.
+        """
+        project = self.get_object()
+        customer_keys = {k.service: k for k in CustomerAPIKey.objects.filter(project=project)}
+        
+        from apps.gateway.services import SERVICES, get_api_key
+        
+        sources = []
+        for service_id, config in SERVICES.items():
+            # Check if it's a free service (no auth needed)
+            is_free = config.get('auth_type') == 'none'
+            
+            # Check if customer has provided a key
+            customer_key = customer_keys.get(service_id)
+            
+            # Check if platform has a key configured
+            platform_key = bool(get_api_key(config)) if config.get('env_key') else False
+            
+            sources.append({
+                'id': service_id,
+                'name': config['name'],
+                'docs': config.get('docs', ''),
+                'free_tier': config.get('free_tier', ''),
+                'is_free': is_free,
+                'status': 'connected' if (is_free or customer_key or platform_key) else 'not_connected',
+                'customer_key': bool(customer_key),
+                'requires_key': config.get('auth_type') != 'none',
+            })
+        
+        return Response({
+            'data_sources': sources,
+            'connected_count': sum(1 for s in sources if s['status'] == 'connected'),
+            'total_count': len(sources),
+        })
 

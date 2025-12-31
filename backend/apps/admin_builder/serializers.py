@@ -136,13 +136,13 @@ class ExportRequestSerializer(serializers.Serializer):
 
 # Widget type catalog
 WIDGET_TYPES = [
-    {'type': 'chart_bar', 'name': 'Bar Chart', 'icon': '📊', 'category': 'charts'},
-    {'type': 'chart_line', 'name': 'Line Chart', 'icon': '📈', 'category': 'charts'},
+    {'type': 'chart_bar', 'name': 'Bar Chart', 'icon': '[chart]', 'category': 'charts'},
+    {'type': 'chart_line', 'name': 'Line Chart', 'icon': '[trend]', 'category': 'charts'},
     {'type': 'chart_pie', 'name': 'Pie Chart', 'icon': '🥧', 'category': 'charts'},
     {'type': 'chart_area', 'name': 'Area Chart', 'icon': '📉', 'category': 'charts'},
     {'type': 'stat_card', 'name': 'Stat Card', 'icon': '🔢', 'category': 'data'},
     {'type': 'table', 'name': 'Data Table', 'icon': '📋', 'category': 'data'},
-    {'type': 'form', 'name': 'Form', 'icon': '📝', 'category': 'input'},
+    {'type': 'form', 'name': 'Form', 'icon': '[note]', 'category': 'input'},
     {'type': 'text', 'name': 'Text/HTML', 'icon': '📄', 'category': 'content'},
     {'type': 'image', 'name': 'Image', 'icon': '🖼️', 'category': 'content'},
     {'type': 'button', 'name': 'Button', 'icon': '🔘', 'category': 'input'},
@@ -157,8 +157,10 @@ WIDGET_TYPES = [
     {'type': 'tabs', 'name': 'Tabs', 'icon': '📂', 'category': 'layout'},
     {'type': 'accordion', 'name': 'Accordion', 'icon': '📚', 'category': 'layout'},
     {'type': 'modal', 'name': 'Modal Trigger', 'icon': '🪟', 'category': 'layout'},
-    {'type': 'custom', 'name': 'Custom Component', 'icon': '⚙️', 'category': 'advanced'},
+    {'type': 'custom', 'name': 'Custom Component', 'icon': '[gear]', 'category': 'advanced'},
 ]
+
+
 
 
 

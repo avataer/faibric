@@ -19,7 +19,7 @@ def broadcast_progress(project_id, step, message, progress):
     # Add new message to list
     existing.append({
         'id': f'{project_id}_{len(existing)}',
-        'type': 'action' if '✅' in message else 'thinking',
+        'type': 'action' if '[OK]' in message else 'thinking',
         'content': message,
         'timestamp': timezone.now().isoformat()
     })
@@ -51,7 +51,7 @@ def generate_app_task(self, project_id):
         project.status = 'generating'
         project.save()
         
-        broadcast_progress(project_id, 1, "🚀 Starting AI generation...", 5)
+        broadcast_progress(project_id, 1, "[launch] Starting AI generation...", 5)
         
         # Initialize generators
         ai_client = AIClient()
@@ -65,17 +65,17 @@ def generate_app_task(self, project_id):
         project.ai_analysis = analysis
         project.save()
         
-        broadcast_progress(project_id, 3, f"✅ Identified {len(analysis.get('models', []))} models and {len(analysis.get('api_endpoints', []))} API endpoints", 25)
+        broadcast_progress(project_id, 3, f"[OK] Identified {len(analysis.get('models', []))} models and {len(analysis.get('api_endpoints', []))} API endpoints", 25)
         
         # Step 2: Generate database schema
-        broadcast_progress(project_id, 4, "🗄️ Generating database models...", 35)
+        broadcast_progress(project_id, 4, "[DB] Generating database models...", 35)
         generated_models = schema_gen.generate_models(analysis, project_id=project_id)
         schema_json = schema_gen.create_schema_json(analysis)
         project.database_schema = schema_json
         
         # Save individual models to database
         for idx, (model_name, model_code) in enumerate(generated_models.items()):
-            broadcast_progress(project_id, 5, f"📝 Creating model: {model_name}", 40 + (idx * 5))
+            broadcast_progress(project_id, 5, f"[note] Creating model: {model_name}", 40 + (idx * 5))
             model_data = next(
                 (m for m in analysis['models'] if m['name'] == model_name),
                 None
@@ -111,10 +111,10 @@ def generate_app_task(self, project_id):
             )
         
         project.save()
-        broadcast_progress(project_id, 7, "✅ API layer complete", 75)
+        broadcast_progress(project_id, 7, "[OK] API layer complete", 75)
         
         # Step 4: Generate UI code
-        broadcast_progress(project_id, 8, "🎨 Generating React components...", 85)
+        broadcast_progress(project_id, 8, "[art] Generating React components...", 85)
         components = ui_gen.generate_components(analysis, project_id=project_id)
         app_structure = ui_gen.generate_app_structure(components)
         
@@ -126,13 +126,13 @@ def generate_app_task(self, project_id):
         project.frontend_code = str(frontend_code)  # Store as JSON string
         project.save()
         
-        broadcast_progress(project_id, 9, "✅ Frontend components generated", 95)
+        broadcast_progress(project_id, 9, "[OK] Frontend components generated", 95)
         
         # Mark as ready
         project.status = 'ready'
         project.save()
         
-        broadcast_progress(project_id, 10, "🎉 App generation complete!", 100)
+        broadcast_progress(project_id, 10, "[party] App generation complete!", 100)
         
         # Clear progress after 5 seconds
         cache.delete(f'project_progress_{project_id}')
@@ -146,7 +146,7 @@ def generate_app_task(self, project_id):
     except Exception as e:
         # Mark project as failed
         error_message = str(e)
-        broadcast_progress(project_id, -1, f"❌ Error: {error_message[:100]}", 0)
+        broadcast_progress(project_id, -1, f"[ERROR] Error: {error_message[:100]}", 0)
         
         try:
             project = Project.objects.get(id=project_id)

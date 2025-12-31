@@ -14,3 +14,5 @@ class RecommendationsConfig(AppConfig):
 
 
 
+
+

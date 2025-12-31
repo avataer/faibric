@@ -249,7 +249,7 @@ const CreationView = () => {
             {isComplete ? (
               <>
                 <Typography variant="h4" gutterBottom sx={{ color: '#10b981' }}>
-                  🎉 Your App is Ready!
+                  Your App is Ready!
                 </Typography>
                 <Typography variant="body1" color="#9ca3af">
                   Redirecting to project details...

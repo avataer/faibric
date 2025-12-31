@@ -86,3 +86,5 @@ LOG_FIELD_CANDIDATE_COUNT = 'candidate_count'
 # Haiku is only for classification, summarization, and admin questions
 GENERATION_MODEL = "claude-sonnet-4-20250514"  # Opus 4.5 for ALL code
 UTILITY_MODEL = "claude-3-5-haiku-20241022"    # Only for non-code tasks
+
+

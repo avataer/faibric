@@ -151,3 +151,5 @@ class RetrievalDeterminismTest(TestCase):
         ids2 = [c['item_id'] for c in result2.get('top_candidates', [])]
         
         self.assertEqual(ids1, ids2, "Same query should return same results")
+
+

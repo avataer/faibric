@@ -63,3 +63,5 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.ERROR(summary + " - NEEDS ATTENTION"))
         self.stdout.write("=" * 60 + "\n")
+
+

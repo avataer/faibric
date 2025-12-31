@@ -320,7 +320,7 @@ Focus on correctness, clarity, and best practices."""
         user = customer_input.user
         
         # Build email
-        subject = "🔧 We've improved your request in Faibric"
+        subject = "[tool] We've improved your request in Faibric"
         
         # Generate view URL
         view_url = f"{settings.FRONTEND_URL}/fixes/{fix.id}"
@@ -601,6 +601,8 @@ class InsightReportService:
                 'ratings': [d['avg_rating'] for d in daily_counts],
             },
         }
+
+
 
 
 

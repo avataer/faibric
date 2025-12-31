@@ -12,6 +12,9 @@ from django.core.cache import cache
 from django.utils import timezone
 from .prompts import CLASSIFY_PROMPT, MODIFY_PROMPT, get_prompt_for_type
 
+# Import from centralized config - SINGLE SOURCE OF TRUTH
+from ..models_config import CODE_MODEL, CHAT_MODEL
+
 logger = logging.getLogger(__name__)
 
 
@@ -59,30 +62,41 @@ class CodeLibraryMixin:
         """Save generated code to library for future reuse."""
         try:
             from apps.code_library.models import LibraryItem
-            import re
             
-            # Generate slug from name
-            slug = re.sub(r'[^a-z0-9-]', '-', name.lower())[:100]
-            
-            # Check if similar already exists
-            existing = LibraryItem.objects.filter(slug=slug).first()
+            # Check if similar already exists by name
+            existing = LibraryItem.objects.filter(name=name, is_active=True).first()
             if existing:
                 # Update usage count instead of creating duplicate
                 existing.increment_usage()
                 return str(existing.id)
             
+            # Get source project if provided
+            source_project = None
+            if project_id:
+                try:
+                    from apps.projects.models import Project
+                    source_project = Project.objects.get(id=project_id)
+                except Exception:
+                    pass
+            
+            # Ensure keywords is a list
+            kw_list = keywords if isinstance(keywords, list) else []
+            
+            # Create with ONLY fields that exist in Django model
             item = LibraryItem.objects.create(
-                name=name,
-                slug=slug,
+                name=name[:200],
                 item_type='component',
-                language='typescript',
+                language='tsx',
                 code=code,
-                description=description,
-                keywords=keywords,
-                tags=keywords[:5],
-                source='generated',
+                description=description[:500] if description else 'Auto-generated component',
+                keywords=kw_list,  # JSONField - pass as list
+                tags=kw_list[:5],  # JSONField - pass as list
+                source_project=source_project,
+                created_by='ai',
                 is_public=True,
-                quality_score=70.0,  # Default score for new items
+                is_approved=True,
+                needs_review=True,
+                quality_score=0.7,
             )
             logger.info(f"Saved component to library: {name}")
             return str(item.id)
@@ -111,7 +125,10 @@ class CodeLibraryMixin:
             if code and len(code) < 3000:  # Only include reasonably sized components
                 context_parts.append(f"\n--- {result['name']} ({result['item_type']}) ---")
                 context_parts.append(f"Description: {result.get('description', 'N/A')}")
-                context_parts.append(f"Keywords: {', '.join(result.get('keywords', []))}")
+                keywords = result.get('keywords', '')
+                if isinstance(keywords, list):
+                    keywords = ', '.join(keywords)
+                context_parts.append(f"Keywords: {keywords}")
                 context_parts.append(f"```\n{code[:2000]}\n```")
         
         if len(context_parts) > 1:
@@ -129,9 +146,9 @@ class AIGeneratorV2(CodeLibraryMixin):
     - Haiku for classification, summaries, and reusing existing code
     """
     
-    # Model tiers
-    EXPENSIVE_MODEL = "claude-sonnet-4-20250514"  # Opus 4.5 - for new code
-    CHEAP_MODEL = "claude-3-5-haiku-20241022"     # Haiku - for everything else
+    # Model tiers - from centralized config (models_config.py)
+    EXPENSIVE_MODEL = CODE_MODEL  # Claude Opus 4.5 - for code generation
+    CHEAP_MODEL = CHAT_MODEL       # Claude Haiku 4.5 - for chat/classification
     
     def __init__(self, model: str = None):
         self.client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
@@ -191,13 +208,77 @@ class AIGeneratorV2(CodeLibraryMixin):
         session = None
     ) -> Dict[str, Any]:
         """
-        Generate a complete app in a single AI call with streaming.
-        Returns dict with components and metadata.
+        Generate a complete app using COMPONENT-BASED building blocks.
+        
+        NEW ARCHITECTURE:
+        1. Decompose request into building blocks (navigation, hero, cards, etc.)
+        2. Search library for EACH block
+        3. Reuse found blocks, generate missing ones
+        4. Save new blocks to library for future reuse
+        5. Compose final app from blocks
         """
         
         # Broadcast: Starting
         self._broadcast(project_id, "thinking", "Analyzing your request...")
         self._add_session_event(session, "Analyzing request...")
+        
+        # NEW: Use component-based generation
+        try:
+            return self._generate_with_components(user_prompt, project_id, session)
+        except Exception as e:
+            logger.warning(f"Component pipeline failed, falling back to legacy: {e}")
+            print(f"[GENERATOR] Component pipeline failed: {e}, using legacy")
+            return self._generate_legacy(user_prompt, project_id, session)
+    
+    def _generate_with_components(
+        self, 
+        user_prompt: str, 
+        project_id: int = None,
+        session = None
+    ) -> Dict[str, Any]:
+        """
+        Component-based generation pipeline.
+        
+        Each project is decomposed into reusable building blocks.
+        This is the RIGHT way - components, not whole projects.
+        """
+        from apps.code_library.component_pipeline import ComponentGenerationPipeline
+        
+        self._broadcast(project_id, "action", "Decomposing into building blocks...")
+        self._add_session_event(session, "Breaking down into components...")
+        
+        pipeline = ComponentGenerationPipeline(session=session)
+        
+        # Build using component blocks
+        code = pipeline.build(user_prompt, project=None)
+        
+        # Get stats
+        stats = pipeline.get_stats()
+        
+        self._broadcast(project_id, "success", 
+            f"Built from {stats['components_required']} blocks "
+            f"({stats['components_reused']} reused, {stats['components_generated']} new)")
+        
+        # Classify for app type
+        app_type = self.classify_prompt(user_prompt)
+        
+        return {
+            'app_type': app_type,
+            'components': {
+                'App.tsx': code
+            },
+            'build_stats': stats
+        }
+    
+    def _generate_legacy(
+        self, 
+        user_prompt: str, 
+        project_id: int = None,
+        session = None
+    ) -> Dict[str, Any]:
+        """
+        LEGACY: Monolithic generation (fallback).
+        """
         
         # Classify the prompt
         app_type = self.classify_prompt(user_prompt)
@@ -209,6 +290,37 @@ class AIGeneratorV2(CodeLibraryMixin):
         full_prompt = prompt_template.format(user_prompt=user_prompt)
         
         # IMPORTANT: Strict requirements for generated apps
+        # Check if user wants stock/trading data
+        wants_stock_data = any(w in user_prompt.lower() for w in ['stock', 'trading', 'nbis', 'crwv', 'ticker', 'price data', 'historical', 'yahoo', 'factual data', 'real data'])
+        
+        stock_requirement = ""
+        if wants_stock_data:
+            stock_requirement = """
+5. STOCK/FINANCIAL DATA - MUST USE REAL API:
+   - You MUST fetch real data using useEffect and fetch
+   - Use this EXACT pattern:
+   ```
+   useEffect(() => {
+     const fetchStock = async () => {
+       setLoading(true);
+       const res = await fetch('https://faibric-api.onrender.com/api/gateway/', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ service: 'yahoo_finance', endpoint: '/chart/NBIS?range=1y&interval=1d' })
+       });
+       const result = await res.json();
+       if (result.success) setStockData(result.data);
+       setLoading(false);
+     };
+     fetchStock();
+   }, []);
+   ```
+   - REPLACE 'NBIS' with the actual ticker(s) the user mentioned
+   - NEVER hardcode stock prices - they will be WRONG
+   - Show "Loading market data..." while fetching
+   - THIS IS MANDATORY FOR ANY STOCK/TRADING REQUEST
+"""
+        
         strict_requirements = """
 CRITICAL REQUIREMENTS - FOLLOW EXACTLY:
 
@@ -235,7 +347,7 @@ CRITICAL REQUIREMENTS - FOLLOW EXACTLY:
    - NEVER leave image src empty
 
 4. COMPLETE CODE: Always finish all JSX tags and exports
-"""
+""" + stock_requirement
         full_prompt = strict_requirements + "\n\n" + full_prompt
         
         # Search code library for reusable components (internal - no client message)
@@ -266,10 +378,8 @@ CRITICAL REQUIREMENTS - FOLLOW EXACTLY:
             full_response = ""
             thinking_shown = False
             
-            with self.client.messages.stream(
-                model=generation_model,
-                max_tokens=16000,
-                system="""You are an expert React developer. 
+            # Build dynamic system prompt
+            system_prompt = """You are an expert React developer. 
 CRITICAL RULES:
 1. Output ONLY valid JSON
 2. ALWAYS use San Francisco font (-apple-system, BlinkMacSystemFont, 'SF Pro Display')
@@ -279,7 +389,29 @@ CRITICAL RULES:
    - Use unique seeds: seed/portrait1, seed/art2, seed/photo3
    - NEVER use source.unsplash.com (broken, returns 503)
    - NEVER leave image src empty
-6. Always complete all JSX tags - never leave code incomplete""",
+6. Always complete all JSX tags - never leave code incomplete"""
+
+            # ADD STOCK DATA REQUIREMENT TO SYSTEM PROMPT
+            if wants_stock_data:
+                system_prompt += """
+
+7. STOCK DATA - THIS IS MANDATORY:
+   - You MUST fetch REAL data using the Gateway API
+   - Use this EXACT code pattern in useEffect:
+     fetch('https://faibric-api.onrender.com/api/gateway/', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ service: 'yahoo_finance', endpoint: '/chart/TICKER' })
+     })
+   - Replace TICKER with the actual stock symbol (NBIS, CRWV, etc.)
+   - NEVER hardcode stock prices - they will be WRONG
+   - Show "Loading market data..." while fetching
+   - The user asked for REAL data - you MUST use the API"""
+            
+            with self.client.messages.stream(
+                model=generation_model,
+                max_tokens=16000,
+                system=system_prompt,
                 messages=[
                     {"role": "user", "content": full_prompt}
                 ],
@@ -350,7 +482,7 @@ CRITICAL RULES:
             return result
             
         except Exception as e:
-            self._broadcast(project_id, "error", f"❌ Generation failed: {str(e)[:100]}")
+            self._broadcast(project_id, "error", f"[ERROR] Generation failed: {str(e)[:100]}")
             raise
     
     def modify_app(
@@ -390,7 +522,7 @@ CRITICAL RULES:
             return result
             
         except Exception as e:
-            self._broadcast(project_id, "error", f"❌ Modification failed: {str(e)[:100]}")
+            self._broadcast(project_id, "error", f"[ERROR] Modification failed: {str(e)[:100]}")
             raise
     
     def _parse_json_response(self, text: str) -> Optional[Dict]:

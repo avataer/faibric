@@ -113,3 +113,68 @@ class ProjectVersion(models.Model):
     def __str__(self):
         return f"{self.project.name} v{self.version}"
 
+
+class CustomerAPIKey(models.Model):
+    """
+    Store customer's API keys for data integrations.
+    
+    Customers can provide their own API keys to unlock real data
+    in their generated apps. Keys are encrypted at rest.
+    """
+    SERVICE_CHOICES = [
+        ('openweather', 'OpenWeather'),
+        ('alpha_vantage', 'Alpha Vantage (Stocks)'),
+        ('finnhub', 'Finnhub (Stocks)'),
+        ('newsapi', 'News API'),
+        ('stripe', 'Stripe'),
+        ('shopify', 'Shopify'),
+        ('custom', 'Custom API'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending Verification'),
+        ('active', 'Active'),
+        ('invalid', 'Invalid'),
+        ('expired', 'Expired'),
+    ]
+    
+    project = models.ForeignKey(
+        Project, 
+        on_delete=models.CASCADE, 
+        related_name='api_keys'
+    )
+    service = models.CharField(max_length=50, choices=SERVICE_CHOICES)
+    service_name = models.CharField(max_length=100, blank=True, help_text='Display name')
+    
+    # Encrypted API key (should use django-encrypted-model-fields in production)
+    api_key = models.CharField(max_length=500)
+    
+    # For custom APIs
+    base_url = models.URLField(blank=True, help_text='For custom APIs')
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    last_verified_at = models.DateTimeField(null=True, blank=True)
+    error_message = models.TextField(blank=True)
+    
+    # Usage tracking
+    call_count = models.IntegerField(default=0)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = [['project', 'service']]
+        verbose_name = 'Customer API Key'
+        verbose_name_plural = 'Customer API Keys'
+    
+    def __str__(self):
+        return f"{self.project.name} - {self.service}"
+    
+    def mask_key(self) -> str:
+        """Return masked version of key for display"""
+        if len(self.api_key) > 8:
+            return f"{self.api_key[:4]}...{self.api_key[-4:]}"
+        return "****"
+

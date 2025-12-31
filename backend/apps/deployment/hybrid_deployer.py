@@ -1,0 +1,267 @@
+"""
+Hybrid Deployer for Faibric
+
+Strategy:
+1. Static frontends → Vercel (fast: 30-60 seconds)
+2. Dynamic backends → Render (reliable: 5-10 minutes)
+3. Fallback: If Vercel fails → Render
+
+This gives clients near-instant feedback while maintaining full-stack capability.
+"""
+
+import logging
+from typing import Dict, Optional
+from dataclasses import dataclass
+
+from .vercel_deployer import get_vercel_deployer
+from .render_deployer import RenderDeployer, get_render_deployer
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class DeploymentResult:
+    """Result of a deployment attempt."""
+    success: bool
+    url: Optional[str]
+    provider: str  # 'vercel' or 'render'
+    deploy_time_seconds: float
+    deployment_id: Optional[str] = None
+    error: Optional[str] = None
+    verified: bool = False  # True only if URL was tested and works
+    
+    def to_dict(self) -> dict:
+        return {
+            'success': self.success,
+            'url': self.url,
+            'provider': self.provider,
+            'deploy_time_seconds': self.deploy_time_seconds,
+            'deployment_id': self.deployment_id,
+            'error': self.error,
+            'verified': self.verified
+        }
+
+
+class HybridDeployer:
+    """
+    Intelligent deployment routing.
+    
+    Decision logic:
+    - Is this a static app? → Try Vercel first (10x faster)
+    - Does it need backend? → Use Render
+    - Vercel failed? → Fallback to Render
+    
+    Benefits:
+    - 30-60 second deploys for most initial projects
+    - Full-stack support when needed
+    - Automatic fallback for reliability
+    """
+    
+    def __init__(self):
+        self.vercel = get_vercel_deployer()
+        self.render = get_render_deployer()
+    
+    def deploy(
+        self,
+        project_name: str,
+        app_code: str,
+        project_id: str = None,
+        needs_backend: bool = False,
+        force_provider: str = None,  # 'vercel' or 'render'
+        user_prompt: str = ""  # Original user request
+    ) -> DeploymentResult:
+        """
+        Deploy an app using the optimal provider.
+        
+        Args:
+            project_name: Name of the project
+            app_code: The generated App.tsx code
+            project_id: Database project ID
+            needs_backend: If True, use Render (has APIs/DB)
+            force_provider: Override automatic selection
+            user_prompt: Original user request (for compact regeneration)
+        
+        Returns:
+            DeploymentResult with URL and metadata
+        """
+        
+        # Determine provider
+        if force_provider:
+            provider = force_provider
+        elif needs_backend:
+            provider = 'render'
+            logger.info(f"[HYBRID] Using Render (needs backend)")
+        elif self.vercel.is_configured:
+            provider = 'vercel'
+            logger.info(f"[HYBRID] Using Vercel (fast static deploy)")
+        else:
+            provider = 'render'
+            logger.info(f"[HYBRID] Using Render (Vercel not configured)")
+        
+        # Deploy
+        if provider == 'vercel':
+            result = self._deploy_vercel(project_name, app_code, project_id, user_prompt)
+            
+            # Fallback to Render if Vercel fails
+            if not result.success:
+                logger.warning(f"[HYBRID] Vercel failed, falling back to Render: {result.error}")
+                result = self._deploy_render(project_name, app_code, project_id)
+        else:
+            result = self._deploy_render(project_name, app_code, project_id)
+        
+        return result
+    
+    def _deploy_vercel(
+        self,
+        project_name: str,
+        app_code: str,
+        project_id: str,
+        user_prompt: str = ""
+    ) -> DeploymentResult:
+        """
+        Deploy to Vercel with COMPACT code.
+        
+        If the code is too complex (>8KB), regenerate as compact
+        to ensure browser Babel can handle it.
+        """
+        # Check if code is too complex for browser Babel
+        code_size = len(app_code)
+        has_complex_ts = 'interface ' in app_code or '<T>' in app_code
+        
+        if code_size > 8000 or has_complex_ts:
+            logger.info(f"[HYBRID] Code too complex for Vercel ({code_size} bytes, TS: {has_complex_ts})")
+            logger.info(f"[HYBRID] Regenerating as compact app...")
+            
+            try:
+                from apps.code_library.component_pipeline import build_compact_app
+                
+                # Detect if needs data
+                data_keywords = ['stock', 'crypto', 'bitcoin', 'price', 'weather', 
+                                'tracker', 'live', 'real-time', 'monitor', 'dashboard']
+                needs_data = any(kw in user_prompt.lower() for kw in data_keywords)
+                
+                # Generate compact version
+                app_code = build_compact_app(user_prompt or project_name, needs_data)
+                logger.info(f"[HYBRID] Compact code generated: {len(app_code)} bytes")
+            except Exception as e:
+                logger.warning(f"[HYBRID] Compact generation failed: {e}")
+                # Continue with original code
+        
+        result = self.vercel.deploy_static_app(
+            project_name=project_name,
+            app_code=app_code,
+            project_id=project_id
+        )
+        
+        return DeploymentResult(
+            success=result.get('success', False),
+            url=result.get('url'),
+            provider='vercel',
+            deploy_time_seconds=result.get('deploy_time_seconds', 0),
+            deployment_id=result.get('deployment_id'),
+            error=result.get('error'),
+            verified=result.get('verified', False)
+        )
+    
+    def _deploy_render(
+        self,
+        project_name: str,
+        app_code: str,
+        project_id: str
+    ) -> DeploymentResult:
+        """Deploy to Render."""
+        import time
+        start = time.time()
+        
+        # Get project from database if we have an ID
+        project = None
+        if project_id:
+            try:
+                from apps.projects.models import Project
+                project = Project.objects.get(id=project_id)
+            except Exception:
+                pass
+        
+        # RenderDeployer.deploy_react_app takes just project
+        # But we need to ensure it has the code stored
+        if project and app_code:
+            # Store the code in project before deploying
+            from apps.projects.models import Project
+            if not project.generated_code:
+                project.generated_code = {'components': {'App.tsx': app_code}}
+                project.save(update_fields=['generated_code'])
+        
+        result = self.render.deploy_react_app(project)
+        
+        deploy_time = time.time() - start
+        
+        if isinstance(result, dict):
+            return DeploymentResult(
+                success=result.get('success', False),
+                url=result.get('url'),
+                provider='render',
+                deploy_time_seconds=deploy_time,
+                deployment_id=result.get('service_id'),
+                error=result.get('error')
+            )
+        else:
+            # Legacy return format (just URL string)
+            return DeploymentResult(
+                success=bool(result),
+                url=result if isinstance(result, str) else None,
+                provider='render',
+                deploy_time_seconds=deploy_time
+            )
+    
+    def detect_needs_backend(self, app_code: str, prompt: str) -> bool:
+        """
+        Detect if the app needs a backend (beyond the shared Gateway API).
+        
+        Returns True if:
+        - Uses authentication
+        - Has user-specific data storage
+        - Needs server-side processing
+        
+        Returns False for:
+        - Static sites
+        - Dashboards using Gateway API
+        - Landing pages
+        """
+        prompt_lower = prompt.lower()
+        code_lower = app_code.lower()
+        
+        # Keywords indicating backend needs
+        backend_keywords = [
+            'user auth', 'authentication', 'login system', 'signup',
+            'database', 'user accounts', 'save data', 'persist',
+            'admin panel with users', 'multi-tenant'
+        ]
+        
+        for kw in backend_keywords:
+            if kw in prompt_lower:
+                return True
+        
+        # Check code for backend patterns
+        backend_patterns = [
+            '/api/auth',
+            '/api/users',
+            'localStorage.setItem',  # Might need server sync
+        ]
+        
+        # Don't trigger on Gateway API (that's our shared backend)
+        if 'faibric-api.onrender.com' in code_lower:
+            return False
+        
+        return False  # Default: assume static
+
+
+# Singleton
+_hybrid_deployer = None
+
+def get_hybrid_deployer() -> HybridDeployer:
+    """Get or create HybridDeployer instance."""
+    global _hybrid_deployer
+    if _hybrid_deployer is None:
+        _hybrid_deployer = HybridDeployer()
+    return _hybrid_deployer
+

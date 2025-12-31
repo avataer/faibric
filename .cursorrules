@@ -1,0 +1,77 @@
+# FAIBRIC PROJECT RULES
+
+## PERMANENT OWNER RULES
+
+These rules are ENFORCED BY CODE, not just documented.
+
+### 1. NO INSTRUCTION-BASED SOLUTIONS
+NEVER create a fix that relies on instructions/documentation.
+
+BAD (instruction-based):
+- Adding "IMPORTANT: always do X" to a prompt
+- Writing a comment "# MUST do Y"
+- Documenting rules that aren't enforced
+
+GOOD (code-enforced):
+- Validator function that DETECTS violations
+- Code that BLOCKS deployment if rule is broken
+- Test that FAILS if rule is violated
+
+If you find yourself writing "MUST", "SHOULD", "ALWAYS", "NEVER" as text:
+STOP. Write CODE that enforces it instead.
+
+### 2. FIX CAUSES, NOT SYMPTOMS
+When fixing a problem:
+- Fix immediate issue first
+- IMMEDIATELY create CODE that prevents this CLASS of problems
+- Task is NOT complete until enforcement code exists
+
+### 3. NO URLS WITHOUT VERIFICATION
+Enforced by: `build_service._wait_and_verify_deployment()`
+- Blocks URL display until HTTP 200 + JS loads + JS > 10KB
+
+### 4. NO EMOJIS
+Enforced by: `user_rules.UserRulesRegistry.enforce_rules()`
+- Automatically removes emojis from all generated code
+
+### 5. GATEWAY API REQUIRED FOR DATA
+Enforced by: `code_validator._check_gateway_usage()`
+- Detects when app needs data but doesn't use Gateway
+
+### 6. NO MOCK DATA
+Enforced by: `code_validator._check_no_mock_data()`
+- Detects hardcoded mock/fake data arrays
+
+### 7. SETTINGS VIEW REQUIRED
+Enforced by: `code_validator._check_settings_view()`
+- Detects missing Settings view when app uses data
+
+### 8. NO INSTRUCTION-BASED SOLUTIONS (META-RULE)
+Enforced by: `solution_validator.check_for_instruction_based_rules()`
+- Detects rules written as text (MUST/SHOULD/ALWAYS/NEVER)
+- Requires corresponding enforcement code
+- Suggests how to convert instruction to enforcement
+
+---
+
+## Enforcement System Summary
+
+Every rule has:
+1. A detector function (catches violations)
+2. An entry in `problem_registry.REQUIRED_FIXES`
+3. Integration into the build pipeline
+
+NO rule exists as just text/instructions.
+
+---
+
+## Code Location Reference
+
+| File | Purpose |
+|------|---------|
+| `user_rules.py` | Enforces owner rules (emoji removal) |
+| `code_validator.py` | Validates code syntax + business rules |
+| `solution_validator.py` | Blocks instruction-based solutions |
+| `problem_registry.py` | Tracks problems + requires fixes |
+| `build_service.py` | Orchestrates build + deployment |
+| `owner_instructions.py` | Runtime instruction enforcement |

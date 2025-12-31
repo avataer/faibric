@@ -189,8 +189,43 @@ def get_service(name: str) -> dict:
     return SERVICES.get(name.lower())
 
 
-def get_api_key(service_config: dict) -> str:
-    """Get API key for a service from environment"""
+def get_api_key(service_config: dict, project_id: int = None) -> str:
+    """
+    Get API key for a service.
+    
+    Priority:
+    1. Customer's own key (if project_id provided)
+    2. Platform key from environment
+    """
+    # First, check if customer has provided a key
+    if project_id:
+        try:
+            from apps.projects.models import CustomerAPIKey
+            service_name = None
+            # Find service name from config
+            for name, config in SERVICES.items():
+                if config == service_config:
+                    service_name = name
+                    break
+            
+            if service_name:
+                customer_key = CustomerAPIKey.objects.filter(
+                    project_id=project_id,
+                    service=service_name,
+                    status='active'
+                ).first()
+                
+                if customer_key:
+                    # Update usage tracking
+                    from django.utils import timezone
+                    customer_key.call_count += 1
+                    customer_key.last_used_at = timezone.now()
+                    customer_key.save(update_fields=['call_count', 'last_used_at'])
+                    return customer_key.api_key
+        except Exception:
+            pass  # Fall through to platform key
+    
+    # Fall back to platform key from environment
     env_key = service_config.get('env_key')
     if not env_key:
         return None

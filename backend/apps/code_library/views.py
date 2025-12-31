@@ -494,8 +494,127 @@ class CodeGenerationViewSet(TenantMixin, viewsets.ViewSet):
         })
 
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def instruction_log_view(request):
+    """
+    View the instruction-based solutions log.
+    
+    This shows all detected instruction-based solutions that need enforcement.
+    """
+    from .instruction_log import get_instruction_log
+    from .models import InstructionSolutionRecord
+    
+    log = get_instruction_log()
+    
+    # Get from database for accuracy
+    try:
+        pending = InstructionSolutionRecord.objects.filter(status='pending').order_by('-detected_at')
+        all_records = InstructionSolutionRecord.objects.all().order_by('-detected_at')
+        
+        pending_data = [
+            {
+                'id': r.id,
+                'detected_at': r.detected_at.isoformat(),
+                'file_path': r.file_path,
+                'line_number': r.line_number,
+                'instruction_text': r.instruction_text[:200],
+                'missing_enforcement': r.missing_enforcement,
+                'status': r.status,
+            }
+            for r in pending[:20]
+        ]
+        
+        return Response({
+            'total': all_records.count(),
+            'pending': pending.count(),
+            'pending_items': pending_data,
+            'message': 'Instruction-based solutions that need code enforcement',
+        })
+    except Exception as e:
+        # Fallback to in-memory log
+        return Response({
+            'summary': log.get_summary(),
+            'error': str(e),
+        })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def mark_instruction_fixed(request, entry_id):
+    """Mark an instruction-based solution as fixed."""
+    from .instruction_log import get_instruction_log
+    
+    fixed_by = request.data.get('fixed_by', 'unknown')
+    log = get_instruction_log()
+    
+    success = log.mark_fixed(entry_id, fixed_by)
+    
+    if success:
+        return Response({'success': True, 'message': f'Entry {entry_id} marked as fixed'})
+    else:
+        return Response({'success': False, 'message': 'Entry not found'}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def alerts_view(request):
+    """
+    View all unread alerts.
+    
+    This is the main notification endpoint - check this to see new alerts.
+    """
+    from .models import Alert
+    
+    try:
+        unread = Alert.objects.filter(is_read=False).order_by('-created_at')
+        all_alerts = Alert.objects.all().order_by('-created_at')[:50]
+        
+        unread_data = [
+            {
+                'id': a.id,
+                'created_at': a.created_at.isoformat(),
+                'type': a.alert_type,
+                'title': a.title,
+                'message': a.message[:500],
+                'severity': a.severity,
+            }
+            for a in unread[:20]
+        ]
+        
+        return Response({
+            'unread_count': unread.count(),
+            'total_count': all_alerts.count(),
+            'unread_alerts': unread_data,
+            'check_url': '/api/library/alerts/',
+        })
+    except Exception as e:
+        return Response({
+            'error': str(e),
+            'unread_count': 0,
+            'unread_alerts': [],
+        })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def mark_alert_read(request, alert_id):
+    """Mark an alert as read."""
+    from .models import Alert
+    from datetime import datetime
+    
+    try:
+        alert = Alert.objects.get(id=alert_id)
+        alert.is_read = True
+        alert.read_at = datetime.now()
+        alert.save()
+        return Response({'success': True})
+    except Alert.DoesNotExist:
+        return Response({'success': False, 'message': 'Alert not found'}, status=404)
 
 
 

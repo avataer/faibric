@@ -34,7 +34,32 @@ class LibraryItem(models.Model):
     
     # Basic info
     name = models.CharField(max_length=200, db_index=True)
+    slug = models.SlugField(max_length=200, blank=True, default='', db_index=True)
     description = models.TextField(help_text="What this component does")
+    usage_example = models.TextField(blank=True, default='', help_text="Example usage code")
+    documentation = models.TextField(blank=True, default='', help_text="Documentation for component")
+    
+    # ═══ CONNECTOR SYSTEM ═══
+    # Component interface definition (inputs, outputs, state, slots)
+    interface = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="ComponentInterface definition for this building block"
+    )
+    
+    # Validated connections with other components
+    validated_connections = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of validated connections to other components"
+    )
+    
+    # Wiring hints for composition
+    wiring_hints = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Hints for automatic wiring (prop mappings, handlers)"
+    )
     
     # Categorization
     ITEM_TYPES = [
@@ -54,9 +79,10 @@ class LibraryItem(models.Model):
     language = models.CharField(max_length=20, default='tsx')
     
     # Search & matching
-    keywords = models.TextField(
+    keywords = models.JSONField(
+        default=list,
         blank=True,
-        help_text="Comma-separated keywords for matching (salon, hair, pricing, hero...)"
+        help_text="Keywords for matching (list of strings)"
     )
     tags = models.JSONField(
         default=list,
@@ -70,6 +96,8 @@ class LibraryItem(models.Model):
         blank=True,
         help_text="Vector embedding for semantic search (list of floats)"
     )
+    embedding_model = models.CharField(max_length=100, blank=True, default='')
+    dependencies = models.JSONField(default=list, blank=True)
     
     # Quality & usage tracking
     quality_score = models.FloatField(
@@ -79,10 +107,16 @@ class LibraryItem(models.Model):
     usage_count = models.IntegerField(default=0)
     last_used_at = models.DateTimeField(null=True, blank=True)
     
+    # Source info
+    source = models.CharField(max_length=20, blank=True, default='generated')
+    source_url = models.CharField(max_length=200, blank=True, default='')
+    
     # Admin curation
     is_active = models.BooleanField(default=True, help_text="Available for use")
     is_approved = models.BooleanField(default=True, help_text="Auto-approved, admin reviews after")
     is_public = models.BooleanField(default=True)
+    is_deprecated = models.BooleanField(default=False)
+    deprecation_note = models.TextField(blank=True, default='')
     needs_review = models.BooleanField(default=True, help_text="Flagged for admin review")
     
     # Source tracking
@@ -116,6 +150,86 @@ class LibraryItem(models.Model):
         self.usage_count += 1
         self.last_used_at = timezone.now()
         self.save(update_fields=['usage_count', 'last_used_at'])
+    
+    # ═══ CONNECTOR SYSTEM METHODS ═══
+    
+    def get_interface(self):
+        """
+        Deserialize the stored ComponentInterface.
+        
+        Returns a ComponentInterface object or None if not set.
+        """
+        if not self.interface:
+            return None
+        
+        try:
+            from apps.code_library.connectors import ComponentInterface
+            return ComponentInterface.from_dict(self.interface)
+        except Exception:
+            return None
+    
+    def set_interface(self, interface):
+        """
+        Serialize and store a ComponentInterface.
+        
+        Args:
+            interface: ComponentInterface object to store
+        """
+        if interface is None:
+            self.interface = None
+        else:
+            self.interface = interface.to_dict()
+        self.save(update_fields=['interface'])
+    
+    def add_validated_connection(self, target_component_id: str, connection_name: str):
+        """
+        Record a validated connection to another component.
+        
+        Args:
+            target_component_id: UUID of the target component
+            connection_name: Name of the connection (e.g., "data", "onSelect")
+        """
+        from django.utils import timezone
+        
+        if not self.validated_connections:
+            self.validated_connections = []
+        
+        # Avoid duplicates
+        for conn in self.validated_connections:
+            if conn.get('target') == target_component_id and conn.get('name') == connection_name:
+                conn['validated_at'] = timezone.now().isoformat()
+                self.save(update_fields=['validated_connections'])
+                return
+        
+        self.validated_connections.append({
+            'target': target_component_id,
+            'name': connection_name,
+            'validated_at': timezone.now().isoformat()
+        })
+        self.save(update_fields=['validated_connections'])
+    
+    def get_compatible_components(self):
+        """
+        Get list of components this one can connect to.
+        
+        Returns a list of component IDs that have been validated
+        to work with this component.
+        """
+        if not self.validated_connections:
+            return []
+        return list(set(conn.get('target') for conn in self.validated_connections))
+    
+    def set_wiring_hints(self, hints: dict):
+        """
+        Store wiring hints for automatic composition.
+        
+        Hints include:
+        - prop_mappings: How this component's outputs map to common input names
+        - handler_templates: Template code for event handlers
+        - composition_order: Where this component should appear in the layout
+        """
+        self.wiring_hints = hints
+        self.save(update_fields=['wiring_hints'])
 
 
 class LibraryItemUsage(models.Model):
@@ -485,3 +599,96 @@ class ReuseLog(models.Model):
     
     def __str__(self):
         return f"{self.decision} (score={self.match_score:.1f})"
+
+
+class ProblemRecord(models.Model):
+    """
+    Tracks problems that occurred and their systemic fixes.
+    
+    This is part of the ENFORCEMENT system - not instructions.
+    Problems are logged here and checked to ensure fixes exist.
+    """
+    problem_id = models.CharField(max_length=100, primary_key=True)
+    problem_class = models.CharField(max_length=100, db_index=True)
+    description = models.TextField()
+    
+    first_seen = models.DateTimeField()
+    last_seen = models.DateTimeField()
+    occurrences = models.IntegerField(default=1)
+    
+    systemic_fix_id = models.CharField(max_length=100, blank=True, null=True)
+    fix_verified = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-last_seen']
+    
+    def __str__(self):
+        return f"{self.problem_class} ({self.occurrences}x)"
+
+
+class InstructionSolutionRecord(models.Model):
+    """
+    LOG of all instruction-based solutions detected.
+    
+    Since we can't prevent instruction-based solutions,
+    we LOG them so the owner can see and act on them.
+    """
+    id = models.CharField(max_length=20, primary_key=True)
+    detected_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    file_path = models.CharField(max_length=500)
+    line_number = models.IntegerField()
+    instruction_text = models.TextField()
+    missing_enforcement = models.TextField()
+    
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending - needs enforcement'),
+            ('fixed', 'Fixed - enforcement added'),
+            ('acknowledged', 'Acknowledged - intentional'),
+        ],
+        default='pending',
+        db_index=True
+    )
+    
+    fixed_by = models.CharField(max_length=100, blank=True, null=True)
+    fixed_at = models.DateTimeField(blank=True, null=True)
+    
+    class Meta:
+        ordering = ['-detected_at']
+    
+    def __str__(self):
+        return f"[{self.status}] {self.file_path}:{self.line_number}"
+
+
+class Alert(models.Model):
+    """
+    System alerts for the owner.
+    """
+    id = models.AutoField(primary_key=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    alert_type = models.CharField(max_length=50, db_index=True)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    
+    severity = models.CharField(
+        max_length=20,
+        choices=[
+            ('info', 'Info'),
+            ('warning', 'Warning'),
+            ('error', 'Error'),
+            ('critical', 'Critical'),
+        ],
+        default='warning'
+    )
+    
+    is_read = models.BooleanField(default=False, db_index=True)
+    read_at = models.DateTimeField(blank=True, null=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"[{self.severity}] {self.title}"

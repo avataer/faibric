@@ -34,7 +34,7 @@ def generate_app_v2_task(self, project_id):
         project.status = 'generating'
         project.save()
         
-        broadcast_progress(project_id, "action", "🚀 Starting V2 generation...")
+        broadcast_progress(project_id, "action", "[launch] Starting V2 generation...")
         
         # Initialize V2 generator
         generator = AIGeneratorV2()
@@ -116,7 +116,7 @@ export default App;
         project.status = 'ready'
         project.save()
         
-        broadcast_progress(project_id, "success", "🎉 Generation complete! Deploying...")
+        broadcast_progress(project_id, "success", "[party] Generation complete! Deploying...")
         
         # Auto-deploy
         from apps.deployment.tasks import deploy_app_task
@@ -130,7 +130,7 @@ export default App;
         
     except Exception as e:
         error_msg = str(e)[:200]
-        broadcast_progress(project_id, "error", f"❌ Error: {error_msg}")
+        broadcast_progress(project_id, "error", f"[ERROR] Error: {error_msg}")
         
         try:
             project = Project.objects.get(id=project_id)
@@ -197,7 +197,7 @@ def quick_modify_task(project_id, user_request):
         project.status = 'deploying'
         project.save()
         
-        broadcast_progress(project_id, "thinking", "🚀 Redeploying...")
+        broadcast_progress(project_id, "thinking", "[launch] Redeploying...")
         
         # Remove old container and redeploy
         if project.container_id:
@@ -213,6 +213,6 @@ def quick_modify_task(project_id, user_request):
         return {'status': 'success'}
         
     except Exception as e:
-        broadcast_progress(project_id, "error", f"❌ Failed: {str(e)[:100]}")
+        broadcast_progress(project_id, "error", f"[ERROR] Failed: {str(e)[:100]}")
         return {'status': 'error', 'message': str(e)}
 

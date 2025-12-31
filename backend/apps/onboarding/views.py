@@ -220,6 +220,14 @@ class SessionStatusView(APIView):
             build_progress = 0
             generated_code = None
             
+            # Get the latest progress from events (for smooth progress updates)
+            latest_progress_event = session.events.filter(
+                event_type='build_progress'
+            ).order_by('-timestamp').first()
+            
+            if latest_progress_event and latest_progress_event.event_data:
+                build_progress = latest_progress_event.event_data.get('progress', 0)
+            
             if session.converted_to_project:
                 project = session.converted_to_project
                 deployment_url = project.deployment_url
@@ -237,17 +245,15 @@ class SessionStatusView(APIView):
                         # Fallback to raw string
                         generated_code = str(project.frontend_code)
                 
-                # Calculate build progress based on status
-                if project.status == 'generating':
-                    build_progress = 30
-                elif project.status == 'ready':
-                    build_progress = 70
-                elif project.status == 'deploying':
-                    build_progress = 85
-                elif project.status == 'deployed':
+                # Use project status for final states only
+                if project.status == 'deployed':
                     build_progress = 100
                     session.status = 'deployed'
                     session.save()
+                elif project.status == 'deploying' and build_progress < 85:
+                    build_progress = 85
+                elif project.status == 'ready' and build_progress < 70:
+                    build_progress = 70
             
             return Response({
                 'status': session.status,

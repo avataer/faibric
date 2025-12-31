@@ -432,12 +432,14 @@ def print_service_status():
     print("=" * 60)
     
     for name, info in status.items():
-        mode = "🔶 MOCK" if info["mock"] else "✅ LIVE"
+        mode = "🔶 MOCK" if info["mock"] else "[OK] LIVE"
         print(f"{mode} {name:15} ({info['provider']})")
         if info["mock"]:
             print(f"     └─ Set: {', '.join(info['keys_needed'])}")
     
     print("=" * 60 + "\n")
+
+
 
 
 

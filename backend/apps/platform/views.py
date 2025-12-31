@@ -71,7 +71,14 @@ def db_collection(request, app_id, collection_name):
     elif request.method == "POST":
         try:
             body = json.loads(request.body)
-            data = body.get('data', {})
+            
+            # Support both formats:
+            # 1. {"data": {...}} - wrapped format
+            # 2. {...} - direct data format (more intuitive for users)
+            if 'data' in body and isinstance(body.get('data'), dict):
+                data = body['data']
+            else:
+                data = body  # Use entire body as data
             
             doc = AppDocument.objects.create(
                 collection=collection,
@@ -115,10 +122,19 @@ def db_document(request, app_id, collection_name, doc_id):
     elif request.method == "PUT":
         try:
             body = json.loads(request.body)
-            data = body.get('data', {})
+            
+            # Support both formats:
+            # 1. {"data": {...}, "merge": true/false} - wrapped format
+            # 2. {...} - direct data format (replaces entirely)
+            if 'data' in body and isinstance(body.get('data'), dict):
+                data = body['data']
+                merge = body.get('merge', False)
+            else:
+                data = body
+                merge = False
             
             # Merge or replace
-            if body.get('merge', False):
+            if merge:
                 doc.data.update(data)
             else:
                 doc.data = data
@@ -169,12 +185,17 @@ def auth_signup(request, app_id):
         if not email or not password:
             return JsonResponse({'success': False, 'error': 'Email and password required'}, status=400)
         
+        # Validate password strength
+        if len(password) < 6:
+            return JsonResponse({'success': False, 'error': 'Password must be at least 6 characters'}, status=400)
+        
         # Check if user exists
         if AppUser.objects.filter(app_id=app_id, email=email).exists():
             return JsonResponse({'success': False, 'error': 'User already exists'}, status=409)
         
-        # Hash password (simple - use bcrypt in production)
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        # Use Django's secure password hashing (bcrypt/PBKDF2)
+        from django.contrib.auth.hashers import make_password
+        password_hash = make_password(password)
         
         user = AppUser.objects.create(
             app_id=app_id,
@@ -205,23 +226,28 @@ def auth_login(request, app_id):
         email = body.get('email', '').lower().strip()
         password = body.get('password', '')
         
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        from django.contrib.auth.hashers import check_password
+        from django.utils import timezone
+        import secrets
         
         try:
-            user = AppUser.objects.get(app_id=app_id, email=email, password_hash=password_hash)
+            user = AppUser.objects.get(app_id=app_id, email=email)
         except AppUser.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Invalid credentials'}, status=401)
+        
+        # Use Django's secure password checking
+        if not check_password(password, user.password_hash):
             return JsonResponse({'success': False, 'error': 'Invalid credentials'}, status=401)
         
         if not user.is_active:
             return JsonResponse({'success': False, 'error': 'Account disabled'}, status=403)
         
         # Update last login
-        from django.utils import timezone
         user.last_login = timezone.now()
         user.save()
         
-        # Return simple token (use JWT in production)
-        token = hashlib.sha256(f"{user.id}{timezone.now().isoformat()}".encode()).hexdigest()
+        # Generate cryptographically secure token
+        token = secrets.token_urlsafe(32)
         
         return JsonResponse({
             'success': True,

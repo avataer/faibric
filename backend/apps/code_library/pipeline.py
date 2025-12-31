@@ -157,7 +157,11 @@ Only include sections and features actually mentioned or implied. Return ONLY va
         ).order_by('-quality_score', '-usage_count')
         
         for item in items:
-            item_keywords = item.keywords.lower()
+            # Handle keywords as list (JSONField) or legacy string
+            if isinstance(item.keywords, list):
+                item_keywords = ' '.join([k.lower() for k in item.keywords])
+            else:
+                item_keywords = (item.keywords or '').lower()
             item_tags = [t.lower() for t in (item.tags or [])]
             item_name = item.name.lower()
             item_desc = item.description.lower()
@@ -248,10 +252,12 @@ class LibraryFirstPipeline:
         top_score = matches[0]['score'] if matches else 0
         candidate_count = len(matches)
         
+        print(f"[LIBRARY] Search results: {len(matches)} matches, top_score={top_score:.1f}")
+        
         if matches and top_score >= constants.REUSE_THRESHOLD_HIGH:
             # Good match found - ADAPT existing code
             decision = 'reused'
-            logger.info(f"[Pipeline] REUSE: score={top_score:.1f} >= {constants.REUSE_THRESHOLD_HIGH} - using {matches[0]['item'].name}")
+            print(f"[LIBRARY] 🔄 REUSE: score={top_score:.1f} >= {constants.REUSE_THRESHOLD_HIGH} - using '{matches[0]['item'].name}'")
             self._library_was_used = True
             
             self.messenger.send('building_hero')
@@ -263,7 +269,7 @@ class LibraryFirstPipeline:
         elif matches and top_score >= constants.GRAY_ZONE_MIN:
             # Gray zone - generate new but log for review
             decision = 'gray_zone'
-            logger.warning(f"[Pipeline] GRAY_ZONE: score={top_score:.1f} in [{constants.GRAY_ZONE_MIN}, {constants.REUSE_THRESHOLD_HIGH})")
+            print(f"[LIBRARY] [WARN] GRAY_ZONE: score={top_score:.1f} in [{constants.GRAY_ZONE_MIN}, {constants.REUSE_THRESHOLD_HIGH})")
             self._generated_new_code = True
             
             self.messenger.send('building_hero')
@@ -277,7 +283,7 @@ class LibraryFirstPipeline:
         else:
             # No good match - GENERATE new code
             decision = 'generated'
-            logger.info(f"[Pipeline] GENERATE: score={top_score:.1f} < {constants.GRAY_ZONE_MIN}")
+            print(f"[LIBRARY] [NEW] GENERATE: score={top_score:.1f} < {constants.GRAY_ZONE_MIN} (no good match)")
             self._generated_new_code = True
             
             self.messenger.send('building_hero')
@@ -414,53 +420,97 @@ Return the complete App.tsx code. Start with import, end with export default App
         """Save newly generated code to library for future reuse."""
         from apps.code_library.models import LibraryItem
         
+        print(f"[LIBRARY] Saving code to library: {len(code)} chars, prompt: {user_prompt[:50]}...")
+        
         # Only save if code is substantial
         if len(code) < constants.MIN_CODE_LENGTH_FOR_LIBRARY:
-            logger.info(f"[Pipeline] Code too short ({len(code)} < {constants.MIN_CODE_LENGTH_FOR_LIBRARY}), not saving")
+            print(f"[LIBRARY] Code too short ({len(code)} < {constants.MIN_CODE_LENGTH_FOR_LIBRARY}), not saving")
             return
         
         # Check for near-duplicates before saving
         duplicate_check = DuplicateDetector.check_for_duplicate(code)
         if duplicate_check:
-            logger.warning(
-                f"[Pipeline] DUPLICATE BLOCKED: {duplicate_check['similarity']:.0%} similar to "
-                f"{duplicate_check['matching_item_name']} ({duplicate_check['matching_item_id']})"
-            )
+            print(f"[LIBRARY] DUPLICATE BLOCKED: {duplicate_check['similarity']:.0%} similar to {duplicate_check['matching_item_name']}")
             return
         
         try:
-            # Generate keywords from requirements
+            import re
+            
+            # Generate rich keywords from requirements AND user prompt
             keywords = []
             keywords.append(requirements.get('site_type', ''))
             keywords.append(requirements.get('industry', ''))
             keywords.extend(requirements.get('sections_needed', []))
             keywords.extend(requirements.get('features', []))
+            
+            # Also extract keywords from user prompt for better matching
+            prompt_words = [w.lower() for w in user_prompt.split() if len(w) > 3]
+            keywords.extend(prompt_words[:5])
+            
             keywords = [k for k in keywords if k and k != 'other'][:constants.MAX_KEYWORDS]
             
-            # Create library item - AUTO-APPROVED for immediate reuse
-            # Admin reviews AFTER, not as a gate
+            # Generate slug from user prompt
+            slug = re.sub(r'[^a-z0-9]+', '-', user_prompt.lower())[:100].strip('-')
+            
+            # Generate better documentation
+            doc = f"""
+## Auto-Generated Component
+
+**Original Request:** {user_prompt}
+
+**Features:**
+{chr(10).join(['- ' + k for k in keywords if k])}
+
+**Gateway Usage:**
+Uses Faibric Gateway at https://faibric-api.onrender.com/api/gateway/
+
+**How to Reuse:**
+This component can be adapted for similar requests. The AI will modify
+the specific data endpoints and styling while keeping the core structure.
+"""
+            
+            # Create library item with comprehensive metadata
             item = LibraryItem.objects.create(
                 name=f"Generated: {user_prompt[:50]}...",
+                slug=slug,
                 description=f"Auto-generated for: {user_prompt[:200]}",
+                usage_example=f'''
+// Import and use this component
+import App from './App';
+
+// Customize by passing props:
+// <App ticker="BTC" theme="dark" />
+
+// Original prompt: {user_prompt[:100]}
+''',
+                documentation=doc,
                 item_type='template',
+                language='tsx',
                 code=code,
-                keywords=', '.join(keywords),
+                keywords=keywords,
                 tags=keywords[:constants.MAX_TAGS],
+                embedding_model='',
+                dependencies=[],
+                source='generated',
+                source_url='',
                 quality_score=constants.DEFAULT_AI_QUALITY_SCORE,
-                is_approved=True,   # AUTO-APPROVED - no gate
-                is_active=True,     # Immediately available for reuse
+                is_approved=True,
+                is_active=True,
+                is_public=True,
+                is_deprecated=False,
+                deprecation_note='',
                 needs_review=True,  # Flag for admin to review later
                 source_project=project,
                 created_by='ai'
             )
             
-            logger.info(f"[Pipeline] Saved to library as {item.id} (auto-approved, pending review)")
+            print(f"[LIBRARY] [OK] SAVED: {item.id} - {item.name} (keywords: {keywords})")
             
             # Queue admin feedback question
             self._queue_admin_feedback(item, user_prompt, requirements)
             
         except Exception as e:
-            logger.warning(f"[Pipeline] Failed to save to library: {e}")
+            print(f"[LIBRARY] [ERROR] FAILED to save: {e}")
     
     def _verify_output(self, code: str, requirements: Dict):
         """Verify the generated code meets requirements."""
@@ -583,3 +633,4 @@ Return ONLY the JSON array, no explanation."""
             'library_used': self._library_was_used,
             'new_code_generated': self._generated_new_code,
         }
+

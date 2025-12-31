@@ -172,7 +172,7 @@ function Welcome() {{
     }}}}>
       <div>
         <h1 style={{{{ fontSize: '48px', marginBottom: '20px' }}}}>
-          🚀 {project.name}
+          [launch] {project.name}
         </h1>
         <p style={{{{ fontSize: '24px', opacity: 0.9 }}}}>
           {project.description}

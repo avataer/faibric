@@ -312,11 +312,11 @@ def generate_dashboard_html():
 <body>
     <div class="dashboard">
         <div class="header">
-            <h1>🚀 Faibric Conversion Funnel</h1>
+            <h1>[launch] Faibric Conversion Funnel</h1>
             <p>Real-time onboarding analytics</p>
         </div>
         
-        {"<div class='alert'><span class='alert-icon'>⚠️</span><span>" + str(data["email_changes"]) + " users changed their email after initial submission</span></div>" if data["email_changes"] > 0 else ""}
+        {"<div class='alert'><span class='alert-icon'>[WARN]</span><span>" + str(data["email_changes"]) + " users changed their email after initial submission</span></div>" if data["email_changes"] > 0 else ""}
         
         <div class="funnel-container">
             <div class="funnel">
@@ -369,7 +369,7 @@ def generate_dashboard_html():
         
         <div class="breakdown">
             <div class="breakdown-card">
-                <h3>📊 Traffic Sources</h3>
+                <h3>[chart] Traffic Sources</h3>
                 {sources_html if sources_html else '<div class="source-item"><span class="source-name">No data</span></div>'}
             </div>
             <div class="breakdown-card">
@@ -386,6 +386,8 @@ def generate_dashboard_html():
 </html>
 '''
     return html
+
+
 
 
 

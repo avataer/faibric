@@ -74,7 +74,7 @@ class CabinetAuthService:
             activity_type='account',
             title='Account Created',
             description='Welcome! Your account has been created.',
-            icon='🎉'
+            icon='[party]'
         )
         
         return user
@@ -247,7 +247,7 @@ class CabinetService:
             user=self.user,
             activity_type='profile',
             title='Profile Updated',
-            icon='✏️'
+            icon='[edit]'
         )
         
         return self.user
@@ -499,6 +499,8 @@ class CabinetService:
             )
         except Order.DoesNotExist:
             return None
+
+
 
 
 

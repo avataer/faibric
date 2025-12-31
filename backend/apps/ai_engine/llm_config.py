@@ -3,10 +3,15 @@ LLM Configuration for Faibric.
 
 Primary: Claude Opus 4.5 for code generation
 Secondary: Best LLM per task type
+
+NOTE: Model IDs are defined in models_config.py - SINGLE SOURCE OF TRUTH
 """
 from enum import Enum
 from typing import Dict, Optional
 from dataclasses import dataclass
+
+# Import from centralized config - SINGLE SOURCE OF TRUTH
+from .models_config import CODE_MODEL, CHAT_MODEL
 
 
 class TaskType(Enum):
@@ -33,12 +38,12 @@ class LLMConfig:
     cost_per_1k_output: float
 
 
-# LLM Configurations
+# LLM Configurations - using centralized model IDs from models_config.py
 LLMS = {
-    # Anthropic Models
+    # Anthropic Models - IDs from models_config.py
     "claude-opus-4.5": LLMConfig(
         provider="anthropic",
-        model="claude-sonnet-4-20250514",  # Opus 4.5 model ID
+        model=CODE_MODEL,  # From models_config.py - Claude Opus 4.5
         max_tokens=8192,
         temperature=0.2,
         description="Claude Opus 4.5 - Best for complex code generation",
@@ -47,19 +52,19 @@ LLMS = {
     ),
     "claude-sonnet-4": LLMConfig(
         provider="anthropic",
-        model="claude-sonnet-4-20250514",
+        model=CODE_MODEL,  # From models_config.py - using Opus for code quality
         max_tokens=8192,
         temperature=0.3,
         description="Claude Sonnet 4 - Fast, good for chat",
         cost_per_1k_input=0.003,
         cost_per_1k_output=0.015,
     ),
-    "claude-haiku-3.5": LLMConfig(
+    "claude-haiku-4.5": LLMConfig(
         provider="anthropic",
-        model="claude-3-5-haiku-20241022",
+        model=CHAT_MODEL,  # From models_config.py - Claude Haiku 4.5
         max_tokens=4096,
         temperature=0.3,
-        description="Claude Haiku 3.5 - Ultra fast, good for simple tasks",
+        description="Claude Haiku 4.5 - Ultra fast, good for chat/classification",
         cost_per_1k_input=0.0008,
         cost_per_1k_output=0.004,
     ),
@@ -89,10 +94,10 @@ TASK_LLM_MAP: Dict[TaskType, str] = {
     TaskType.CODE_EXPLANATION: "claude-opus-4.5",
     
     # Chat - Sonnet for speed + quality balance
-    TaskType.AI_CHAT: "claude-sonnet-4",
+    TaskType.AI_CHAT: "claude-haiku-4.5",  # Haiku for chat
     
     # Summarization - Haiku for speed (simpler task)
-    TaskType.SUMMARIZATION: "claude-haiku-3.5",
+    TaskType.SUMMARIZATION: "claude-haiku-4.5",
     
     # Embeddings - OpenAI (best embedding model)
     TaskType.EMBEDDING: "text-embedding-3-small",

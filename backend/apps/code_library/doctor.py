@@ -267,3 +267,5 @@ def run_doctor() -> Dict:
 def diagnose(query: str) -> Dict:
     """Diagnose why a query returns certain results."""
     return RetrievalDiagnostics.diagnose_query(query)
+
+

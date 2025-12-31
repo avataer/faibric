@@ -10,6 +10,7 @@ CLASSIFY_PROMPT = """Classify this request into ONE category:
 - dashboard: Data display with charts/metrics/stats
 - form: Data collection form
 - game: Interactive game
+- saas: SaaS app with authentication, user dashboard, multiple pages
 
 Request: "{prompt}"
 
@@ -20,16 +21,65 @@ Reply with ONLY the category name, nothing else."""
 BASE_RULES = """
 ABSOLUTE RULES (NEVER BREAK THESE):
 1. Output ONLY valid JSON - no markdown, no backticks, no explanations
-2. Use ONLY inline styles: style={{{{ backgroundColor: '#000' }}}}
-3. NEVER use fetch(), axios, or any HTTP requests - browsers block CORS
-4. ALL data must be defined inside the component using useState
-5. For "live" data: use useEffect + setInterval to randomly update values
-6. Import ONLY from 'react': import React, {{ useState, useEffect }} from 'react'
-7. NO external libraries, NO imports except React
-8. Component must be a complete, working, self-contained function
-9. TYPOGRAPHY: ALWAYS use Apple San Francisco font. Set on EVERY text element:
-   fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif"
-   This is MANDATORY - NEVER use any other font unless user explicitly requests it.
+2. Component must be a complete, working, self-contained function
+3. For "live" data: use useEffect + setInterval to randomly update values
+
+UNDERSTAND THE USER'S REQUEST (CRITICAL):
+- Read EVERY word of the user's request - they are telling you EXACTLY what they want
+- If they mention specific names, terms, stocks, concepts - USE THOSE EXACTLY
+- If they ask for N items/examples - generate EXACTLY N items
+- If they mention a strategy/technique/method - understand it and apply it
+- DO NOT substitute generic content for specific requirements
+- The user's request is your specification - follow it precisely
+
+REAL DATA vs FAKE DATA (EXTREMELY IMPORTANT):
+- If user asks for "real data", "factual data", "historical data" - you MUST use the Gateway API
+- NEVER make up stock prices, dates, or financial data - it's WRONG and DANGEROUS
+- For stocks: fetch from yahoo_finance via Gateway: POST /api/gateway/ with {service: 'yahoo_finance', endpoint: '/chart/TICKER'}
+- If data cannot be fetched, show a message: "Connect to fetch real-time data"
+- DO NOT HALLUCINATE - if you don't have real data, say so
+
+AVAILABLE LIBRARIES (USE THESE!):
+- react, react-dom (core)
+- react-router-dom (for multi-page apps with navigation)
+- recharts (for charts: LineChart, BarChart, PieChart, AreaChart)
+- lucide-react (for icons: import {{ Home, User, Settings, ArrowRight, etc. }} from 'lucide-react')
+- clsx (for conditional classNames)
+- date-fns (for date formatting)
+
+STYLING OPTIONS (choose one):
+1. TAILWIND CSS (PREFERRED): Use className with Tailwind classes
+   Example: <div className="bg-gray-900 text-white p-6 rounded-xl shadow-lg">
+2. Inline styles: style={{{{ backgroundColor: '#000' }}}}
+
+CHARTS EXAMPLE (for dashboards):
+```javascript
+import {{ LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer }} from 'recharts';
+
+const data = [
+  {{ name: 'Jan', value: 4000 }},
+  {{ name: 'Feb', value: 3000 }},
+  {{ name: 'Mar', value: 5000 }},
+];
+
+<ResponsiveContainer width="100%" height={{300}}>
+  <LineChart data={{data}}>
+    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+    <XAxis dataKey="name" stroke="#9ca3af" />
+    <YAxis stroke="#9ca3af" />
+    <Tooltip />
+    <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={{2}} />
+  </LineChart>
+</ResponsiveContainer>
+```
+
+ICONS EXAMPLE:
+```javascript
+import {{ Home, User, Settings, ChevronRight, Star, Heart }} from 'lucide-react';
+
+<Home className="w-6 h-6 text-blue-500" />
+<Star className="w-5 h-5 text-yellow-400 fill-current" />
+```
 
 CONTENT RULES (EXTREMELY IMPORTANT):
 - NEVER use placeholder text: No "Lorem ipsum", "placeholder", "[Your text]", "Coming soon", "Sample", "Example"
@@ -101,61 +151,98 @@ Generate now:"""
 
 
 # Single-shot dashboard generator  
-DASHBOARD_PROMPT = """You are an expert React developer. Create a data dashboard with live-updating data.
+DASHBOARD_PROMPT = """You are an expert React developer AND domain expert. Create a professional data dashboard.
 
 USER REQUEST:
 {user_prompt}
 
 """ + BASE_RULES + """
 
+CRITICAL - UNDERSTAND THE REQUEST:
+1. READ THE USER REQUEST CAREFULLY - identify every specific term, metric, stock, concept they mention
+2. If the user mentions a STRATEGY (e.g., "Livermore trade") - understand what it means and show relevant analysis
+3. If the user mentions SPECIFIC STOCKS (e.g., "NBIS", "CRWV") - generate realistic data for those EXACT stocks
+4. If the user asks for X items/moments/cases - generate EXACTLY X items, not more, not less
+5. Every data point, chart, and metric should directly relate to what the user asked for
+6. DO NOT generate a generic dashboard - make it SPECIFIC to the user's domain
+
 DASHBOARD-SPECIFIC RULES:
-1. NEVER use fetch() or any external API calls - they will fail due to CORS
-2. Generate REALISTIC stock data as initial state in useState
-3. Use useEffect + setInterval to simulate live updates (random price changes every 2-5 seconds)
-4. Show green for positive change, red for negative
-5. Include realistic price ranges for each stock (AAPL ~150-200, NVDA ~400-500, etc.)
-6. Create mini charts using colored DIVs as bar charts showing price history
-7. Dark theme preferred: background #0f0f0f or #1a1a2e
-8. Display current time/date, market status (OPEN/CLOSED based on time)
+1. USE RECHARTS for all charts and visualizations - this is REQUIRED
+2. Use Tailwind CSS for styling (dark theme: bg-gray-900)
+3. Use Lucide React icons for visual polish
+4. Show green for positive metrics, red for negative
 
-EXAMPLE PATTERN FOR LIVE STOCK DASHBOARD:
+STOCK DATA - MUST USE REAL API:
+If the user asks for stock/trading data, you MUST fetch real data:
+```javascript
+useEffect(() => {{
+  const fetchData = async () => {{
+    const res = await fetch('https://faibric-api.onrender.com/api/gateway/', {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/json' }},
+      body: JSON.stringify({{ service: 'yahoo_finance', endpoint: '/chart/NBIS?range=1y&interval=1d' }})
+    }});
+    const result = await res.json();
+    if (result.success) setData(result.data);
+  }};
+  fetchData();
+}}, []);
+```
+- NEVER hardcode stock prices - they will be WRONG and the user will notice
+- Show "Loading real market data..." while fetching
+- Use ACTUAL ticker symbols the user mentioned
+
+REQUIRED IMPORTS FOR DASHBOARDS:
 import React, {{ useState, useEffect }} from 'react';
+import {{ LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer }} from 'recharts';
+import {{ TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, Activity }} from 'lucide-react';
 
-function App() {{
-  const [stocks, setStocks] = useState([
-    {{ symbol: 'AAPL', price: 178.52, change: 2.34, changePercent: 1.33, volume: 52340000, history: [175, 176, 177, 178, 178.52] }},
-    {{ symbol: 'NVDA', price: 467.23, change: 12.45, changePercent: 2.74, volume: 41200000, history: [455, 458, 462, 465, 467.23] }},
-    {{ symbol: 'TSLA', price: 251.80, change: -3.20, changePercent: -1.25, volume: 89100000, history: [255, 254, 253, 252, 251.80] }},
-  ]);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+CHART EXAMPLES:
 
-  useEffect(() => {{
-    const interval = setInterval(() => {{
-      setStocks(prev => prev.map(stock => {{
-        const change = (Math.random() - 0.5) * 2;
-        const newPrice = Math.max(1, stock.price + change);
-        return {{
-          ...stock,
-          price: Math.round(newPrice * 100) / 100,
-          change: Math.round(change * 100) / 100,
-          changePercent: Math.round((change / stock.price) * 10000) / 100,
-          history: [...stock.history.slice(-9), newPrice]
-        }};
-      }}));
-      setLastUpdate(new Date());
-    }}, 3000);
-    return () => clearInterval(interval);
-  }}, []);
+1. Line Chart with gradient:
+const data = [{{ name: 'Jan', value: 4000 }}, {{ name: 'Feb', value: 3000 }}, ...];
+<ResponsiveContainer width="100%" height={{300}}>
+  <LineChart data={{data}}>
+    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+    <XAxis dataKey="name" stroke="#9ca3af" />
+    <YAxis stroke="#9ca3af" />
+    <Tooltip contentStyle={{{{ backgroundColor: '#1f2937', border: 'none' }}}} />
+    <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={{2}} dot={{false}} />
+  </LineChart>
+</ResponsiveContainer>
 
-  return (<div>...</div>);
-}}
-export default App;
+2. Area Chart:
+<AreaChart data={{data}}>
+  <defs>
+    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stopColor="#3b82f6" stopOpacity={{0.8}}/>
+      <stop offset="95%" stopColor="#3b82f6" stopOpacity={{0}}/>
+    </linearGradient>
+  </defs>
+  <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="url(#colorValue)" />
+</AreaChart>
+
+3. Stat Card with icon:
+<div className="bg-gray-800 rounded-xl p-6 shadow-lg">
+  <div className="flex items-center justify-between">
+    <div>
+      <p className="text-gray-400 text-sm">Total Revenue</p>
+      <p className="text-3xl font-bold text-white">$45,231</p>
+      <p className="text-green-400 text-sm flex items-center mt-1">
+        <TrendingUp className="w-4 h-4 mr-1" /> +12.5%
+      </p>
+    </div>
+    <div className="bg-blue-500/20 p-4 rounded-full">
+      <DollarSign className="w-8 h-8 text-blue-500" />
+    </div>
+  </div>
+</div>
 
 OUTPUT FORMAT (strict JSON):
 {{
     "title": "Dashboard Title",
     "components": {{
-        "App": "// Complete dashboard with simulated live data as shown above"
+        "App": "// Complete dashboard with Recharts, Tailwind, and Lucide icons"
     }}
 }}
 
@@ -188,6 +275,119 @@ OUTPUT FORMAT (strict JSON):
 Generate now:"""
 
 
+# SaaS application generator
+SAAS_PROMPT = """You are an expert React developer. Create a complete SaaS application with navigation.
+
+USER REQUEST:
+{user_prompt}
+
+""" + BASE_RULES + """
+
+SAAS-SPECIFIC RULES - THIS IS CRITICAL:
+1. USE React Router for multi-page navigation
+2. USE Tailwind CSS for beautiful styling
+3. USE Recharts for any data visualization
+4. USE Lucide icons for polish
+5. Include a sidebar or top navigation
+6. Create a cohesive dark theme (bg-gray-900)
+
+REQUIRED STRUCTURE:
+
+```javascript
+import React, {{ useState }} from 'react';
+import {{ BrowserRouter, Routes, Route, Link, useLocation }} from 'react-router-dom';
+import {{ Home, Settings, Users, BarChart2, LogOut, Menu, X }} from 'lucide-react';
+import {{ LineChart, Line, XAxis, YAxis, ResponsiveContainer }} from 'recharts';
+
+// Sidebar Navigation Component
+function Sidebar({{ isOpen, setIsOpen }}) {{
+  const location = useLocation();
+  const links = [
+    {{ to: '/', icon: Home, label: 'Dashboard' }},
+    {{ to: '/analytics', icon: BarChart2, label: 'Analytics' }},
+    {{ to: '/users', icon: Users, label: 'Users' }},
+    {{ to: '/settings', icon: Settings, label: 'Settings' }},
+  ];
+  
+  return (
+    <div className={{`fixed left-0 top-0 h-full bg-gray-900 border-r border-gray-800 transition-all ${{isOpen ? 'w-64' : 'w-16'}}`}}>
+      <div className="p-4 flex items-center justify-between">
+        {{isOpen && <span className="text-xl font-bold text-white">AppName</span>}}
+        <button onClick={{() => setIsOpen(!isOpen)}} className="text-gray-400 hover:text-white">
+          {{isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}}
+        </button>
+      </div>
+      <nav className="mt-8">
+        {{links.map(link => (
+          <Link
+            key={{link.to}}
+            to={{link.to}}
+            className={{`flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 transition
+              ${{location.pathname === link.to ? 'text-white bg-gray-800 border-l-2 border-blue-500' : ''}}`}}
+          >
+            <link.icon className="w-5 h-5" />
+            {{isOpen && <span className="ml-3">{{link.label}}</span>}}
+          </Link>
+        ))}}
+      </nav>
+    </div>
+  );
+}}
+
+// Main App with Router
+function App() {{
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  return (
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-950 text-white">
+        <Sidebar isOpen={{sidebarOpen}} setIsOpen={{setSidebarOpen}} />
+        <div className={{`transition-all ${{sidebarOpen ? 'ml-64' : 'ml-16'}}`}}>
+          <main className="p-8">
+            <Routes>
+              <Route path="/" element={{<Dashboard />}} />
+              <Route path="/analytics" element={{<Analytics />}} />
+              <Route path="/users" element={{<UsersPage />}} />
+              <Route path="/settings" element={{<SettingsPage />}} />
+            </Routes>
+          </main>
+        </div>
+      </div>
+    </BrowserRouter>
+  );
+}}
+
+// Page Components
+function Dashboard() {{
+  return <div>Dashboard content with stats cards...</div>;
+}}
+
+function Analytics() {{
+  return <div>Charts and analytics...</div>;
+}}
+
+function UsersPage() {{
+  return <div>User management table...</div>;
+}}
+
+function SettingsPage() {{
+  return <div>Settings form...</div>;
+}}
+
+export default App;
+```
+
+OUTPUT FORMAT (strict JSON):
+{{
+    "title": "SaaS App Title",
+    "components": {{
+        "App": "// Complete SaaS app with React Router, sidebar navigation, multiple pages"
+    }}
+}}
+
+Generate a COMPLETE, WORKING SaaS application now:"""
+
+
 # Modification prompt for quick updates
 MODIFY_PROMPT = """You are an expert React developer. You are making a MODIFICATION to an existing website.
 
@@ -204,13 +404,13 @@ CRITICAL UNDERSTANDING:
 - Example: If original was "stocks trader website" and modification is "make background red",
   you keep ALL the stocks trading content and just change the background color to red
 
-ABSOLUTE RULES:
+RULES:
 1. Return ONLY the code - no markdown, no backticks, no explanation
-2. Use ONLY inline styles  
+2. Use Tailwind CSS for styling (preferred) or inline styles
 3. KEEP all existing functionality and content unless explicitly asked to remove it
 4. Only change what the CURRENT MODIFICATION REQUEST asks for
 5. Maintain the website's original purpose and theme
-6. Use Apple San Francisco fonts: fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif"
+6. You can use: react-router-dom, recharts, lucide-react, clsx, date-fns
 
 Return ONLY the complete modified component code, starting with import and ending with export:"""
 
@@ -223,5 +423,6 @@ def get_prompt_for_type(app_type: str) -> str:
         'dashboard': DASHBOARD_PROMPT,
         'form': FORM_PROMPT,
         'game': TOOL_PROMPT,  # Games use same structure as tools
+        'saas': SAAS_PROMPT,  # Full SaaS with routing
     }
     return prompts.get(app_type, WEBSITE_PROMPT)

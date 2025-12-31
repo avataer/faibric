@@ -31,8 +31,11 @@ interface SessionData {
 }
 
 const LandingFlow = () => {
-  // Restore session from localStorage on mount
-  const savedSession = typeof window !== 'undefined' ? localStorage.getItem('faibric_session') : null
+  // Check for ?clear query param to force-clear session
+  const shouldClear = typeof window !== 'undefined' && window.location.search.includes('clear')
+  
+  // Restore session from localStorage on mount (unless clearing)
+  const savedSession = !shouldClear && typeof window !== 'undefined' ? localStorage.getItem('faibric_session') : null
   const savedState = savedSession ? JSON.parse(savedSession) : null
   
   const [step, setStep] = useState<FlowStep>(savedState?.step || 'input')
@@ -47,6 +50,15 @@ const LandingFlow = () => {
   
   // Typing tracking
   const typingStartRef = useRef<number | null>(null)
+  
+  // Clear on mount if ?clear param present
+  useEffect(() => {
+    if (shouldClear) {
+      localStorage.removeItem('faibric_session')
+      // Remove ?clear from URL without reload
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [shouldClear])
   
   // Persist session state to localStorage
   useEffect(() => {
@@ -123,7 +135,22 @@ const LandingFlow = () => {
       })
       
       setSessionToken(res.data.session_token)
-      setStep('email')
+      
+      // DEBUG MODE: Skip email, go straight to building
+      // Auto-submit a test email and trigger build immediately
+      const debugEmail = `debug-${Date.now()}@test.com`
+      setEmail(debugEmail)
+      
+      await api.post('/api/onboarding/email/', {
+        session_token: res.data.session_token,
+        email: debugEmail,
+      })
+      
+      await api.post('/api/onboarding/build/', {
+        session_token: res.data.session_token,
+      })
+      
+      setStep('building')
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to submit request')
     } finally {

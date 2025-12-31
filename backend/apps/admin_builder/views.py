@@ -197,14 +197,14 @@ class DataSourceViewSet(viewsets.ModelViewSet):
         """Get available data source types."""
         return Response([
             {'type': 'api', 'name': 'External API', 'icon': '🌐'},
-            {'type': 'database', 'name': 'Database Collection', 'icon': '🗄️'},
-            {'type': 'static', 'name': 'Static Data', 'icon': '📦'},
-            {'type': 'checkout_orders', 'name': 'Orders', 'icon': '📦'},
+            {'type': 'database', 'name': 'Database Collection', 'icon': '[db]'},
+            {'type': 'static', 'name': 'Static Data', 'icon': '[box]'},
+            {'type': 'checkout_orders', 'name': 'Orders', 'icon': '[box]'},
             {'type': 'checkout_products', 'name': 'Products', 'icon': '🏷️'},
             {'type': 'cabinet_users', 'name': 'Users', 'icon': '👥'},
             {'type': 'cabinet_tickets', 'name': 'Support Tickets', 'icon': '🎫'},
             {'type': 'storage_files', 'name': 'Files', 'icon': '📁'},
-            {'type': 'analytics_events', 'name': 'Analytics Events', 'icon': '📈'},
+            {'type': 'analytics_events', 'name': 'Analytics Events', 'icon': '[trend]'},
         ])
 
 
@@ -259,14 +259,14 @@ class TemplateViewSet(viewsets.ViewSet):
     def categories(self, request):
         """Get template categories."""
         return Response([
-            {'slug': 'dashboard', 'name': 'Dashboard', 'icon': '📊'},
+            {'slug': 'dashboard', 'name': 'Dashboard', 'icon': '[chart]'},
             {'slug': 'ecommerce', 'name': 'E-Commerce', 'icon': '🛒'},
-            {'slug': 'crm', 'name': 'CRM', 'icon': '💼'},
-            {'slug': 'cms', 'name': 'Content Management', 'icon': '📝'},
-            {'slug': 'analytics', 'name': 'Analytics', 'icon': '📈'},
+            {'slug': 'crm', 'name': 'CRM', 'icon': '[brief]'},
+            {'slug': 'cms', 'name': 'Content Management', 'icon': '[note]'},
+            {'slug': 'analytics', 'name': 'Analytics', 'icon': '[trend]'},
             {'slug': 'project', 'name': 'Project Management', 'icon': '📋'},
             {'slug': 'hr', 'name': 'HR Management', 'icon': '👔'},
-            {'slug': 'finance', 'name': 'Finance', 'icon': '💰'},
+            {'slug': 'finance', 'name': 'Finance', 'icon': '[money]'},
             {'slug': 'support', 'name': 'Support/Helpdesk', 'icon': '🎫'},
             {'slug': 'social', 'name': 'Social Media', 'icon': '📱'},
         ])
@@ -309,6 +309,8 @@ class ExportViewSet(viewsets.ViewSet):
             **ExportedAdminSerializer(export).data,
             'code': export.code
         })
+
+
 
 
 

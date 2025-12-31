@@ -787,3 +787,5 @@ class AdminConfig(models.Model):
         """Get or create the singleton config."""
         config, _ = cls.objects.get_or_create(pk='00000000-0000-0000-0000-000000000001')
         return config
+
+

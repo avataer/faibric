@@ -75,3 +75,5 @@ class Command(BaseCommand):
                 self.stdout.write(f"    - {d[3]} <-> {d[4]} ({d[2]:.0%} similar)")
         
         self.stdout.write("\n" + "=" * 60 + "\n")
+
+

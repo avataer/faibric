@@ -73,3 +73,8 @@ trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; docker-compose stop db redis;
 wait
 
 
+
+
+
+
+

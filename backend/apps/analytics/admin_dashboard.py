@@ -551,9 +551,9 @@ def generate_admin_dashboard_html():
     )
     
     activity_icons = {
-        'new_user': '👤', 'build_started': '🔨', 'build_completed': '✅',
-        'build_failed': '❌', 'deployed': '🚀', 'modification': '✏️',
-        'error': '⚠️', 'alert': '🔔', 'system': '⚙️',
+        'new_user': '👤', 'build_started': '🔨', 'build_completed': '[OK]',
+        'build_failed': '[ERROR]', 'deployed': '[launch]', 'modification': '[edit]',
+        'error': '[WARN]', 'alert': '🔔', 'system': '[gear]',
     }
     
     html_content = f"""
@@ -704,9 +704,9 @@ def generate_activity_html():
     live_stats = ActivityFeedService.get_live_stats()
     
     activity_icons = {
-        'new_user': '👤', 'build_started': '🔨', 'build_completed': '✅',
-        'build_failed': '❌', 'deployed': '🚀', 'modification': '✏️',
-        'error': '⚠️', 'alert': '🔔', 'system': '⚙️',
+        'new_user': '👤', 'build_started': '🔨', 'build_completed': '[OK]',
+        'build_failed': '[ERROR]', 'deployed': '[launch]', 'modification': '[edit]',
+        'error': '[WARN]', 'alert': '🔔', 'system': '[gear]',
     }
     
     return f"""
@@ -1565,3 +1565,5 @@ def generate_components_html():
 </body>
 </html>
 """
+
+

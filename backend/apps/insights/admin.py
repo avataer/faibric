@@ -48,7 +48,7 @@ class CustomerInputAdmin(admin.ModelAdmin):
     
     def needs_attention_display(self, obj):
         if obj.needs_attention:
-            return format_html('<span style="color: red;">⚠️ Yes</span>')
+            return format_html('<span style="color: red;">[WARN] Yes</span>')
         return format_html('<span style="color: green;">✓ No</span>')
     needs_attention_display.short_description = 'Needs Attention'
     
@@ -127,6 +127,8 @@ class CustomerHealthAdmin(admin.ModelAdmin):
             color, obj.health_score
         )
     health_score_display.short_description = 'Health Score'
+
+
 
 
 

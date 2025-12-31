@@ -15,7 +15,7 @@
 | Key | Service | Purpose | Get It |
 |-----|---------|---------|--------|
 | `ANTHROPIC_API_KEY` | Anthropic | Claude Opus 4.5 for code generation | https://console.anthropic.com/ |
-| `OPENAI_API_KEY` | OpenAI | Embeddings for code search | https://platform.openai.com/ |
+| `OPENAI_API_KEY` | OpenAI | Embeddings + GPT-Image-1.5 image generation | https://platform.openai.com/ |
 
 ### Payment Processing
 
@@ -100,6 +100,11 @@ The mock system:
 - Simulates delays like real APIs
 - Logs all "calls" for debugging
 - Works identically to real APIs (same response format)
+
+
+
+
+
 
 
 

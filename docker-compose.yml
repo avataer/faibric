@@ -59,6 +59,19 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - APP_SUBDOMAIN_BASE=localhost
+      # GitHub - for pushing generated apps to repo
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - GITHUB_APPS_REPO=${GITHUB_APPS_REPO:-avataer/faibric-apps}
+      # Render - for cloud deployment
+      - RENDER_API_KEY=${RENDER_API_KEY:-}
+      - RENDER_OWNER_ID=${RENDER_OWNER_ID:-}
+      # Vercel - for fast static deploys (30-60 sec vs 5-10 min)
+      - VERCEL_TOKEN=${VERCEL_TOKEN:-}
+      # Supabase credentials (for real auth in generated apps)
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY:-}
+      - SUPABASE_ACCESS_TOKEN=${SUPABASE_ACCESS_TOKEN:-}
     depends_on:
       - postgres
       - redis
@@ -94,6 +107,19 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - APP_SUBDOMAIN_BASE=localhost
+      # GitHub - for pushing generated apps to repo
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - GITHUB_APPS_REPO=${GITHUB_APPS_REPO:-avataer/faibric-apps}
+      # Render - for cloud deployment
+      - RENDER_API_KEY=${RENDER_API_KEY:-}
+      - RENDER_OWNER_ID=${RENDER_OWNER_ID:-}
+      # Vercel - for fast static deploys (30-60 sec vs 5-10 min)
+      - VERCEL_TOKEN=${VERCEL_TOKEN:-}
+      # Supabase credentials (for real auth in generated apps)
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY:-}
+      - SUPABASE_ACCESS_TOKEN=${SUPABASE_ACCESS_TOKEN:-}
     depends_on:
       - postgres
       - redis

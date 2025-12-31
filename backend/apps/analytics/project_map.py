@@ -257,22 +257,22 @@ def generate_project_map_html():
             { id: 'react', x: 0.15, y: 0.12, type: 'frontend', icon: '⚛️', name: 'React Frontend', desc: 'Vite + TypeScript. User interface, landing page, chat.', size: 50 },
             { id: 'studio', x: 0.35, y: 0.12, type: 'frontend', icon: '🏗️', name: 'BuildingStudio', desc: 'Split-screen builder. Chat on left, preview on right.', size: 45, isNew: true },
             { id: 'preview', x: 0.55, y: 0.12, type: 'frontend', icon: '🎬', name: 'ProgressivePreview', desc: 'Animated build visualization with contextual content.', size: 45, isNew: true },
-            { id: 'sandpack', x: 0.75, y: 0.12, type: 'frontend', icon: '📦', name: 'Sandpack', desc: 'Live in-browser React preview before deployment.', size: 40 },
+            { id: 'sandpack', x: 0.75, y: 0.12, type: 'frontend', icon: '[box]', name: 'Sandpack', desc: 'Live in-browser React preview before deployment.', size: 40 },
             
             // Backend Layer
             { id: 'django', x: 0.25, y: 0.32, type: 'backend', icon: '🐍', name: 'Django API', desc: 'REST API. Handles requests, auth, data, routing.', size: 55 },
-            { id: 'onboarding', x: 0.45, y: 0.28, type: 'backend', icon: '📝', name: 'Onboarding', desc: 'Session management, email verification, magic links.', size: 42 },
+            { id: 'onboarding', x: 0.45, y: 0.28, type: 'backend', icon: '[note]', name: 'Onboarding', desc: 'Session management, email verification, magic links.', size: 42 },
             { id: 'build', x: 0.65, y: 0.32, type: 'backend', icon: '🔨', name: 'Build Service', desc: 'In-process builds. No Celery needed. Fast.', size: 45, isNew: true },
-            { id: 'cost', x: 0.85, y: 0.28, type: 'backend', icon: '💰', name: 'Cost Tracker', desc: 'Per-user API costs. Forecasting. Model breakdown.', size: 40, isNew: true },
+            { id: 'cost', x: 0.85, y: 0.28, type: 'backend', icon: '[money]', name: 'Cost Tracker', desc: 'Per-user API costs. Forecasting. Model breakdown.', size: 40, isNew: true },
             
             // AI Layer
             { id: 'generator', x: 0.20, y: 0.50, type: 'ai', icon: '🧠', name: 'AI Generator', desc: 'Claude Opus for new code. Haiku for reuse. Smart selection.', size: 55, isNew: true },
             { id: 'library', x: 0.40, y: 0.48, type: 'ai', icon: '📚', name: 'Code Library', desc: 'Reusable components. Semantic search. Quality scores.', size: 48 },
-            { id: 'prompts', x: 0.60, y: 0.50, type: 'ai', icon: '📊', name: 'Prompt Analytics', desc: 'Success rates by type and industry. Optimization.', size: 42, isNew: true },
+            { id: 'prompts', x: 0.60, y: 0.50, type: 'ai', icon: '[chart]', name: 'Prompt Analytics', desc: 'Success rates by type and industry. Optimization.', size: 42, isNew: true },
             { id: 'gaps', x: 0.80, y: 0.48, type: 'ai', icon: '🔍', name: 'Gap Analysis', desc: 'Detect missing components. Priority recommendations.', size: 40, isNew: true },
             
             // Analytics Layer
-            { id: 'dashboard', x: 0.15, y: 0.68, type: 'backend', icon: '📈', name: 'Admin Dashboard', desc: '12 pages. Real-time activity, users, costs, alerts.', size: 55, isNew: true },
+            { id: 'dashboard', x: 0.15, y: 0.68, type: 'backend', icon: '[trend]', name: 'Admin Dashboard', desc: '12 pages. Real-time activity, users, costs, alerts.', size: 55, isNew: true },
             { id: 'health', x: 0.32, y: 0.72, type: 'backend', icon: '❤️', name: 'Health Scores', desc: '0-100 customer health. Churn prediction.', size: 42, isNew: true },
             { id: 'funnel', x: 0.48, y: 0.68, type: 'backend', icon: '📉', name: 'Funnel', desc: 'Conversion tracking. Drop-off analysis.', size: 42, isNew: true },
             { id: 'cohorts', x: 0.64, y: 0.72, type: 'backend', icon: '👥', name: 'Cohorts', desc: 'Weekly retention. Cohort comparison.', size: 40, isNew: true },
@@ -280,11 +280,11 @@ def generate_project_map_html():
             
             // Data Layer
             { id: 'postgres', x: 0.25, y: 0.88, type: 'database', icon: '🐘', name: 'PostgreSQL', desc: 'Production database. All persistent data.', size: 45 },
-            { id: 'redis', x: 0.45, y: 0.88, type: 'database', icon: '⚡', name: 'Redis', desc: 'Cache. Real-time message broadcasting.', size: 40 },
+            { id: 'redis', x: 0.45, y: 0.88, type: 'database', icon: '[CRITICAL]', name: 'Redis', desc: 'Cache. Real-time message broadcasting.', size: 40 },
             
             // External Services
-            { id: 'anthropic', x: 0.60, y: 0.88, type: 'external', icon: '🤖', name: 'Anthropic', desc: 'Claude Opus 4.5 + Haiku 3.5. AI backbone.', size: 50 },
-            { id: 'render', x: 0.75, y: 0.88, type: 'external', icon: '🚀', name: 'Render', desc: 'Deployment platform. Hosts generated sites.', size: 45 },
+            { id: 'anthropic', x: 0.60, y: 0.88, type: 'external', icon: '[bot]', name: 'Anthropic', desc: 'Claude Opus 4.5 + Haiku 3.5. AI backbone.', size: 50 },
+            { id: 'render', x: 0.75, y: 0.88, type: 'external', icon: '[launch]', name: 'Render', desc: 'Deployment platform. Hosts generated sites.', size: 45 },
             { id: 'github', x: 0.88, y: 0.88, type: 'external', icon: '🐙', name: 'GitHub', desc: 'Code storage. Branch per project.', size: 42 },
         ];
         
@@ -516,3 +516,5 @@ def generate_project_map_html():
 </body>
 </html>
 """
+
+

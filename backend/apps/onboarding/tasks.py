@@ -92,21 +92,42 @@ def build_app_from_session_task(self, session_token: str):
         SessionEvent.objects.create(
             session=session,
             event_type='build_progress',
-            event_data={'progress': 5, 'message': '🚀 Starting build process...'},
+            event_data={'progress': 1, 'message': 'Initializing build...'},
         )
+        
+        import time
+        time.sleep(0.3)  # Small delay for smoother UX
         
         SessionEvent.objects.create(
             session=session,
             event_type='build_progress',
-            event_data={'progress': 10, 'message': '🤖 Analyzing your requirements...'},
+            event_data={'progress': 5, 'message': 'Analyzing your requirements...'},
+        )
+        
+        time.sleep(0.3)
+        
+        SessionEvent.objects.create(
+            session=session,
+            event_type='build_progress',
+            event_data={'progress': 10, 'message': 'Understanding your requirements...'},
         )
         
         generator = AIGeneratorV2()
         
+        time.sleep(0.3)
+        
         SessionEvent.objects.create(
             session=session,
             event_type='build_progress',
-            event_data={'progress': 20, 'message': '✨ Designing your app architecture...'},
+            event_data={'progress': 15, 'message': 'Designing your perfect layout...'},
+        )
+        
+        time.sleep(0.3)
+        
+        SessionEvent.objects.create(
+            session=session,
+            event_type='build_progress',
+            event_data={'progress': 20, 'message': 'Creating your homepage...'},
         )
         
         # Pass session to generator for real-time streaming updates
@@ -165,7 +186,7 @@ export default App;
         SessionEvent.objects.create(
             session=session,
             event_type='build_progress',
-            event_data={'progress': 60, 'message': '✅ Code generation complete!'},
+            event_data={'progress': 60, 'message': '[OK] Code generation complete!'},
         )
         
         # Step 3: Deploy
@@ -174,7 +195,7 @@ export default App;
         SessionEvent.objects.create(
             session=session,
             event_type='build_progress',
-            event_data={'progress': 65, 'message': '📦 Preparing deployment package...'},
+            event_data={'progress': 65, 'message': '[box] Preparing deployment package...'},
         )
         
         try:
@@ -193,7 +214,7 @@ export default App;
             SessionEvent.objects.create(
                 session=session,
                 event_type='build_progress',
-                event_data={'progress': 90, 'message': '🔧 Configuring your app...'},
+                event_data={'progress': 90, 'message': '[tool] Configuring your app...'},
             )
             
             # Update project with deployment URL
@@ -345,7 +366,7 @@ def check_at_risk_customers():
         if not recent_notification:
             AdminNotification.objects.create(
                 notification_type='at_risk_customer',
-                title=f"⚠️ At-Risk Customer: {health.tenant.name}",
+                title=f"[WARN] At-Risk Customer: {health.tenant.name}",
                 message=f"Health score: {health.health_score}. Reasons: {', '.join(health.risk_reasons)}",
                 data={
                     'tenant_id': str(health.tenant_id),

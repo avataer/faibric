@@ -71,7 +71,7 @@ class RenderDeployer:
             }
             
         except Exception as e:
-            print(f"❌ Render deployment error: {str(e)}")
+            print(f"[ERROR] Render deployment error: {str(e)}")
             raise Exception(f"Failed to deploy to Render: {str(e)}")
     
     def _get_branch_name(self, project):
@@ -140,7 +140,7 @@ class RenderDeployer:
         # Update branch ref
         self._update_branch_ref(owner, repo, branch_name, commit_sha, headers)
         
-        print(f"✅ Pushed to GitHub: {self.github_repo}#{branch_name}")
+        print(f"[OK] Pushed to GitHub: {self.github_repo}#{branch_name}")
     
     def _ensure_repo_exists(self, owner, repo, headers):
         """Ensure the apps repository exists"""
@@ -276,7 +276,7 @@ class RenderDeployer:
         """Generate all files needed for the React app"""
         files = {}
         
-        # package.json
+        # package.json - MUST include Tailwind CSS!
         files['package.json'] = json.dumps({
             "name": f"app-{project.id}",
             "private": True,
@@ -295,7 +295,11 @@ class RenderDeployer:
                 "@types/react": "^18.2.0",
                 "@types/react-dom": "^18.2.0",
                 "@vitejs/plugin-react": "^4.2.0",
-                "vite": "^5.0.0"
+                "vite": "^5.0.0",
+                "typescript": "^5.3.0",
+                "tailwindcss": "^3.4.0",
+                "postcss": "^8.4.0",
+                "autoprefixer": "^10.4.0"
             }
         }, indent=2)
         
@@ -307,6 +311,65 @@ export default defineConfig({
   plugins: [react()],
 })
 """
+        
+        # tailwind.config.js - CRITICAL for styling!
+        files['tailwind.config.js'] = """/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+"""
+        
+        # postcss.config.js - Required for Tailwind
+        files['postcss.config.js'] = """export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+"""
+        
+        # tsconfig.json - TypeScript configuration
+        files['tsconfig.json'] = json.dumps({
+            "compilerOptions": {
+                "target": "ES2020",
+                "useDefineForClassFields": True,
+                "lib": ["ES2020", "DOM", "DOM.Iterable"],
+                "module": "ESNext",
+                "skipLibCheck": True,
+                "moduleResolution": "bundler",
+                "allowImportingTsExtensions": True,
+                "resolveJsonModule": True,
+                "isolatedModules": True,
+                "noEmit": True,
+                "jsx": "react-jsx",
+                "strict": True,
+                "noUnusedLocals": False,
+                "noUnusedParameters": False,
+                "noFallthroughCasesInSwitch": True
+            },
+            "include": ["src"],
+            "references": [{"path": "./tsconfig.node.json"}]
+        }, indent=2)
+        
+        # tsconfig.node.json
+        files['tsconfig.node.json'] = json.dumps({
+            "compilerOptions": {
+                "composite": True,
+                "skipLibCheck": True,
+                "module": "ESNext",
+                "moduleResolution": "bundler",
+                "allowSyntheticDefaultImports": True,
+                "strict": True
+            },
+            "include": ["vite.config.ts"]
+        }, indent=2)
         
         # index.html
         files['index.html'] = f"""<!DOCTYPE html>
@@ -324,10 +387,24 @@ export default defineConfig({
 </html>
 """
         
-        # src/main.tsx
+        # src/index.css - Tailwind base styles
+        files['src/index.css'] = """@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+"""
+        
+        # src/main.tsx - MUST import index.css for Tailwind to work!
         files['src/main.tsx'] = """import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -402,8 +479,84 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         # Get the URL
         url = data.get('serviceDetails', {}).get('url', f"https://{service_name}.onrender.com")
         
-        print(f"✅ Created Render site: {url}")
+        print(f"[OK] Created Render site: {url}")
+        
+        # NOTE: Verification is now done in BuildService._wait_and_verify_deployment()
+        # This allows faster response and more accurate status tracking
+        
         return url
+    
+    def _verify_deployment(self, url, service_id, headers, max_wait=180):
+        """
+        Wait for deployment to complete and verify the site works.
+        
+        FIX #5: TRUE VERIFICATION
+        Checks that:
+        1. Deploy status is 'live'
+        2. HTML page returns 200
+        3. JS bundle is accessible (not 404)
+        4. JS bundle size > 10KB (not a stub/error page)
+        """
+        import time
+        import re
+        
+        print(f"[wait] Waiting for build to complete...")
+        
+        start_time = time.time()
+        while time.time() - start_time < max_wait:
+            # Check deploy status via Render API
+            resp = requests.get(
+                f"{self.render_api}/services/{service_id}/deploys?limit=1",
+                headers=headers
+            )
+            
+            if resp.status_code == 200:
+                deploys = resp.json()
+                if deploys:
+                    status = deploys[0].get('status', '')
+                    if status == 'live':
+                        print(f"[OK] Deploy is live, verifying JS bundle...")
+                        
+                        # TRUE VERIFICATION: Check JS bundle exists AND has content
+                        try:
+                            html_resp = requests.get(url, timeout=15)
+                            if html_resp.status_code == 200:
+                                # Extract JS path
+                                js_match = re.search(r'/assets/index-[^"\']+\.js', html_resp.text)
+                                if js_match:
+                                    js_url = url.rstrip('/') + js_match.group()
+                                    # Use GET to check size, not HEAD
+                                    js_resp = requests.get(js_url, timeout=15)
+                                    if js_resp.status_code == 200:
+                                        js_size = len(js_resp.content)
+                                        # FIX #5: Verify bundle is > 10KB (real app, not stub)
+                                        if js_size > 10240:
+                                            print(f"[OK] JS bundle verified! ({js_size} bytes)")
+                                            return True
+                                        else:
+                                            print(f"[WARN] JS bundle too small ({js_size} bytes), waiting...")
+                                    else:
+                                        print(f"[WARN] JS bundle returned {js_resp.status_code}, waiting...")
+                                else:
+                                    print(f"[WARN] No JS bundle found in HTML, waiting...")
+                            else:
+                                print(f"[WARN] HTML returned {html_resp.status_code}, waiting...")
+                        except Exception as e:
+                            print(f"[WARN] Verification failed: {e}, waiting...")
+                        
+                    elif status == 'build_failed':
+                        print(f"[ERROR] Build failed!")
+                        break
+                    elif status in ['canceled', 'deactivated']:
+                        print(f"[ERROR] Build {status}!")
+                        break
+                    else:
+                        print(f"[wait] Build status: {status}...")
+            
+            time.sleep(8)
+        
+        print(f"[WARN] Could not verify deployment within {max_wait}s")
+        return False
     
     def _get_existing_service(self, service_name, headers):
         """Check if service already exists and return its URL"""
@@ -441,7 +594,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                         headers=headers,
                         json={}
                     )
-                    print(f"✅ Triggered redeploy for {service_name}")
+                    print(f"[OK] Triggered redeploy for {service_name}")
                     return
     
     def _default_app(self, project):
@@ -482,7 +635,7 @@ function Welcome() {{
     }}}}>
       <div>
         <h1 style={{{{ fontSize: '48px', marginBottom: '20px' }}}}>
-          🚀 {project.name}
+          [launch] {project.name}
         </h1>
         <p style={{{{ fontSize: '20px', opacity: 0.9 }}}}>
           {desc}
@@ -496,3 +649,12 @@ export default Welcome;
 """
 
 
+# Singleton instance
+_render_deployer = None
+
+def get_render_deployer() -> RenderDeployer:
+    """Get or create RenderDeployer instance."""
+    global _render_deployer
+    if _render_deployer is None:
+        _render_deployer = RenderDeployer()
+    return _render_deployer

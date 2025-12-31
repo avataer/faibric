@@ -165,7 +165,7 @@ class OnboardingService:
         # Send email
         html_content = f"""
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #1a1a2e; margin-bottom: 24px;">🚀 Your Faibric Project is Ready!</h1>
+            <h1 style="color: #1a1a2e; margin-bottom: 24px;">[launch] Your Faibric Project is Ready!</h1>
             
             <p style="font-size: 16px; color: #333; line-height: 1.6;">
                 Great news! We're building your project based on your request:
@@ -208,7 +208,7 @@ class OnboardingService:
                 email_service = EmailService()
                 email_service.send_email(
                     to_email=session.email,
-                    subject="🚀 Your Faibric Project is Ready!",
+                    subject="[launch] Your Faibric Project is Ready!",
                     html_content=html_content,
                     from_email='hello@faibric.com',
                 )
@@ -586,7 +586,7 @@ class DailyReportService:
         html_content = f"""
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #1a1a2e; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
-                📊 Faibric Daily Report - {report.date}
+                [chart] Faibric Daily Report - {report.date}
             </h1>
             
             <!-- Conversion Funnel -->
@@ -639,7 +639,7 @@ class DailyReportService:
             </div>
             
             <!-- Google Ads -->
-            <h2 style="color: #1a1a2e; margin-top: 32px;">📢 Google Ads Performance</h2>
+            <h2 style="color: #1a1a2e; margin-top: 32px;">[EVENT] Google Ads Performance</h2>
             <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
                 <tr style="background: #f5f5f5;">
                     <td style="padding: 12px; border: 1px solid #ddd;"><strong>Impressions</strong></td>
@@ -666,10 +666,10 @@ class DailyReportService:
             </table>
             
             <!-- Email Changes Alert -->
-            {'<div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 16px; border-radius: 8px; margin: 20px 0;"><strong>⚠️ Email Changes:</strong> ' + str(report.email_changes) + ' users changed their email after initial submission.</div>' if report.email_changes > 0 else ''}
+            {'<div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 16px; border-radius: 8px; margin: 20px 0;"><strong>[WARN] Email Changes:</strong> ' + str(report.email_changes) + ' users changed their email after initial submission.</div>' if report.email_changes > 0 else ''}
             
             <!-- Attribution -->
-            <h2 style="color: #1a1a2e; margin-top: 32px;">📈 Attribution</h2>
+            <h2 style="color: #1a1a2e; margin-top: 32px;">[trend] Attribution</h2>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div>
                     <h3>By Source</h3>
@@ -686,7 +686,7 @@ class DailyReportService:
             </div>
             
             <!-- Top Requests -->
-            <h2 style="color: #1a1a2e; margin-top: 32px;">💡 What People Are Asking For</h2>
+            <h2 style="color: #1a1a2e; margin-top: 32px;">[idea] What People Are Asking For</h2>
             <ol style="background: #f9fafb; padding: 20px 40px; border-radius: 8px;">
                 {''.join([f'<li style="margin: 8px 0;">{r.get("initial_request", "")[:100]}...</li>' for r in (report.top_requests or [])[:10]]) or '<li>No requests today</li>'}
             </ol>
@@ -718,7 +718,7 @@ class DailyReportService:
             for email in admin_emails:
                 email_service.send_email(
                     to_email=email,
-                    subject=f"📊 Faibric Daily Report - {report.date}",
+                    subject=f"[chart] Faibric Daily Report - {report.date}",
                     html_content=html_content,
                     from_email='reports@faibric.com',
                 )

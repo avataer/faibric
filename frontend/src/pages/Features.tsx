@@ -82,15 +82,15 @@ const IMPLEMENTED_FEATURES: Feature[] = [
     ],
   },
   {
-    name: 'Admin Panel (/faibric)',
-    description: 'Built-in admin for every generated app',
+    name: 'Admin Panel with Builder',
+    description: 'Built-in admin + chat-based editor for every app',
     status: 'implemented',
     category: 'Features',
     details: [
-      'Password protection',
-      'Overview, Analytics, Settings views',
-      'Connection status monitoring',
-      'Password change capability',
+      'Builder: Chat interface + live preview',
+      'Overview: Stats & quick actions',
+      'Analytics: Views, sessions, API calls',
+      'Settings: Refresh interval, password change',
     ],
   },
   {

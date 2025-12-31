@@ -13,6 +13,10 @@ from .views import (
     ConstraintViewSet,
     CodeGenerationViewSet,
     LibraryStatsView,
+    instruction_log_view,
+    mark_instruction_fixed,
+    alerts_view,
+    mark_alert_read,
 )
 from .admin_feedback import AdminFeedbackService, generate_admin_dashboard_html
 
@@ -85,6 +89,12 @@ urlpatterns = [
     path('feedback/api/', feedback_api, name='library-feedback-api'),
     path('feedback/quick/', quick_feedback, name='library-quick-feedback'),
     path('feedback/answer/', answer_question, name='library-answer-question'),
+    # Instruction-based solutions log
+    path('instruction-log/', instruction_log_view, name='instruction-log'),
+    path('instruction-log/<str:entry_id>/fix/', mark_instruction_fixed, name='mark-instruction-fixed'),
+    # Alerts
+    path('alerts/', alerts_view, name='alerts'),
+    path('alerts/<int:alert_id>/read/', mark_alert_read, name='mark-alert-read'),
 ]
 
 

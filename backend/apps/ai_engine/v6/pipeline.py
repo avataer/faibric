@@ -15,6 +15,9 @@ from .research import ResearchService, research_topic_sync
 from .constraints import ConstraintManager, load_constraints_sync
 from .prompts import PromptBuilder
 
+# Import from centralized config - SINGLE SOURCE OF TRUTH
+from ..models_config import CODE_MODEL
+
 logger = logging.getLogger(__name__)
 
 
@@ -169,7 +172,7 @@ class CodeGenerationPipeline:
                         'anthropic-version': '2023-06-01',
                     },
                     json={
-                        'model': 'claude-sonnet-4-20250514',
+                        'model': CODE_MODEL,  # From models_config.py
                         'max_tokens': 4000,
                         'system': self.prompt_builder.get_system_prompt(
                             request.language
@@ -275,7 +278,7 @@ if __name__ == "__main__":
         
         # Create slug from description
         import re
-        slug = re.sub(r'[^a-z0-9]+', '-', request.description.lower())[:100]
+        slug = re.sub(r'[^a-z0-9]+', '-', request.description.lower())[:100].strip('-')
         
         # Check for existing item with same slug
         existing = LibraryItem.objects.filter(
@@ -302,28 +305,36 @@ if __name__ == "__main__":
             
             return existing
         
-        # Create new item
+        # Extract keywords from description
+        keywords = [w.lower() for w in request.description.split() if len(w) > 3][:10]
+        
+        # Create new item with ONLY fields that exist in Django model
         item = LibraryItem.objects.create(
-            tenant_id=request.tenant_id,
             name=request.description[:200],
-            slug=slug,
-            item_type=request.item_type,
-            language=request.language,
+            item_type=request.item_type or 'component',
+            language=request.language or 'tsx',
             code=code,
             description=f"Auto-generated: {request.description}",
+            keywords=keywords,  # JSONField - pass as list
+            tags=keywords[:5],  # JSONField - pass as list
             embedding=embedding,
-            source='generated',
-            created_by_id=request.user_id,
-            quality_score=70.0,  # Default score
+            created_by='ai',
+            is_public=True,
+            is_approved=True,
+            needs_review=True,
+            quality_score=70.0,
         )
         
         # Create initial version
-        LibraryVersion.objects.create(
-            item=item,
-            version="1.0.0",
-            code=code,
-            changelog="Initial generation",
-        )
+        try:
+            LibraryVersion.objects.create(
+                item=item,
+                version="1.0.0",
+                code=code,
+                changelog="Initial generation",
+            )
+        except Exception as e:
+            logger.warning(f"Failed to create version: {e}")
         
         return item
     

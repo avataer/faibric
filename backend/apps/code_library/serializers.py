@@ -23,18 +23,15 @@ class LibraryCategorySerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
-            'slug',
             'description',
             'parent',
-            'icon',
-            'color',
+            'order',
             'item_count',
-            'created_at',
         ]
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = ['id']
     
     def get_item_count(self, obj):
-        return obj.items.count()
+        return LibraryItem.objects.filter(category=obj).count()
 
 
 class LibraryVersionSerializer(serializers.ModelSerializer):
@@ -44,10 +41,9 @@ class LibraryVersionSerializer(serializers.ModelSerializer):
         model = LibraryVersion
         fields = [
             'id',
-            'version',
+            'version_number',
             'code',
             'changelog',
-            'dependencies',
             'created_by',
             'created_at',
         ]
@@ -65,28 +61,23 @@ class LibraryItemSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
-            'slug',
             'item_type',
             'category',
             'category_name',
             'language',
             'code',
             'description',
-            'usage_example',
-            'documentation',
             'keywords',
             'tags',
-            'dependencies',
             'quality_score',
             'usage_count',
             'last_used_at',
-            'source',
-            'source_url',
+            'source_project',
             'created_by',
             'is_active',
+            'is_approved',
             'is_public',
-            'is_deprecated',
-            'deprecation_note',
+            'needs_review',
             'version_count',
             'created_at',
             'updated_at',
@@ -109,13 +100,8 @@ class LibraryItemCreateSerializer(serializers.ModelSerializer):
             'language',
             'code',
             'description',
-            'usage_example',
-            'documentation',
             'keywords',
             'tags',
-            'dependencies',
-            'source',
-            'source_url',
             'is_public',
         ]
 
@@ -130,12 +116,29 @@ class LibraryItemDetailSerializer(LibraryItemSerializer):
         fields = LibraryItemSerializer.Meta.fields + ['versions', 'related_items']
     
     def get_related_items(self, obj):
-        from .search import LibrarySearchService
+        """Get related items based on keywords."""
+        if not obj.keywords:
+            return []
         
-        service = LibrarySearchService(str(obj.tenant_id) if obj.tenant_id else None)
-        related = service.get_related_items(str(obj.id), limit=5)
+        # Simple keyword-based related items
+        keywords = [k.strip().lower() for k in obj.keywords.split(',') if k.strip()]
+        if not keywords:
+            return []
         
-        return related
+        from django.db.models import Q
+        query = Q()
+        for kw in keywords[:3]:  # Limit to first 3 keywords
+            query |= Q(keywords__icontains=kw)
+        
+        related = LibraryItem.objects.filter(
+            query,
+            is_active=True
+        ).exclude(id=obj.id)[:5]
+        
+        return [
+            {'id': str(r.id), 'name': r.name, 'item_type': r.item_type}
+            for r in related
+        ]
 
 
 class ConstraintSerializer(serializers.ModelSerializer):
@@ -146,17 +149,14 @@ class ConstraintSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
-            'slug',
+            'description',
             'constraint_type',
-            'content',
-            'rules',
-            'applies_to',
+            'rule_text',
             'priority',
             'is_active',
             'created_at',
-            'updated_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at']
 
 
 class LibrarySearchSerializer(serializers.Serializer):
@@ -169,7 +169,7 @@ class LibrarySearchSerializer(serializers.Serializer):
     )
     item_type = serializers.CharField(required=False)
     language = serializers.CharField(required=False)
-    category_id = serializers.UUIDField(required=False)
+    category_id = serializers.IntegerField(required=False)
     limit = serializers.IntegerField(default=20, max_value=100)
 
 
@@ -178,13 +178,12 @@ class LibrarySearchResultSerializer(serializers.Serializer):
     
     id = serializers.UUIDField()
     name = serializers.CharField()
-    slug = serializers.CharField()
     item_type = serializers.CharField()
     language = serializers.CharField()
     description = serializers.CharField()
     quality_score = serializers.FloatField()
     usage_count = serializers.IntegerField()
-    keywords = serializers.ListField()
+    keywords = serializers.CharField()
     similarity_score = serializers.FloatField(required=False)
     combined_score = serializers.FloatField(required=False)
     match_type = serializers.CharField(required=False)
@@ -199,7 +198,7 @@ class GenerateCodeRequestSerializer(serializers.Serializer):
         default='typescript'
     )
     item_type = serializers.ChoiceField(
-        choices=['component', 'service', 'utility', 'hook', 'api', 'model', 'snippet'],
+        choices=['component', 'section', 'page', 'template', 'utility'],
         default='component'
     )
     search_library = serializers.BooleanField(default=True)
@@ -233,12 +232,3 @@ class ResearchRequestSerializer(serializers.Serializer):
     include_web = serializers.BooleanField(default=True)
     include_github = serializers.BooleanField(default=True)
     include_packages = serializers.BooleanField(default=True)
-
-
-
-
-
-
-
-
-

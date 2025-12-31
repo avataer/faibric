@@ -403,7 +403,7 @@ class ReportGenerator:
 <body>
     <div class="header">
         {% if logo_url %}<img src="{{ logo_url }}" alt="Logo" style="height: 40px; margin-bottom: 10px;">{% endif %}
-        <h1>📊 {{ title }}</h1>
+        <h1>[chart] {{ title }}</h1>
         <div class="period">{{ period_start }} - {{ period_end }}</div>
     </div>
     
@@ -686,6 +686,8 @@ def generate_and_send_report(tenant_id: str) -> MarketingReport:
         delivery.send_email()
     
     return report
+
+
 
 
 

@@ -162,3 +162,5 @@ class ResearchCacheAdmin(admin.ModelAdmin):
     def query_short(self, obj):
         return obj.query[:50] + '...' if len(obj.query) > 50 else obj.query
     query_short.short_description = 'Query'
+
+

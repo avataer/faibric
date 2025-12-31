@@ -56,3 +56,5 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(seed_data, reverse_seed),
     ]
+
+

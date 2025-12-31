@@ -248,6 +248,14 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
       }])
     } catch (err) {
       console.error('Failed to stop build:', err)
+      // Even if API fails, allow user to escape by calling onNewProject
+      setIsBuilding(false)
+      setMessages(prev => [...prev, {
+        id: `stop-error-${Date.now()}`,
+        role: 'system',
+        content: 'Could not stop build on server. Click "Start New" to begin fresh.',
+        timestamp: new Date(),
+      }])
     }
     setIsStopping(false)
   }
@@ -318,23 +326,22 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
                 </Button>
               </>
             ) : (
-              <>
-                <Chip 
-                  label="Deployed"
-                  color="success"
-                  size="small"
-                />
-                {onNewProject && (
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={onNewProject}
-                    sx={{ ml: 1 }}
-                  >
-                    Start New Project
-                  </Button>
-                )}
-              </>
+              <Chip 
+                label="Deployed"
+                color="success"
+                size="small"
+              />
+            )}
+            {/* Always show Start New button */}
+            {onNewProject && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={onNewProject}
+                sx={{ ml: 1 }}
+              >
+                Start New
+              </Button>
             )}
           </Box>
         </Box>
@@ -455,8 +462,37 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
 
         {/* Preview Content */}
         <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: '#fff' }}>
-          {/* Priority 1: Show deployed site when available */}
-          {deploymentUrl && !showLivePreview ? (
+          {/* Priority 1: During build, show live code preview when we have code */}
+          {isBuilding && sandpackCode ? (
+            <Box sx={{ height: '100%', width: '100%', overflow: 'hidden' }}>
+              <SandpackProvider
+                key={previewKey}
+                template="react-ts"
+                theme="light"
+                files={{
+                  '/App.tsx': {
+                    code: sandpackCode,
+                    active: true,
+                  },
+                  '/styles.css': {
+                    code: `* { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; box-sizing: border-box; } body { margin: 0; padding: 0; }`,
+                  },
+                }}
+                customSetup={{
+                  dependencies: {
+                    "lucide-react": "latest",
+                  },
+                }}
+              >
+                <SandpackPreview 
+                  style={{ height: '100%', width: '100%' }}
+                  showNavigator={false}
+                  showRefreshButton={false}
+                />
+              </SandpackProvider>
+            </Box>
+          ) : deploymentUrl && !showLivePreview ? (
+            /* Priority 2: Show deployed site when available */
             <iframe
               key={`iframe-${deploymentUrl}`}
               src={deploymentUrl}
@@ -469,8 +505,8 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
               title="Your Deployed Website"
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
             />
-          ) : sandpackCode && showLivePreview ? (
-            /* Priority 2: Show Sandpack live preview during build */
+          ) : sandpackCode ? (
+            /* Priority 3: Show Sandpack if user wants code preview */
             <Box sx={{ height: '100%', width: '100%', overflow: 'hidden' }}>
               <SandpackProvider
                 key={previewKey}
@@ -499,7 +535,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
               </SandpackProvider>
             </Box>
           ) : (
-            /* Priority 3: Show animated progressive preview during build */
+            /* Priority 4: Show animated progressive preview when no code yet */
             <ProgressivePreview 
               progress={buildProgress}
               phase={buildPhase}

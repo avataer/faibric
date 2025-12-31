@@ -4,6 +4,7 @@ import { Box, Typography, Paper, TextField, IconButton, Button, CircularProgress
 import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import { projectsService } from '../services/projects'
+import ProgressivePreview from '../components/ProgressivePreview'
 
 interface AIMessage {
   id: string
@@ -22,6 +23,21 @@ const LiveCreation = () => {
   const [error, setError] = useState<string>('')
   const [isReloading, setIsReloading] = useState(false)
   const [projectStatus, setProjectStatus] = useState<string>('')
+  const [buildProgress, setBuildProgress] = useState<number>(0)
+  const [displayProgress, setBuildProgressSmooth] = useState<number>(0)
+  const [currentPhase, setCurrentPhase] = useState<string>('Initializing...')
+  
+  // Smoothly interpolate progress
+  useEffect(() => {
+    if (displayProgress < buildProgress) {
+      const diff = buildProgress - displayProgress
+      const step = Math.max(0.1, diff / 20) // Smooth movement
+      const timer = setTimeout(() => {
+        setBuildProgressSmooth(prev => Math.min(prev + step, buildProgress))
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [buildProgress, displayProgress])
   const chatEndRef = useRef<HTMLDivElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const pollCountRef = useRef(0)
@@ -42,12 +58,21 @@ const LiveCreation = () => {
 
       // Update messages from the backend (merge with local messages)
       if (progress.messages && Array.isArray(progress.messages)) {
+        // Update build progress if available
+        if (progress.progress !== undefined) {
+          setBuildProgress(progress.progress)
+        }
+        
         const backendMessages = progress.messages.map((msg: any) => ({
           id: msg.id,
           type: msg.type,
           content: msg.content,
           timestamp: new Date(msg.timestamp).getTime()
         }))
+        
+        if (backendMessages.length > 0) {
+          setCurrentPhase(backendMessages[backendMessages.length - 1].content)
+        }
         
         // Smart merge: keep local messages, add new backend messages
         setMessages(prev => {
@@ -188,7 +213,7 @@ const LiveCreation = () => {
       const errorMsg: AIMessage = {
         id: `error_${Date.now()}`,
         type: 'error',
-        content: '❌ Failed to apply update. Please try again.',
+        content: 'Failed to apply update. Please try again.',
         timestamp: Date.now()
       }
       setMessages(prev => [...prev, errorMsg])
@@ -212,7 +237,7 @@ const LiveCreation = () => {
       {error ? (
         <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#1a1a2e' }}>
           <Box sx={{ textAlign: 'center', color: 'white', p: 4 }}>
-            <Typography variant="h5" sx={{ mb: 2, color: '#ef4444' }}>⚠️ Error</Typography>
+            <Typography variant="h5" sx={{ mb: 2, color: '#ef4444' }}>Error</Typography>
             <Typography variant="body1" sx={{ mb: 3 }}>{error}</Typography>
             <Button variant="outlined" onClick={() => window.location.href = '/dashboard'} sx={{ color: 'white', borderColor: 'white' }}>
               Go to Dashboard
@@ -264,42 +289,64 @@ const LiveCreation = () => {
                       display: 'flex', 
                       alignItems: 'center', 
                       justifyContent: 'center',
-                      color: 'white'
+                      color: 'white',
+                      zIndex: 100
                     }}>
                       <Box sx={{ textAlign: 'center' }}>
                         <CircularProgress sx={{ color: '#667eea', mb: 2 }} />
-                        <Typography>Updating...</Typography>
+                        <Typography variant="h6">Updating your app...</Typography>
+                        <Typography variant="body2" sx={{ opacity: 0.8 }}>{currentPhase}</Typography>
                       </Box>
                     </Box>
                   )}
                 </Box>
               </>
             ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'white', position: 'relative' }}>
-                <Box sx={{ textAlign: 'center', zIndex: 10 }}>
-                  <Typography variant="h4" sx={{ mb: 2, fontWeight: 600 }}>
-                    ⚡ Building Your App
-                  </Typography>
-                  <Typography variant="body1" sx={{ opacity: 0.7, mb: 3, maxWidth: 400 }}>
-                    {messages.length > 0 ? messages[messages.length - 1].content : 'Initializing AI...'}
-                  </Typography>
-                  <CircularProgress sx={{ color: '#667eea' }} size={48} />
-                  <Typography variant="caption" sx={{ display: 'block', mt: 2, opacity: 0.5 }}>
-                    Status: {projectStatus || 'starting'}
-                  </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'white', position: 'relative' }}>
+                <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+                  <ProgressivePreview 
+                    progress={displayProgress} 
+                    phase={currentPhase} 
+                    projectName={id} 
+                    userRequest={messages.find(m => m.id.startsWith('user_'))?.content || ''} 
+                  />
+                  
+                  {/* Overlay progress info */}
+                  <Box sx={{ 
+                    position: 'absolute', 
+                    top: 24, 
+                    left: '50%', 
+                    transform: 'translateX(-50%)',
+                    bgcolor: 'rgba(0,0,0,0.8)',
+                    backdropFilter: 'blur(10px)',
+                    px: 3,
+                    py: 1,
+                    borderRadius: 10,
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    zIndex: 10,
+                    textAlign: 'center',
+                    minWidth: 300
+                  }}>
+                    <Typography variant="subtitle2" sx={{ color: '#667eea', fontWeight: 600, mb: 0.5 }}>
+                      BUILDING YOUR CUSTOM PROJECT
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box sx={{ flex: 1, height: 4, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
+                        <Box sx={{ 
+                          width: `${displayProgress}%`, 
+                          height: '100%', 
+                          bgcolor: '#667eea', 
+                          borderRadius: 2,
+                          transition: 'width 0.1s linear'
+                        }} />
+                      </Box>
+                      <Typography variant="caption" sx={{ fontWeight: 700 }}>{Math.round(displayProgress)}%</Typography>
+                    </Box>
+                    <Typography variant="caption" sx={{ opacity: 0.7, mt: 0.5, display: 'block' }}>
+                      {currentPhase}
+                    </Typography>
+                  </Box>
                 </Box>
-                {/* Animated background */}
-                <Box sx={{
-                  position: 'absolute',
-                  inset: 0,
-                  opacity: 0.1,
-                  background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(102, 126, 234, 0.3) 10px, rgba(102, 126, 234, 0.3) 20px)',
-                  animation: 'slide 20s linear infinite',
-                  '@keyframes slide': {
-                    '0%': { backgroundPosition: '0 0' },
-                    '100%': { backgroundPosition: '1000px 1000px' }
-                  }
-                }} />
               </Box>
             )}
           </Box>

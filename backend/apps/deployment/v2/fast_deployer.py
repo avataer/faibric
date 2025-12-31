@@ -26,36 +26,71 @@ class FastReactDeployer:
         self.base_image = self._ensure_base_image()
     
     def _ensure_base_image(self):
-        """Ensure we have a base image with node/npm pre-installed"""
-        base_tag = "faibric-base:node20"
+        """Ensure we have base images with pre-installed dependencies"""
+        deps_tag = "faibric-deps:latest"
         
         try:
-            self.client.images.get(base_tag)
-            return base_tag
+            self.client.images.get(deps_tag)
+            return deps_tag
         except docker.errors.ImageNotFound:
-            # Build base image if not exists
-            print(f"Building base image {base_tag}...")
+            # Build deps image with all npm packages pre-installed
+            print(f"Building dependency cache image {deps_tag}...")
+            
+            # This image has all dependencies pre-installed
+            package_json = {
+                "name": "faibric-deps",
+                "private": True,
+                "version": "1.0.0",
+                "type": "module",
+                "scripts": {"dev": "vite", "build": "vite build"},
+                "dependencies": {
+                    "react": "^18.2.0",
+                    "react-dom": "^18.2.0",
+                    "react-router-dom": "^6.20.0",
+                    "recharts": "^2.10.0",
+                    "lucide-react": "^0.294.0",
+                    "clsx": "^2.0.0",
+                    "date-fns": "^2.30.0",
+                    "@supabase/supabase-js": "^2.39.0"
+                },
+                "devDependencies": {
+                    "@types/react": "^18.2.0",
+                    "@types/react-dom": "^18.2.0",
+                    "@vitejs/plugin-react": "^4.2.0",
+                    "vite": "^5.0.0",
+                    "tailwindcss": "^3.3.0",
+                    "postcss": "^8.4.0",
+                    "autoprefixer": "^10.4.0"
+                }
+            }
+            
             dockerfile = """FROM node:20-alpine
 WORKDIR /app
-RUN npm install -g serve
-EXPOSE 80
-CMD ["serve", "-s", "dist", "-l", "80"]
+COPY package.json ./
+RUN npm install --legacy-peer-deps
 """
+            
             context = BytesIO()
             with tarfile.open(fileobj=context, mode='w') as tar:
                 df_data = dockerfile.encode('utf-8')
                 df_info = tarfile.TarInfo(name='Dockerfile')
                 df_info.size = len(df_data)
                 tar.addfile(df_info, BytesIO(df_data))
+                
+                pkg_data = json.dumps(package_json, indent=2).encode('utf-8')
+                pkg_info = tarfile.TarInfo(name='package.json')
+                pkg_info.size = len(pkg_data)
+                tar.addfile(pkg_info, BytesIO(pkg_data))
             context.seek(0)
             
             self.client.images.build(
                 fileobj=context,
                 custom_context=True,
-                tag=base_tag,
+                tag=deps_tag,
                 rm=True
             )
-            return base_tag
+            print(f"[OK] Dependency cache image built")
+            return deps_tag
     
     def deploy_react_app(self, project):
         """Deploy React app with optimized build"""
@@ -118,11 +153,11 @@ CMD ["serve", "-s", "dist", "-l", "80"]
                 restart_policy={"Name": "unless-stopped"},
             )
             
-            print(f"✅ App deployed: {container.id[:12]}")
+            print(f"[OK] App deployed: {container.id[:12]}")
             return container.id
             
         except Exception as e:
-            print(f"❌ Deployment error: {str(e)}")
+            print(f"[ERROR] Deployment error: {str(e)}")
             raise Exception(f"Failed to deploy: {str(e)}")
     
     def _extract_frontend_code(self, project):
@@ -182,7 +217,7 @@ function Welcome() {{
     }}}}>
       <div>
         <h1 style={{{{ fontSize: '48px', marginBottom: '20px' }}}}>
-          🚀 {project.name}
+          [launch] {project.name}
         </h1>
         <p style={{{{ fontSize: '20px', opacity: 0.9 }}}}>
           {project.description[:100] if project.description else 'Built with Faibric AI'}
@@ -198,28 +233,25 @@ export default Welcome;
     def _create_optimized_context(self, frontend_code, project):
         """Create build context with optimizations"""
         
-        # Optimized Dockerfile - uses multi-stage build with caching
-        dockerfile = """FROM node:20-alpine AS builder
+        # Optimized Dockerfile - uses pre-built base image for faster builds
+        dockerfile = """# Stage 1: Build with cached dependencies
+FROM faibric-deps:latest AS builder
 WORKDIR /app
 
-# Copy package files first (for caching)
-COPY package.json ./
-RUN npm install --legacy-peer-deps
-
-# Copy source and build
+# Just copy source and build (dependencies already in base image)
 COPY . .
-RUN npm run build
+RUN npm run build 2>/dev/null || (npm install --legacy-peer-deps && npm run build)
 
-# Production stage
+# Stage 2: Lightweight production image
 FROM node:20-alpine
 WORKDIR /app
-RUN npm install -g serve
+RUN npm install -g serve@14
 COPY --from=builder /app/dist ./dist
 EXPOSE 80
 CMD ["serve", "-s", "dist", "-l", "80"]
 """
         
-        # Minimal package.json
+        # Enhanced package.json with powerful libraries
         package_json = {
             "name": f"app-{project.id}",
             "private": True,
@@ -232,26 +264,86 @@ CMD ["serve", "-s", "dist", "-l", "80"]
             },
             "dependencies": {
                 "react": "^18.2.0",
-                "react-dom": "^18.2.0"
+                "react-dom": "^18.2.0",
+                "react-router-dom": "^6.20.0",
+                "recharts": "^2.10.0",
+                "lucide-react": "^0.294.0",
+                "clsx": "^2.0.0",
+                "date-fns": "^2.30.0",
+                "@supabase/supabase-js": "^2.39.0"
             },
             "devDependencies": {
                 "@types/react": "^18.2.0",
                 "@types/react-dom": "^18.2.0",
                 "@vitejs/plugin-react": "^4.2.0",
-                "vite": "^5.0.0"
+                "vite": "^5.0.0",
+                "tailwindcss": "^3.3.0",
+                "postcss": "^8.4.0",
+                "autoprefixer": "^10.4.0"
             }
         }
         
-        # Minimal vite config
+        # Vite config with Tailwind
         vite_config = """import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  css: {
+    postcss: './postcss.config.js',
+  },
 })
 """
         
-        # index.html - inject FAIBRIC_APP_ID for database API
+        # Tailwind config
+        tailwind_config = """/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'system-ui', 'sans-serif'],
+      },
+    },
+  },
+  plugins: [],
+}
+"""
+        
+        # PostCSS config
+        postcss_config = """export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+"""
+        
+        # Global CSS with Tailwind directives
+        global_css = """@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+}
+"""
+        
+        # Get Supabase credentials from settings
+        from django.conf import settings
+        supabase_url = getattr(settings, 'SUPABASE_URL', '') or ''
+        supabase_anon_key = getattr(settings, 'SUPABASE_ANON_KEY', '') or ''
+        
+        # index.html - inject FAIBRIC_APP_ID, auth helpers, and Supabase config
         index_html = f"""<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -259,7 +351,62 @@ export default defineConfig({
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{project.name}</title>
     <style>* {{ margin: 0; padding: 0; box-sizing: border-box; }}</style>
-    <script>window.FAIBRIC_APP_ID = {project.id};</script>
+    <script>
+      window.FAIBRIC_APP_ID = {project.id};
+      
+      // Supabase configuration (if available)
+      window.SUPABASE_URL = '{supabase_url}';
+      window.SUPABASE_ANON_KEY = '{supabase_anon_key}';
+      
+      // Simple auth helpers (localStorage-based fallback, upgrades to Supabase if configured)
+      window.FaibricAuth = {{
+        _user: null,
+        getUser: function() {{
+          if (this._user) return this._user;
+          return JSON.parse(localStorage.getItem('faibric_user') || 'null');
+        }},
+        login: async function(email, password) {{
+          // If Supabase is configured, use it
+          if (window.SUPABASE_URL && window.supabase) {{
+            const {{ data, error }} = await window.supabase.auth.signInWithPassword({{ email, password }});
+            if (error) throw error;
+            this._user = data.user;
+            return data.user;
+          }}
+          // Fallback to localStorage simulation
+          const user = {{ id: Date.now().toString(), email, name: email.split('@')[0] }};
+          localStorage.setItem('faibric_user', JSON.stringify(user));
+          this._user = user;
+          return user;
+        }},
+        signUp: async function(email, password) {{
+          if (window.SUPABASE_URL && window.supabase) {{
+            const {{ data, error }} = await window.supabase.auth.signUp({{ email, password }});
+            if (error) throw error;
+            return data.user;
+          }}
+          return this.login(email, password);
+        }},
+        logout: async function() {{
+          if (window.SUPABASE_URL && window.supabase) {{
+            await window.supabase.auth.signOut();
+          }}
+          localStorage.removeItem('faibric_user');
+          this._user = null;
+        }},
+        isLoggedIn: function() {{
+          return !!this.getUser();
+        }},
+        onAuthStateChange: function(callback) {{
+          if (window.supabase) {{
+            return window.supabase.auth.onAuthStateChange(callback);
+          }}
+          // Fallback: just call with current state
+          callback('INITIAL', this.getUser());
+          return {{ data: {{ subscription: {{ unsubscribe: () => {{}} }} }} }};
+        }},
+      }};
+    </script>
   </head>
   <body>
     <div id="root"></div>
@@ -268,10 +415,28 @@ export default defineConfig({
 </html>
 """
         
-        # main.tsx
+        # main.tsx with CSS import and Supabase initialization
         main_tsx = """import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { createClient } from '@supabase/supabase-js'
 import App from './App'
+import './index.css'
+
+// Initialize Supabase if configured
+declare global {
+  interface Window {
+    SUPABASE_URL: string;
+    SUPABASE_ANON_KEY: string;
+    supabase: any;
+    FAIBRIC_APP_ID: number;
+    FaibricAuth: any;
+  }
+}
+
+if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+  window.supabase = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  console.log('Supabase initialized');
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -280,14 +445,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 )
 """
         
-        # Create tar archive
+        # Create tar archive with all config files
         context = BytesIO()
         with tarfile.open(fileobj=context, mode='w') as tar:
             self._add_file(tar, 'Dockerfile', dockerfile)
             self._add_file(tar, 'package.json', json.dumps(package_json, indent=2))
             self._add_file(tar, 'vite.config.ts', vite_config)
+            self._add_file(tar, 'tailwind.config.js', tailwind_config)
+            self._add_file(tar, 'postcss.config.js', postcss_config)
             self._add_file(tar, 'index.html', index_html)
             self._add_file(tar, 'src/main.tsx', main_tsx)
+            self._add_file(tar, 'src/index.css', global_css)
             self._add_file(tar, 'src/App.tsx', frontend_code['App.tsx'])
             
             for comp_name, comp_code in frontend_code['components'].items():
