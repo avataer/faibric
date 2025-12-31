@@ -203,8 +203,10 @@ class ComponentGenerationPipeline:
             
             # INCREMENT USAGE COUNT - track component reuse
             try:
-                match.component.increment_usage()
-                print(f"    Usage count: {match.component.usage_count}")
+                from apps.code_library.models import LibraryItem
+                library_item = LibraryItem.objects.get(id=match.component.id)
+                library_item.increment_usage()
+                print(f"    Usage count: {library_item.usage_count}")
             except Exception as e:
                 print(f"    [WARN] Failed to increment usage: {e}")
             
