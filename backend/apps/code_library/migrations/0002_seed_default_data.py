@@ -5,15 +5,19 @@ from django.db import migrations
 
 
 def seed_data(apps, schema_editor):
-    AdminDesignRules = apps.get_model('code_library', 'AdminDesignRules')
-    CustomerMessage = apps.get_model('code_library', 'CustomerMessage')
-    
-    # Create default design rules (if none exist)
-    if not AdminDesignRules.objects.exists():
-        AdminDesignRules.objects.create(
-            name="Default Art Direction",
-            is_active=True,
-        )
+    try:
+        AdminDesignRules = apps.get_model('code_library', 'AdminDesignRules')
+        CustomerMessage = apps.get_model('code_library', 'CustomerMessage')
+        
+        # Create default design rules (if none exist)
+        if not AdminDesignRules.objects.exists():
+            AdminDesignRules.objects.create(
+                name="Default Art Direction",
+                is_active=True,
+            )
+    except Exception as e:
+        # Table might not exist yet - skip silently
+        print(f"Warning: Could not seed AdminDesignRules: {e}")
     
     # Create customer messages
     messages = [
@@ -56,5 +60,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(seed_data, reverse_seed),
     ]
+
 
 
