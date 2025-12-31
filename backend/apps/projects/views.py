@@ -448,20 +448,20 @@ class PublicBuilderView(APIView):
             vercel = get_vercel_deployer()
             project_name = project.name.lower().replace(' ', '-')[:50]
             
-            result = vercel.deploy(project_name, app_code, str(project.id))
+            result = vercel.deploy_static_app(project_name, app_code, str(project.id))
             
-            if result.success:
+            if result.get('success'):
                 # Update project with new URL
-                project.deployment_url = result.url
+                project.deployment_url = result.get('url', '')
                 project.status = 'deployed'
                 project.save()
                 
-                logger.info(f"[BUILDER] Redeployed project {project_id}: {result.url}")
+                logger.info(f"[BUILDER] Redeployed project {project_id}: {result.get('url')}")
                 
                 return Response({
                     'status': 'complete',
                     'message': f'Applied: {modification}',
-                    'url': result.url
+                    'url': result.get('url')
                 })
             else:
                 project.status = 'failed'
@@ -469,7 +469,7 @@ class PublicBuilderView(APIView):
                 
                 return Response({
                     'status': 'error',
-                    'message': f'Deployment failed: {result.error}'
+                    'message': f"Deployment failed: {result.get('error', 'Unknown error')}"
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
         except Project.DoesNotExist:
