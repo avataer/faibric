@@ -152,9 +152,47 @@ class CodeValidator:
         - Unclosed tags
         - Mismatched closing tags (closing </button> when </nav> expected)
         - Improperly nested elements
+        - ORPHANED JSX after export default (causes "Expected identifier" errors)
         """
         errors = []
         nesting_errors = []
+        
+        # FIRST: Remove orphaned JSX after export default
+        # This is a common AI generation bug
+        lines = code.split('\n')
+        cleaned_lines = []
+        export_seen = False
+        
+        for line in lines:
+            stripped = line.strip()
+            
+            if 'export default' in line:
+                export_seen = True
+            
+            # After export, remove any JSX lines
+            if export_seen:
+                # Skip orphaned JSX tags after export
+                if stripped.startswith('</') and stripped.endswith('>'):
+                    errors.append(ValidationError(
+                        error_type="jsx_orphaned",
+                        message=f"Auto-fixed: Removed orphaned closing tag after export: {stripped}",
+                        severity="warning",
+                        auto_fix=f"Removed {stripped}"
+                    ))
+                    continue
+                if stripped.startswith('<') and not stripped.startswith('//'):
+                    # Skip any JSX after export
+                    errors.append(ValidationError(
+                        error_type="jsx_orphaned", 
+                        message=f"Auto-fixed: Removed orphaned JSX after export: {stripped[:50]}",
+                        severity="warning",
+                        auto_fix=f"Removed orphaned JSX"
+                    ))
+                    continue
+            
+            cleaned_lines.append(line)
+        
+        code = '\n'.join(cleaned_lines)
         
         # Track tag stack for nesting validation
         tag_stack = []

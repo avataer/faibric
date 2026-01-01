@@ -730,27 +730,75 @@ Return ONLY the complete code.
         """
         CRITICAL: Fix unbalanced JSX tags (divs, spans, etc.)
         
-        AI often generates code with unclosed div tags, which breaks React rendering.
-        Instead of trying to patch, we detect and WARN - the issue is in generation.
+        Handles two cases:
+        1. Extra closing tags at end (remove them)
+        2. Missing closing tags (add them inside the return statement)
         """
         import re
         
         if not code:
             return code
         
-        # Check div balance
-        open_divs = len(re.findall(r'<div', code))
+        # STEP 1: Remove orphaned JSX tags after the last function/export
+        # These cause "Expected identifier but found /" errors
+        lines = code.split('\n')
+        result_lines = []
+        in_jsx_block = False
+        last_valid_line_idx = 0
+        
+        # Find where the App function ends and export happens
+        export_found = False
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            
+            # Track if we've seen export default
+            if 'export default' in line:
+                export_found = True
+            
+            # After export, any JSX tags are orphaned
+            if export_found and stripped.startswith('</') and stripped.endswith('>'):
+                print(f"[FIX JSX] Removing orphaned closing tag after export: {stripped}")
+                continue
+            
+            # Also remove orphaned tags that appear after function closing
+            if export_found and stripped.startswith('<') and not stripped.startswith('//'):
+                # This is JSX after export - invalid
+                print(f"[FIX JSX] Removing orphaned JSX after export: {stripped[:50]}")
+                continue
+            
+            result_lines.append(line)
+        
+        code = '\n'.join(result_lines)
+        
+        # STEP 2: Check div balance and fix if needed
+        open_divs = len(re.findall(r'<div(?:\s|>)', code))
         close_divs = len(re.findall(r'</div>', code))
         diff = open_divs - close_divs
         
         if diff == 0:
-            return code  # Balanced, no fix needed
+            return code  # Balanced
         
-        if diff != 0:
-            print(f"[COMPONENT PIPELINE] WARNING: JSX imbalance detected ({diff:+d} divs)")
-            print(f"[COMPONENT PIPELINE] Open: {open_divs}, Close: {close_divs}")
-            # DON'T try to auto-fix - this creates more problems
-            # The AI should generate correct code
+        print(f"[FIX JSX] JSX imbalance detected: {open_divs} open, {close_divs} close ({diff:+d})")
+        
+        if diff > 0:
+            # Missing closing divs - find the return statement and add them before the closing
+            # Look for the last return's closing pattern
+            match = re.search(r'(return\s*\([^)]*?)(\s*\);?\s*\})', code, re.DOTALL)
+            if match:
+                # Add missing closing divs before the last );
+                closing_tags = '</div>\n' * diff
+                code = code[:match.end(1)] + '\n' + closing_tags + code[match.end(1):]
+                print(f"[FIX JSX] Added {diff} missing </div> tags")
+        
+        elif diff < 0:
+            # Too many closing divs - remove extras from the end
+            excess = abs(diff)
+            for _ in range(excess):
+                # Remove the last </div> 
+                last_close = code.rfind('</div>')
+                if last_close != -1:
+                    code = code[:last_close] + code[last_close + 6:]
+                    print(f"[FIX JSX] Removed excess </div>")
         
         return code
     
