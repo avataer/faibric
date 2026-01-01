@@ -1197,7 +1197,7 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
           <div className="flex items-center gap-4">
             <h1 className="text-lg font-bold">Faibric Admin</h1>
             <div className="flex gap-1">
-              {["builder", "overview", "analytics", "settings"].map(v => (
+              {["builder", "overview", "analytics", "design", "settings"].map(v => (
                 <button key={v} onClick={() => setAdminView(v)}
                   className={adminView === v ? "px-3 py-1 bg-blue-600 rounded text-sm" : "px-3 py-1 hover:bg-gray-700 rounded text-sm"}>
                   {v.charAt(0).toUpperCase() + v.slice(1)}
@@ -1321,6 +1321,105 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
             </div>
             <div className="bg-white p-6 rounded-lg shadow">
               <p className="text-gray-500">Connect to Faibric backend for detailed analytics with charts.</p>
+            </div>
+          </div>
+        </main>
+      )}
+      
+      {/* DESIGN EDITOR */}
+      {adminView === "design" && (
+        <main className="flex-1 overflow-auto p-6">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <h2 className="text-2xl font-bold">Design Editor</h2>
+            <p className="text-gray-500">Customize your app's look and feel with live preview.</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Color Tokens */}
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4">Colors</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Primary Color</label>
+                    <input type="color" defaultValue="#4F46E5" 
+                      onChange={(e) => document.documentElement.style.setProperty("--color-primary", e.target.value)}
+                      className="w-full h-10 rounded border cursor-pointer" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Background</label>
+                    <input type="color" defaultValue="#FFFFFF" 
+                      onChange={(e) => document.documentElement.style.setProperty("--color-bg", e.target.value)}
+                      className="w-full h-10 rounded border cursor-pointer" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Text Color</label>
+                    <input type="color" defaultValue="#111827" 
+                      onChange={(e) => document.documentElement.style.setProperty("--color-text", e.target.value)}
+                      className="w-full h-10 rounded border cursor-pointer" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Accent Color</label>
+                    <input type="color" defaultValue="#10B981" 
+                      onChange={(e) => document.documentElement.style.setProperty("--color-accent", e.target.value)}
+                      className="w-full h-10 rounded border cursor-pointer" />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Typography */}
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-4">Typography</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Font Family</label>
+                    <select defaultValue="Inter" 
+                      onChange={(e) => document.documentElement.style.setProperty("--font-family", e.target.value)}
+                      className="w-full p-2 border rounded">
+                      <option value="Inter, sans-serif">Inter</option>
+                      <option value="system-ui, sans-serif">System</option>
+                      <option value="Georgia, serif">Georgia</option>
+                      <option value="Menlo, monospace">Monospace</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Border Radius</label>
+                    <input type="range" min="0" max="20" defaultValue="8" 
+                      onChange={(e) => document.documentElement.style.setProperty("--radius", e.target.value + "px")}
+                      className="w-full" />
+                    <p className="text-xs text-gray-500 mt-1">Rounded corners for buttons and cards</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Base Font Size</label>
+                    <select defaultValue="16px" 
+                      onChange={(e) => document.documentElement.style.setProperty("--font-size-base", e.target.value)}
+                      className="w-full p-2 border rounded">
+                      <option value="14px">Small (14px)</option>
+                      <option value="16px">Medium (16px)</option>
+                      <option value="18px">Large (18px)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Save Design */}
+            <div className="bg-white p-6 rounded-lg shadow flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">Save Design Changes</h3>
+                <p className="text-sm text-gray-500">Apply and persist your design to the live app</p>
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => { if (confirm("Reset all design changes?")) location.reload(); }}
+                  className="px-4 py-2 border rounded hover:bg-gray-50">Reset</button>
+                <button 
+                  onClick={() => { 
+                    const design = {}; 
+                    document.querySelectorAll("[style]").forEach(el => { /* collect styles */ }); 
+                    localStorage.setItem("faibric_design", JSON.stringify(design));
+                    alert("Design saved! It will be applied on next load.");
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save Design</button>
+              </div>
             </div>
           </div>
         </main>

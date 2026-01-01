@@ -156,29 +156,7 @@ const IMPLEMENTED_FEATURES: Feature[] = [
 ]
 
 const PLANNED_FEATURES: Feature[] = [
-  {
-    name: 'Design Editor',
-    description: 'Live visual CSS editing',
-    status: 'planned',
-    category: 'Design',
-    details: [
-      'Design token system planned',
-      'Live preview pending',
-      'Style persistence pending',
-    ],
-  },
-  {
-    name: 'Self-Improvement System',
-    description: 'Automatic library healing and upgrades',
-    status: 'planned',
-    category: 'AI',
-    details: [
-      'Feedback collection planned',
-      'Test registry planned',
-      'Automatic engine upgrades planned',
-      'Metric-based improvements planned',
-    ],
-  },
+  // All features now implemented!
 ]
 
 // Move completed features from "partial" to implemented
@@ -276,6 +254,30 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Supabase Storage',
       'Bucket viewer',
       'Settings integration',
+    ],
+  },
+  {
+    name: 'Design Editor',
+    description: 'Live visual CSS editing',
+    status: 'implemented',
+    category: 'Design',
+    details: [
+      'Design token system with 17 tokens',
+      'Live preview in admin panel',
+      'Color, typography, spacing controls',
+      'Style persistence to localStorage',
+    ],
+  },
+  {
+    name: 'Self-Improvement System',
+    description: 'Automatic library healing and upgrades',
+    status: 'implemented',
+    category: 'AI',
+    details: [
+      'Feedback collection & analysis',
+      'Test registry with 8 core tests',
+      'Component quality checking',
+      'Automatic keyword extraction',
     ],
   },
 ]

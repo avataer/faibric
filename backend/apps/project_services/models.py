@@ -333,3 +333,141 @@ class AnalyticsEvent(models.Model):
     def __str__(self):
         return f"{self.event_type}: {self.path}"
 
+
+class ProjectDesign(models.Model):
+    """
+    Design tokens and custom CSS for a project.
+    Used by the live design editor.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.OneToOneField(
+        'projects.Project',
+        on_delete=models.CASCADE,
+        related_name='design'
+    )
+    
+    # Design tokens (CSS variables)
+    tokens = models.JSONField(default=dict, help_text="CSS variable overrides")
+    
+    # Custom CSS
+    custom_css = models.TextField(blank=True, help_text="Additional custom CSS")
+    
+    # Font settings
+    primary_font = models.CharField(max_length=100, blank=True)
+    heading_font = models.CharField(max_length=100, blank=True)
+    
+    # Theme
+    is_dark_mode = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Project Design'
+        verbose_name_plural = 'Project Designs'
+    
+    def __str__(self):
+        return f"Design: {self.project.name}"
+
+
+class ProjectFeedback(models.Model):
+    """
+    User feedback for a project. Used by self-improvement system.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    project = models.ForeignKey(
+        'projects.Project',
+        on_delete=models.CASCADE,
+        related_name='feedback'
+    )
+    
+    # Feedback type
+    feedback_type = models.CharField(max_length=50, choices=[
+        ('general', 'General'),
+        ('bug', 'Bug Report'),
+        ('feature', 'Feature Request'),
+        ('quality', 'Quality Issue'),
+    ], default='general')
+    
+    # Rating (1-5)
+    rating = models.IntegerField(default=3)
+    
+    # Feedback message
+    message = models.TextField()
+    
+    # Component reference (if feedback is about a specific component)
+    component_id = models.UUIDField(null=True, blank=True)
+    
+    # Additional data
+    metadata = models.JSONField(default=dict)
+    
+    # Status
+    is_processed = models.BooleanField(default=False)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Project Feedback'
+        verbose_name_plural = 'Project Feedback'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Feedback: {self.project.name} - {self.feedback_type}"
+
+
+class ImprovementTask(models.Model):
+    """
+    Task for the self-improvement system.
+    Created automatically based on feedback, quality issues, etc.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Task type
+    task_type = models.CharField(max_length=50, choices=[
+        ('review_component', 'Review Component'),
+        ('fix_bug', 'Fix Bug'),
+        ('improve_quality', 'Improve Quality'),
+        ('update_keywords', 'Update Keywords'),
+        ('check_compatibility', 'Check Compatibility'),
+    ])
+    
+    # Component reference
+    component_id = models.UUIDField(null=True, blank=True)
+    
+    # Priority
+    priority = models.CharField(max_length=20, choices=[
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('critical', 'Critical'),
+    ], default='medium')
+    
+    # Description
+    description = models.TextField()
+    
+    # Status
+    status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ], default='pending')
+    
+    # Result
+    result = models.JSONField(default=dict, blank=True)
+    
+    # Additional data
+    metadata = models.JSONField(default=dict)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Improvement Task'
+        verbose_name_plural = 'Improvement Tasks'
+        ordering = ['-priority', '-created_at']
+    
+    def __str__(self):
+        return f"{self.task_type}: {self.description[:50]}"
+

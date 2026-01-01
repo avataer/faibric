@@ -569,3 +569,202 @@ def upload_file(request, project_id):
         'size': request.META.get('CONTENT_LENGTH', 0)
     })
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DESIGN EDITOR ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def design_editor(request, project_id):
+    """Get or save design tokens for a project."""
+    from .models import ProjectDesign
+    from apps.projects.models import Project
+    
+    try:
+        project = Project.objects.get(id=project_id)
+    except Project.DoesNotExist:
+        return JsonResponse({'error': 'Project not found'}, status=404)
+    
+    if request.method == "GET":
+        try:
+            design = ProjectDesign.objects.get(project=project)
+            return JsonResponse({
+                'tokens': design.tokens,
+                'custom_css': design.custom_css,
+                'updated_at': design.updated_at.isoformat() if design.updated_at else None
+            })
+        except ProjectDesign.DoesNotExist:
+            # Return default tokens
+            from .design_editor import design_editor as editor
+            return JsonResponse({
+                'tokens': {t.css_var: t.default_value for t in editor.DEFAULT_TOKENS},
+                'custom_css': '',
+                'updated_at': None
+            })
+    
+    # POST - save design
+    try:
+        data = json.loads(request.body)
+        tokens = data.get('tokens', {})
+        custom_css = data.get('custom_css', '')
+        
+        from django.utils import timezone
+        design, created = ProjectDesign.objects.update_or_create(
+            project=project,
+            defaults={
+                'tokens': tokens,
+                'custom_css': custom_css,
+                'updated_at': timezone.now()
+            }
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'created': created,
+            'tokens': design.tokens
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def design_tokens(request):
+    """Get list of available design tokens."""
+    from .design_editor import design_editor as editor
+    
+    tokens = []
+    for t in editor.DEFAULT_TOKENS:
+        tokens.append({
+            'name': t.name,
+            'css_var': t.css_var,
+            'default_value': t.default_value,
+            'type': t.type,
+            'category': t.category
+        })
+    
+    return JsonResponse({'tokens': tokens})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def preview_design(request, project_id):
+    """Generate CSS for design preview."""
+    from .design_editor import design_editor as editor
+    
+    try:
+        data = json.loads(request.body)
+        tokens = data.get('tokens', {})
+        
+        css = editor.generate_css_variables(tokens)
+        
+        return JsonResponse({
+            'css': css
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SELF-IMPROVEMENT SYSTEM ENDPOINTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def submit_feedback(request, project_id):
+    """Submit feedback for a project (used for self-improvement)."""
+    from .models import ProjectFeedback
+    from apps.projects.models import Project
+    
+    try:
+        data = json.loads(request.body)
+        
+        project = Project.objects.get(id=project_id)
+        
+        feedback = ProjectFeedback.objects.create(
+            project=project,
+            feedback_type=data.get('type', 'general'),  # 'bug', 'feature', 'quality', 'general'
+            rating=data.get('rating', 3),  # 1-5
+            message=data.get('message', ''),
+            component_id=data.get('component_id'),
+            metadata=data.get('metadata', {})
+        )
+        
+        # Trigger self-improvement analysis
+        from .self_improvement import improvement_system
+        improvement_system.analyze_feedback(feedback)
+        
+        return JsonResponse({
+            'success': True,
+            'feedback_id': str(feedback.id)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def improvement_status(request):
+    """Get status of self-improvement system."""
+    from .self_improvement import improvement_system
+    
+    status = improvement_system.get_status()
+    
+    return JsonResponse({
+        'library_health': status.library_health,
+        'total_components': status.total_components,
+        'components_needing_review': status.components_needing_review,
+        'recent_improvements': status.recent_improvements,
+        'pending_tests': status.pending_tests,
+        'last_run': status.last_run.isoformat() if status.last_run else None
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def trigger_improvement(request):
+    """Manually trigger a self-improvement cycle."""
+    from .self_improvement import improvement_system
+    
+    try:
+        result = improvement_system.run_improvement_cycle()
+        
+        return JsonResponse({
+            'success': True,
+            'components_checked': result.components_checked,
+            'improvements_made': result.improvements_made,
+            'tests_run': result.tests_run,
+            'tests_passed': result.tests_passed,
+            'duration_seconds': result.duration_seconds
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def test_registry(request):
+    """Get the test registry (all tests that must always pass)."""
+    from .self_improvement import improvement_system
+    
+    tests = improvement_system.get_test_registry()
+    
+    return JsonResponse({
+        'tests': [
+            {
+                'id': t.id,
+                'name': t.name,
+                'description': t.description,
+                'category': t.category,
+                'last_run': t.last_run.isoformat() if t.last_run else None,
+                'last_result': t.last_result
+            }
+            for t in tests
+        ]
+    })
+

@@ -35,5 +35,16 @@ urlpatterns = [
     # Storage
     path('storage/<str:project_id>/buckets/', views.manage_buckets, name='manage-buckets'),
     path('storage/<str:project_id>/upload/', views.upload_file, name='upload-file'),
+    
+    # Design Editor
+    path('design/<str:project_id>/', views.design_editor, name='design-editor'),
+    path('design/<str:project_id>/preview/', views.preview_design, name='preview-design'),
+    path('design/tokens/', views.design_tokens, name='design-tokens'),
+    
+    # Self-Improvement System
+    path('feedback/<str:project_id>/', views.submit_feedback, name='submit-feedback'),
+    path('improvement/status/', views.improvement_status, name='improvement-status'),
+    path('improvement/run/', views.trigger_improvement, name='trigger-improvement'),
+    path('improvement/tests/', views.test_registry, name='test-registry'),
 ]
 
