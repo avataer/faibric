@@ -98,6 +98,13 @@ def fix_schema(request):
         "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS admin_notes TEXT DEFAULT '';",
         "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS improvement_notes TEXT DEFAULT '';",
         "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP;",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS source_project_id INTEGER;",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS created_by VARCHAR(100) DEFAULT 'ai';",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS needs_review BOOLEAN DEFAULT FALSE;",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS quality_score FLOAT DEFAULT 0.7;",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS component_type VARCHAR(50);",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS variant VARCHAR(50);",
+        "ALTER TABLE code_library_libraryitem ADD COLUMN IF NOT EXISTS version VARCHAR(20) DEFAULT '1.0.0';",
     ]
     
     with connection.cursor() as cursor:
