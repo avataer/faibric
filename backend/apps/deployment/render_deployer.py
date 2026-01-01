@@ -420,6 +420,20 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         for comp_name, comp_code in frontend_code.get('components', {}).items():
             files[f'src/components/{comp_name}.tsx'] = comp_code
         
+        # render.yaml - CRITICAL: SPA routing configuration
+        # Without this, direct URL access returns 404
+        files['render.yaml'] = f"""services:
+  - type: web
+    name: app-{project.id}
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+"""
+        
         return files
     
     def _create_render_site(self, branch_name, project):
