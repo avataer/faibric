@@ -46,8 +46,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Semantic search for matching',
       'Automatic component decomposition',
     ],
-    testUrl: 'https://app-40-build-a-modern-landi.onrender.com',
-    testInstructions: 'View source - notice navigation, hero, features, pricing, footer are separate reusable blocks',
+    testUrl: 'https://faibric.com/create',
+    testInstructions: 'Create a landing page - the AI decomposes it into Navigation, Hero, Features, Pricing, Footer blocks',
   },
   {
     name: 'Library Reuse System',
@@ -88,8 +88,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Response caching',
       'Fallback mechanisms',
     ],
-    testUrl: 'https://app-38-build-a-live-crypto.onrender.com',
-    testInstructions: 'Prices update automatically every 10 seconds with real data from CoinGecko API',
+    testUrl: 'https://faibric-api.onrender.com/api/gateway/?service=coingecko&endpoint=simple/price&params=ids%3Dbitcoin%26vs_currencies%3Dusd',
+    testInstructions: 'This is the Gateway API that apps use - returns live Bitcoin price from CoinGecko',
   },
   {
     name: 'Admin Panel with Builder',
@@ -102,8 +102,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Analytics: Views, sessions, API calls',
       'Settings: Refresh interval, password change',
     ],
-    testUrl: 'https://app-39-build-a-todo-list-ap.onrender.com/faibric',
-    testInstructions: 'Login (password: faibric123), use Builder tab to request changes like "make header blue"',
+    testUrl: 'https://faibric.com/create',
+    testInstructions: 'Create any app, then add /faibric to the URL. Login (password: faibric123) to see Builder, Analytics, Design, Settings tabs',
   },
   {
     name: 'Code Validation & Sanitization',
@@ -130,8 +130,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Connection validation',
       'Standard interface library',
     ],
-    testUrl: 'https://app-38-build-a-live-crypto.onrender.com',
-    testInstructions: 'Data flows from API to display - components are wired automatically via connectors',
+    testUrl: 'https://faibric.com/create',
+    testInstructions: 'Create a data-driven app - components are auto-wired with DATA_IN/OUT connectors for state flow',
   },
   {
     name: 'User Rules System',
@@ -172,8 +172,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Real connection status',
       'Cache management',
     ],
-    testUrl: 'https://app-38-build-a-live-crypto.onrender.com/faibric',
-    testInstructions: 'Go to Settings tab, change refresh interval - it actually affects data refresh timing',
+    testUrl: 'https://faibric.com/create',
+    testInstructions: 'Create any app, go to /faibric admin panel, Settings tab - change refresh interval and see it work',
   },
 ]
 
@@ -250,8 +250,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Time range selector',
       'Top pages view',
     ],
-    testUrl: 'https://app-39-build-a-todo-list-ap.onrender.com/faibric',
-    testInstructions: 'Login, go to Analytics tab - see page views, sessions, and API calls',
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/analytics/1/',
+    testInstructions: 'GET request returns analytics data - page views, visitors, top pages, traffic sources',
   },
   {
     name: 'Version Control & Rollback',
@@ -278,8 +278,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Sitemap generation',
       'Open Graph tags',
     ],
-    testUrl: 'https://app-40-build-a-modern-landi.onrender.com',
-    testInstructions: 'View page source - see auto-generated meta tags and Open Graph tags',
+    testUrl: 'https://faibric.com/create',
+    testInstructions: 'Create any app, view page source - auto-generated meta tags and viewport settings',
   },
   {
     name: 'File Storage',
@@ -305,8 +305,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Color, typography, spacing controls',
       'Style persistence to localStorage',
     ],
-    testUrl: 'https://app-39-build-a-todo-list-ap.onrender.com/faibric',
-    testInstructions: 'Login, click Design tab - change colors, fonts, spacing and see live preview',
+    testUrl: 'https://faibric.com/create',
+    testInstructions: 'Create any app, go to /faibric admin panel, click Design tab - change colors, fonts, spacing in real-time',
   },
   {
     name: 'Self-Improvement System',
