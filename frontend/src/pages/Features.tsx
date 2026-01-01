@@ -30,6 +30,8 @@ interface Feature {
   status: 'implemented' | 'partial' | 'planned'
   category: string
   details?: string[]
+  testUrl?: string
+  testInstructions?: string
 }
 
 const IMPLEMENTED_FEATURES: Feature[] = [
@@ -44,6 +46,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Semantic search for matching',
       'Automatic component decomposition',
     ],
+    testUrl: 'https://app-40-build-a-modern-landi.onrender.com',
+    testInstructions: 'View source - notice navigation, hero, features, pricing, footer are separate reusable blocks',
   },
   {
     name: 'Library Reuse System',
@@ -56,6 +60,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Cross-project reuse',
       'Component scoring system',
     ],
+    testUrl: 'https://faibric-api.onrender.com/api/library/items/?limit=10',
+    testInstructions: 'Check usage_count field - higher counts mean more reuse across projects',
   },
   {
     name: 'Hybrid Deployment',
@@ -68,6 +74,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Automatic provider selection',
       'SPA routing support',
     ],
+    testUrl: 'https://faibric.com/create',
+    testInstructions: 'Create a new project - watch the deploy time. Static apps deploy to Vercel in ~60s',
   },
   {
     name: 'Real-Time Data Gateway',
@@ -80,6 +88,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Response caching',
       'Fallback mechanisms',
     ],
+    testUrl: 'https://app-38-build-a-live-crypto.onrender.com',
+    testInstructions: 'Prices update automatically every 10 seconds with real data from CoinGecko API',
   },
   {
     name: 'Admin Panel with Builder',
@@ -92,6 +102,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Analytics: Views, sessions, API calls',
       'Settings: Refresh interval, password change',
     ],
+    testUrl: 'https://app-39-build-a-todo-list-ap.onrender.com/faibric',
+    testInstructions: 'Login (password: faibric123), use Builder tab to request changes like "make header blue"',
   },
   {
     name: 'Code Validation & Sanitization',
@@ -104,6 +116,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'JSX balance checking',
       'TypeScript to JS conversion',
     ],
+    testUrl: 'https://faibric.com/create',
+    testInstructions: 'All deployed apps pass validation - broken code is auto-fixed before deploy',
   },
   {
     name: 'Connector System',
@@ -116,6 +130,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Connection validation',
       'Standard interface library',
     ],
+    testUrl: 'https://app-38-build-a-live-crypto.onrender.com',
+    testInstructions: 'Data flows from API to display - components are wired automatically via connectors',
   },
   {
     name: 'User Rules System',
@@ -128,6 +144,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Automatic code cleanup',
       'Problem registry',
     ],
+    testUrl: 'https://faibric-api.onrender.com/api/library/alerts/',
+    testInstructions: 'View active alerts - rule violations are logged and enforced automatically',
   },
   {
     name: 'AI-Powered Generation',
@@ -140,6 +158,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Industry templates',
       'Component adaptation',
     ],
+    testUrl: 'https://faibric.com/create',
+    testInstructions: 'Type any project idea - AI decomposes it into components and generates code',
   },
   {
     name: 'Functional Settings View',
@@ -152,6 +172,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Real connection status',
       'Cache management',
     ],
+    testUrl: 'https://app-38-build-a-live-crypto.onrender.com/faibric',
+    testInstructions: 'Go to Settings tab, change refresh interval - it actually affects data refresh timing',
   },
 ]
 
@@ -172,6 +194,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Auto-provisioning button',
       'Table viewer',
     ],
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/database/provision/',
+    testInstructions: 'POST with project_id to provision a Supabase database automatically',
   },
   {
     name: 'User Authentication',
@@ -184,6 +208,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'OAuth credentials input',
       'Email/password & magic link',
     ],
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/auth/1/providers/',
+    testInstructions: 'Lists available auth providers: email, magic_link, Google, GitHub, Apple',
   },
   {
     name: 'Custom Domains',
@@ -196,6 +222,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Domain management panel',
       'SSL auto-provisioning',
     ],
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/domains/1/',
+    testInstructions: 'View or add custom domains to any project - DNS records shown for verification',
   },
   {
     name: 'Payment Integration (Stripe)',
@@ -208,6 +236,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Product management',
       'Status indicator',
     ],
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/payments/1/connect/',
+    testInstructions: 'POST with email to connect Stripe account - returns onboarding URL',
   },
   {
     name: 'Analytics Dashboard',
@@ -220,6 +250,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Time range selector',
       'Top pages view',
     ],
+    testUrl: 'https://app-39-build-a-todo-list-ap.onrender.com/faibric',
+    testInstructions: 'Login, go to Analytics tab - see page views, sessions, and API calls',
   },
   {
     name: 'Version Control & Rollback',
@@ -232,6 +264,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Rollback confirmation dialog',
       'Auto-snapshot on deploy',
     ],
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/versions/1/',
+    testInstructions: 'GET versions list, POST to rollback to any previous version',
   },
   {
     name: 'SEO Optimization',
@@ -244,6 +278,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Sitemap generation',
       'Open Graph tags',
     ],
+    testUrl: 'https://app-40-build-a-modern-landi.onrender.com',
+    testInstructions: 'View page source - see auto-generated meta tags and Open Graph tags',
   },
   {
     name: 'File Storage',
@@ -255,6 +291,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Bucket viewer',
       'Settings integration',
     ],
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/storage/1/buckets/',
+    testInstructions: 'GET buckets list, POST to create new storage buckets for files',
   },
   {
     name: 'Design Editor',
@@ -267,6 +305,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Color, typography, spacing controls',
       'Style persistence to localStorage',
     ],
+    testUrl: 'https://app-39-build-a-todo-list-ap.onrender.com/faibric',
+    testInstructions: 'Login, click Design tab - change colors, fonts, spacing and see live preview',
   },
   {
     name: 'Self-Improvement System',
@@ -279,6 +319,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Component quality checking',
       'Automatic keyword extraction',
     ],
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/improvement/status/',
+    testInstructions: 'View library health, pending tests, and recent improvements',
   },
 ]
 
@@ -373,12 +415,32 @@ export default function Features() {
                   {feature.description}
                 </Typography>
                 {feature.details && (
-                  <Box component="ul" sx={{ m: 0, pl: 2 }}>
+                  <Box component="ul" sx={{ m: 0, pl: 2, mb: 2 }}>
                     {feature.details.map((detail, i) => (
                       <Typography component="li" variant="body2" key={i}>
                         {detail}
                       </Typography>
                     ))}
+                  </Box>
+                )}
+                {feature.testUrl && (
+                  <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'grey.200' }}>
+                    <Typography variant="caption" fontWeight="bold" color="primary.main">
+                      How to Test This Feature:
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 0.5, mb: 1.5, color: 'text.secondary' }}>
+                      {feature.testInstructions}
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="primary"
+                      href={feature.testUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Test This Feature
+                    </Button>
                   </Box>
                 )}
               </CardContent>
