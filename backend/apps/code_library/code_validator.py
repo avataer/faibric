@@ -118,6 +118,9 @@ class CodeValidator:
         fixed_code, brace_errors = self._check_brace_balance(fixed_code)
         errors.extend(brace_errors)
         
+        fixed_code, arrow_errors = self._check_arrow_syntax(fixed_code)
+        errors.extend(arrow_errors)
+        
         # ENFORCEMENT: Check Gateway URL usage (not just instructions)
         gateway_warnings = self._check_gateway_usage(fixed_code)
         warnings.extend(gateway_warnings)
@@ -494,6 +497,34 @@ class CodeValidator:
                 severity="warning",
                 auto_fix=f"Added {missing} closing parens"
             ))
+        
+        return code, errors
+    
+    def _check_arrow_syntax(self, code: str) -> Tuple[str, List[ValidationError]]:
+        """
+        Check and fix broken arrow function syntax.
+        
+        AI often generates `= />` instead of `=>` which causes
+        "Unterminated regular expression" errors in esbuild.
+        """
+        errors = []
+        original = code
+        
+        # Fix broken arrow function syntax patterns
+        # Pattern: `(e) = />` should be `(e) =>`
+        if '= />' in code or '=/>' in code:
+            code = re.sub(r'\)\s*=\s*/>', r') =>', code)
+            code = re.sub(r'=\s*/>\s*(\w)', r'=> \1', code)
+            code = code.replace('= />', '=>')
+            code = code.replace('=/>', '=>')
+            
+            if code != original:
+                errors.append(ValidationError(
+                    error_type="arrow_syntax",
+                    message="Auto-fixed: Corrected broken arrow function syntax (= /> to =>)",
+                    severity="warning",
+                    auto_fix="Fixed arrow functions"
+                ))
         
         return code, errors
     

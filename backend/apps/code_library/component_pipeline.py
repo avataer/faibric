@@ -340,6 +340,16 @@ Return ONLY the component code, nothing else.
         for bad, good in replacements.items():
             code = code.replace(bad, good)
         
+        # FIX: Broken arrow function syntax
+        # AI sometimes generates `= />` instead of `=>`
+        # Pattern: `(e) = />` should be `(e) =>`
+        code = re.sub(r'\)\s*=\s*/>', r') =>', code)
+        # Pattern: `= />` at end of line or before something
+        code = re.sub(r'=\s*/>\s*(\w)', r'=> \1', code)
+        # More general: any `= />` → `=>`
+        code = code.replace('= />', '=>')
+        code = code.replace('=/>', '=>')
+        
         # Fix TypeScript generic syntax errors
         # CRITICAL: The AI often forgets closing `>` in nested generics
         
