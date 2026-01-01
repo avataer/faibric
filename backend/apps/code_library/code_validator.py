@@ -121,6 +121,9 @@ class CodeValidator:
         fixed_code, arrow_errors = self._check_arrow_syntax(fixed_code)
         errors.extend(arrow_errors)
         
+        fixed_code, dup_errors = self._check_duplicate_declarations(fixed_code)
+        errors.extend(dup_errors)
+        
         # ENFORCEMENT: Check Gateway URL usage (not just instructions)
         gateway_warnings = self._check_gateway_usage(fixed_code)
         warnings.extend(gateway_warnings)
@@ -525,6 +528,79 @@ class CodeValidator:
                     severity="warning",
                     auto_fix="Fixed arrow functions"
                 ))
+        
+        return code, errors
+    
+    def _check_duplicate_declarations(self, code: str) -> Tuple[str, List[ValidationError]]:
+        """
+        Check and fix duplicate const/function declarations.
+        
+        AI sometimes generates the same component twice, which causes
+        "symbol has already been declared" errors in esbuild.
+        """
+        errors = []
+        
+        # Find all const declarations
+        const_pattern = re.compile(r'^(\s*)(const\s+(\w+)\s*[=:])', re.MULTILINE)
+        
+        # Track declarations
+        declarations = {}
+        lines = code.split('\n')
+        lines_to_remove = set()
+        
+        for i, line in enumerate(lines):
+            match = const_pattern.match(line)
+            if match:
+                var_name = match.group(3)
+                if var_name in declarations:
+                    # Duplicate found - mark for removal (keep first occurrence)
+                    # Find the end of this declaration (next const or function or closing brace at same level)
+                    # For simplicity, just warn for now
+                    errors.append(ValidationError(
+                        error_type="duplicate_declaration",
+                        message=f"Duplicate declaration of '{var_name}' found on line {i+1}",
+                        line_number=i+1,
+                        severity="warning"
+                    ))
+                else:
+                    declarations[var_name] = i
+        
+        # For common duplicate patterns like AppLayout, try to remove the second occurrence
+        # Find the block boundaries and remove
+        common_duplicates = ['AppLayout', 'Navigation', 'Header', 'Footer', 'Sidebar']
+        
+        for dup_name in common_duplicates:
+            pattern = rf'(const\s+{dup_name}\s*[=:][^;]+;)'
+            matches = list(re.finditer(pattern, code, re.DOTALL))
+            
+            if len(matches) > 1:
+                # Remove all but the first
+                for m in reversed(matches[1:]):
+                    code = code[:m.start()] + code[m.end():]
+                    errors.append(ValidationError(
+                        error_type="duplicate_declaration",
+                        message=f"Auto-fixed: Removed duplicate declaration of '{dup_name}'",
+                        severity="warning",
+                        auto_fix=f"Removed duplicate {dup_name}"
+                    ))
+        
+        # Also check for duplicate const with FC type (full component declarations)
+        fc_pattern = rf'(const\s+(\w+):\s*React\.FC[^}}]+\}})'
+        seen_components = {}
+        
+        for match in re.finditer(fc_pattern, code, re.DOTALL):
+            comp_name = match.group(2)
+            if comp_name in seen_components:
+                # Remove this duplicate
+                code = code[:match.start()] + code[match.end():]
+                errors.append(ValidationError(
+                    error_type="duplicate_declaration",
+                    message=f"Auto-fixed: Removed duplicate component '{comp_name}'",
+                    severity="warning",
+                    auto_fix=f"Removed duplicate {comp_name}"
+                ))
+            else:
+                seen_components[comp_name] = match.start()
         
         return code, errors
     
