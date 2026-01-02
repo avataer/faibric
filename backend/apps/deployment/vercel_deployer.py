@@ -349,137 +349,126 @@ root.render(React.createElement(App));
         return code.strip()
     
     def _inject_admin_panel(self, code: str) -> str:
-        """Inject Faibric admin panel into React app code."""
+        """
+        Inject Faibric admin panel as a WRAPPER around the original App.
+        
+        Strategy: Rename App to _OriginalApp, create new App that wraps it.
+        This is SAFER than injecting code inside the function.
+        """
         import re
         
         # Skip if already has admin panel
-        if 'isAdminRoute' in code:
+        if 'FaibricAdmin' in code or 'isAdminRoute' in code:
             return code
         
-        admin_panel = '''
-  // FAIBRIC ADMIN PANEL
-  const [isAdminRoute, setIsAdminRoute] = React.useState(
-    window.location.pathname.includes("/faibric")
-  );
-  const [adminAuth, setAdminAuth] = React.useState(!!localStorage.getItem("faibric_admin_token"));
-  const [adminView, setAdminView] = React.useState("overview");
-  const passwordRef = React.useRef(null);
+        # Find the App function/component and rename it
+        app_patterns = [
+            (r'function\s+App\s*\(', 'function _OriginalApp('),
+            (r'const\s+App\s*=', 'const _OriginalApp ='),
+        ]
+        
+        renamed = False
+        for pattern, replacement in app_patterns:
+            if re.search(pattern, code):
+                code = re.sub(pattern, replacement, code, count=1)
+                renamed = True
+                break
+        
+        if not renamed:
+            return code
+        
+        # Add the admin wrapper at the end
+        admin_wrapper = '''
+
+// FAIBRIC ADMIN PANEL
+function FaibricAdmin() {
+  const [auth, setAuth] = React.useState(!!localStorage.getItem("faibric_admin_token"));
+  const [view, setView] = React.useState("overview");
+  const passRef = React.useRef(null);
   
-  const doLogin = () => {
-    const pass = passwordRef.current?.value || "";
-    if (pass === (localStorage.getItem("faibric_admin_pass") || "faibric123")) {
-      localStorage.setItem("faibric_admin_token", Date.now().toString());
-      setAdminAuth(true);
-    } else { alert("Wrong password"); }
+  const login = () => {
+    if ((passRef.current?.value || "") === (localStorage.getItem("faibric_admin_pass") || "faibric123")) {
+      localStorage.setItem("faibric_admin_token", "1");
+      setAuth(true);
+    } else alert("Wrong password");
   };
   
-  const exitAdmin = () => {
-    window.location.href = window.location.pathname.replace("/faibric", "") || "/";
-  };
-  
-  // Admin Login View
-  if (isAdminRoute && !adminAuth) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full">
-          <h1 className="text-2xl font-bold mb-4 text-center">Faibric Admin</h1>
-          <input ref={passwordRef} type="password" placeholder="Password" 
-            onKeyDown={(e) => e.key === "Enter" && doLogin()}
-            className="w-full p-3 border rounded-lg mb-4" autoFocus />
-          <button onClick={doLogin} className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold">Login</button>
-          <button onClick={exitAdmin} className="w-full py-2 text-gray-500 text-sm mt-2">Back to App</button>
-          <p className="text-xs text-gray-400 text-center mt-4">Default: faibric123</p>
-        </div>
+  if (!auth) return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full">
+        <h1 className="text-2xl font-bold mb-4 text-center">Faibric Admin</h1>
+        <input ref={passRef} type="password" placeholder="Password" 
+          onKeyDown={(e) => e.key === "Enter" && login()}
+          className="w-full p-3 border rounded-lg mb-4" autoFocus />
+        <button onClick={login} className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold">Login</button>
+        <a href="/" className="block text-center text-gray-500 text-sm mt-4">Back to App</a>
       </div>
-    );
-  }
+    </div>
+  );
   
-  // Admin Dashboard View
-  if (isAdminRoute && adminAuth) {
-    return (
-      <div className="min-h-screen bg-gray-900 text-white">
-        <nav className="bg-gray-800 p-4 flex items-center gap-4">
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <nav className="bg-gray-900 text-white p-4 flex justify-between">
+        <div className="flex gap-4">
           <span className="font-bold">Faibric Admin</span>
-          {["overview", "analytics", "settings"].map(v => (
-            <button key={v} onClick={() => setAdminView(v)} 
-              className={"px-3 py-1 rounded " + (adminView === v ? "bg-blue-600" : "hover:bg-gray-700")}>
+          {["overview", "settings"].map(v => (
+            <button key={v} onClick={() => setView(v)} 
+              className={"px-3 py-1 rounded " + (view === v ? "bg-blue-600" : "hover:bg-gray-700")}>
               {v.charAt(0).toUpperCase() + v.slice(1)}
             </button>
           ))}
-          <div className="ml-auto flex gap-2">
-            <button onClick={exitAdmin}>View App</button>
-            <button onClick={() => {localStorage.removeItem("faibric_admin_token"); setAdminAuth(false)}} className="text-red-400">Logout</button>
+        </div>
+        <div className="flex gap-4">
+          <a href="/">View App</a>
+          <button onClick={() => {localStorage.removeItem("faibric_admin_token"); setAuth(false)}} className="text-red-400">Logout</button>
+        </div>
+      </nav>
+      <main className="p-6 max-w-4xl mx-auto">
+        {view === "overview" && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white p-6 rounded-xl shadow">
+                <p className="text-gray-500">Views</p>
+                <p className="text-3xl font-bold">{parseInt(localStorage.getItem("faibric_views") || "0")}</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow">
+                <p className="text-gray-500">Sessions</p>
+                <p className="text-3xl font-bold">{parseInt(localStorage.getItem("faibric_sessions") || "0")}</p>
+              </div>
+            </div>
           </div>
-        </nav>
-        <main className="p-6">
-          {adminView === "overview" && (
-            <div>
-              <h2 className="text-xl font-bold mb-4">Dashboard</h2>
-              <div className="grid grid-cols-2 gap-4 max-w-md">
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <p className="text-gray-400">Views</p>
-                  <p className="text-3xl font-bold">{parseInt(localStorage.getItem("faibric_views") || "0")}</p>
-                </div>
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <p className="text-gray-400">Sessions</p>
-                  <p className="text-3xl font-bold">{parseInt(localStorage.getItem("faibric_sessions") || "0")}</p>
-                </div>
-              </div>
+        )}
+        {view === "settings" && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Settings</h2>
+            <div className="bg-white p-6 rounded-xl shadow">
+              <input type="password" placeholder="New password" 
+                onBlur={(e) => {if(e.target.value){localStorage.setItem("faibric_admin_pass",e.target.value); alert("Saved!")}}}
+                className="w-full p-2 border rounded" />
             </div>
-          )}
-          {adminView === "analytics" && (
-            <div>
-              <h2 className="text-xl font-bold mb-4">Analytics</h2>
-              <div className="bg-gray-800 p-4 rounded-lg max-w-md">
-                <p className="text-gray-400">Basic analytics tracking is active.</p>
-                <p className="mt-2">Views: {localStorage.getItem("faibric_views") || "0"}</p>
-                <p>Sessions: {localStorage.getItem("faibric_sessions") || "0"}</p>
-              </div>
-            </div>
-          )}
-          {adminView === "settings" && (
-            <div>
-              <h2 className="text-xl font-bold mb-4">Settings</h2>
-              <div className="bg-gray-800 p-4 rounded-lg max-w-md">
-                <label className="block text-gray-400 mb-1">Admin Password</label>
-                <input type="password" placeholder="New password" 
-                  onBlur={(e) => {if(e.target.value){localStorage.setItem("faibric_admin_pass",e.target.value); alert("Saved!")}}}
-                  className="w-full p-2 rounded bg-gray-700 border border-gray-600" />
-              </div>
-            </div>
-          )}
-        </main>
-      </div>
-    );
-  }
-  
-  // Track page view
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+function App() {
   React.useEffect(() => {
-    const views = parseInt(localStorage.getItem("faibric_views") || "0") + 1;
-    localStorage.setItem("faibric_views", views.toString());
+    localStorage.setItem("faibric_views", (parseInt(localStorage.getItem("faibric_views") || "0") + 1).toString());
     if (!sessionStorage.getItem("faibric_session")) {
       sessionStorage.setItem("faibric_session", "1");
-      const sessions = parseInt(localStorage.getItem("faibric_sessions") || "0") + 1;
-      localStorage.setItem("faibric_sessions", sessions.toString());
+      localStorage.setItem("faibric_sessions", (parseInt(localStorage.getItem("faibric_sessions") || "0") + 1).toString());
     }
   }, []);
+  
+  if (window.location.pathname.includes("/faibric")) return <FaibricAdmin />;
+  return <_OriginalApp />;
+}
 '''
         
-        # Find function App (supports multiple patterns)
-        patterns = [
-            r'function App\s*\([^)]*\)\s*\{',
-            r'const App\s*=\s*\([^)]*\)\s*=>\s*\{',
-            r'const App\s*=\s*\(\)\s*=>\s*\{',
-        ]
-        
-        for pattern in patterns:
-            match = re.search(pattern, code)
-            if match:
-                insert_pos = match.end()
-                code = code[:insert_pos] + admin_panel + code[insert_pos:]
-                break
-        
-        return code
+        return code + admin_wrapper
     
     def _file(self, path: str, content: str) -> dict:
         """Create a file object for Vercel API."""
