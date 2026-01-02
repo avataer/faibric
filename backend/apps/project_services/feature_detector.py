@@ -219,3 +219,4 @@ class FeatureDetector:
 # Singleton
 feature_detector = FeatureDetector()
 
+

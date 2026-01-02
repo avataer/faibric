@@ -16,3 +16,4 @@ class InsightsConfig(AppConfig):
 
 
 
+

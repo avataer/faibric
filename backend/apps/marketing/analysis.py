@@ -513,3 +513,4 @@ def generate_executive_summary_sync(tenant_id: str, days: int = 7) -> dict:
 
 
 
+

@@ -65,3 +65,4 @@ class ActivityAdmin(admin.ModelAdmin):
 
 
 
+

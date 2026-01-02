@@ -116,3 +116,4 @@ class ReportTemplateAdmin(admin.ModelAdmin):
 
 
 
+

@@ -697,3 +697,4 @@ def generate_and_send_report(tenant_id: str) -> MarketingReport:
 
 
 
+

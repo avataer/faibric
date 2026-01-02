@@ -6,3 +6,4 @@ class ProjectServicesConfig(AppConfig):
     name = 'apps.project_services'
     verbose_name = 'Project Services'
 
+

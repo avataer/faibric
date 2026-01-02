@@ -273,3 +273,4 @@ def display_all_rules() -> str:
     """Display all active rules."""
     return get_rules_registry().display_rules()
 
+

@@ -67,3 +67,4 @@ class AnalyticsEventAdmin(admin.ModelAdmin):
     search_fields = ['path', 'visitor_id']
     date_hierarchy = 'created_at'
 
+

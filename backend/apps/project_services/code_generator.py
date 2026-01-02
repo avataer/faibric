@@ -519,3 +519,4 @@ const FileUpload = ({ onUpload, accept = "image/*", bucket = "files" }) => {
 # Singleton
 service_code_generator = ServiceCodeGenerator()
 
+

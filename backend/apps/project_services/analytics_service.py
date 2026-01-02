@@ -319,3 +319,4 @@ const SimpleLineChart = ({ data }) => {
 # Singleton
 analytics_service = AnalyticsService()
 
+
