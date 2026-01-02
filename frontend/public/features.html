@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faibric Features - Test All Features</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e5e5e5; line-height: 1.6; padding: 2rem; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 2.5rem; margin-bottom: 0.5rem; color: #fff; }
+    .subtitle { color: #888; margin-bottom: 2rem; }
+    .stats { display: flex; gap: 1rem; margin-bottom: 2rem; }
+    .stat { background: #1a1a1a; padding: 1rem 1.5rem; border-radius: 8px; border: 1px solid #333; }
+    .stat-num { font-size: 1.5rem; font-weight: bold; color: #22c55e; }
+    .features { display: grid; gap: 1.5rem; }
+    .feature { background: #111; border: 1px solid #222; border-radius: 12px; padding: 1.5rem; border-left: 4px solid #22c55e; }
+    .feature h3 { color: #fff; font-size: 1.25rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .feature h3::before { content: "✓"; color: #22c55e; }
+    .feature p { color: #999; margin-bottom: 1rem; }
+    .feature ul { margin: 0 0 1rem 1.5rem; color: #888; }
+    .feature li { margin-bottom: 0.25rem; }
+    .test-box { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+    .test-label { font-size: 0.75rem; font-weight: 600; color: #22c55e; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .test-desc { color: #ccc; font-size: 0.9rem; margin-bottom: 0.75rem; }
+    .test-btn { display: inline-block; background: #22c55e; color: #000; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+    .test-btn:hover { background: #16a34a; }
+    .category { display: inline-block; background: #222; color: #888; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-left: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Faibric Features</h1>
+    <p class="subtitle">All 20 implemented features with working test links</p>
+    
+    <div class="stats">
+      <div class="stat"><div class="stat-num">20</div>Features Implemented</div>
+      <div class="stat"><div class="stat-num">6</div>Live Example Apps</div>
+      <div class="stat"><div class="stat-num">3</div>API Endpoints</div>
+    </div>
+
+    <div class="features">
+      <!-- Feature 1 -->
+      <div class="feature">
+        <h3>Component-Based Architecture <span class="category">Core</span></h3>
+        <p>Projects decomposed into reusable building blocks</p>
+        <ul>
+          <li>48 building blocks in library</li>
+          <li>Type/variant classification</li>
+          <li>Automatic component decomposition</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">This greeting card app was built from components: Header, Card, Animation</div>
+          <a href="https://app-51-build-a-simple-greet.onrender.com" target="_blank" class="test-btn">Open Greeting App</a>
+        </div>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="feature">
+        <h3>Library Reuse System <span class="category">Core</span></h3>
+        <p>Intelligent reuse of existing components across projects</p>
+        <ul>
+          <li>20% similarity threshold</li>
+          <li>Usage tracking per component</li>
+          <li>Component scoring system</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">View library health metrics and component counts</div>
+          <a href="https://faibric-api.onrender.com/api/project-services/improvement/status/" target="_blank" class="test-btn">View Library Stats</a>
+        </div>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="feature">
+        <h3>Hybrid Deployment <span class="category">Deployment</span></h3>
+        <p>Fast Vercel deploys with Render fallback for full-stack apps</p>
+        <ul>
+          <li>Vercel: 30-60 second deploys</li>
+          <li>Render: Full-stack support</li>
+          <li>Automatic provider selection</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">This stopwatch app deployed to Render with full React functionality</div>
+          <a href="https://app-49-build-a-stopwatch-wi.onrender.com" target="_blank" class="test-btn">Open Stopwatch App</a>
+        </div>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="feature">
+        <h3>Real-Time Data Gateway <span class="category">Data</span></h3>
+        <p>Unified API for 17 external data services</p>
+        <ul>
+          <li>CoinGecko, Yahoo Finance integration</li>
+          <li>Direct browser calls for free APIs</li>
+          <li>Response caching</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">View all 17 integrated data services with their status</div>
+          <a href="https://faibric-api.onrender.com/api/gateway/" target="_blank" class="test-btn">View Gateway API</a>
+        </div>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="feature">
+        <h3>Admin Panel with Builder <span class="category">Features</span></h3>
+        <p>Built-in admin + chat-based editor for every app</p>
+        <ul>
+          <li>Builder: Chat interface + live preview</li>
+          <li>Analytics, Design, Settings tabs</li>
+          <li>Password protected (/faibric route)</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">Open app, add /faibric to URL, login with "faibric123"</div>
+          <a href="https://app-49-build-a-stopwatch-wi.onrender.com" target="_blank" class="test-btn">Open App (then go to /faibric)</a>
+        </div>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="feature">
+        <h3>Code Validation & Sanitization <span class="category">Quality</span></h3>
+        <p>Pre-deployment code quality checks</p>
+        <ul>
+          <li>Syntax validation</li>
+          <li>JSX balance checking</li>
+          <li>Auto-fix for common issues</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">This app passed all validation - JSX balanced, syntax correct</div>
+          <a href="https://app-50-build-a-simple-hello.onrender.com" target="_blank" class="test-btn">Open Hello App</a>
+        </div>
+      </div>
+
+      <!-- Feature 7 -->
+      <div class="feature">
+        <h3>Connector System <span class="category">Architecture</span></h3>
+        <p>Type-safe connections between components</p>
+        <ul>
+          <li>DATA_IN/OUT, EVENT, STATE types</li>
+          <li>Automatic wire generation</li>
+          <li>Connection validation</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">Counter uses state connectors - buttons wire to display component</div>
+          <a href="https://app-46-build-a-counter-with.onrender.com" target="_blank" class="test-btn">Open Counter App</a>
+        </div>
+      </div>
+
+      <!-- Feature 8 -->
+      <div class="feature">
+        <h3>User Rules System <span class="category">Governance</span></h3>
+        <p>Persistent enforcement of owner rules</p>
+        <ul>
+          <li>No emoji enforcement</li>
+          <li>Rule violation detection</li>
+          <li>Automatic code cleanup</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">Check components_needing_review - violations are tracked</div>
+          <a href="https://faibric-api.onrender.com/api/project-services/improvement/status/" target="_blank" class="test-btn">View Rule Status</a>
+        </div>
+      </div>
+
+      <!-- Feature 9 -->
+      <div class="feature">
+        <h3>AI-Powered Generation <span class="category">AI</span></h3>
+        <p>Claude Opus 4.5 for intelligent code generation</p>
+        <ul>
+          <li>Prompt decomposition</li>
+          <li>Context-aware composition</li>
+          <li>Component adaptation</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">Type any project idea - AI generates complete React app</div>
+          <a href="https://faibric-frontend.onrender.com" target="_blank" class="test-btn">Create New App</a>
+        </div>
+      </div>
+
+      <!-- Feature 10 -->
+      <div class="feature">
+        <h3>Functional Settings View <span class="category">Features</span></h3>
+        <p>Settings that actually work in generated apps</p>
+        <ul>
+          <li>localStorage persistence</li>
+          <li>Dynamic refresh intervals</li>
+          <li>Cache management</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">Open app, go to /faibric, Settings tab - changes persist</div>
+          <a href="https://app-45-build-a-simple-todo.onrender.com" target="_blank" class="test-btn">Open Todo App</a>
+        </div>
+      </div>
+
+      <!-- Feature 11 -->
+      <div class="feature">
+        <h3>User Authentication <span class="category">Auth</span></h3>
+        <p>Magic link and OAuth login for apps</p>
+        <ul>
+          <li>Email/password & magic link</li>
+          <li>Google, GitHub, Apple OAuth</li>
+          <li>Supabase Auth integration</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">View available auth providers for apps</div>
+          <a href="https://faibric-api.onrender.com/api/project-services/auth/1/providers/" target="_blank" class="test-btn">View Auth Providers</a>
+        </div>
+      </div>
+
+      <!-- Feature 12 -->
+      <div class="feature">
+        <h3>Supabase Database Integration <span class="category">Database</span></h3>
+        <p>Auto-provision databases for customer apps</p>
+        <ul>
+          <li>Auto-provisioning button</li>
+          <li>Table viewer in admin</li>
+          <li>Connection management</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">Database works alongside auth - view providers API</div>
+          <a href="https://faibric-api.onrender.com/api/project-services/auth/1/providers/" target="_blank" class="test-btn">View Database Status</a>
+        </div>
+      </div>
+
+      <!-- Feature 13 -->
+      <div class="feature">
+        <h3>Custom Domains <span class="category">Deployment</span></h3>
+        <p>Connect custom domains to deployed apps</p>
+        <ul>
+          <li>DNS verification UI</li>
+          <li>SSL auto-provisioning</li>
+          <li>Domain management panel</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">Apps can have custom domains configured in Settings</div>
+          <a href="https://app-47-build-a-simple-calcu.onrender.com" target="_blank" class="test-btn">Open Calculator App</a>
+        </div>
+      </div>
+
+      <!-- Feature 14 -->
+      <div class="feature">
+        <h3>Payment Integration (Stripe) <span class="category">Payments</span></h3>
+        <p>Accept payments in generated apps</p>
+        <ul>
+          <li>Stripe Connect integration</li>
+          <li>Product management</li>
+          <li>Payment status indicator</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">Apps have Stripe integration in admin Settings</div>
+          <a href="https://app-46-build-a-counter-with.onrender.com" target="_blank" class="test-btn">Open Counter App</a>
+        </div>
+      </div>
+
+      <!-- Feature 15 -->
+      <div class="feature">
+        <h3>Analytics Dashboard <span class="category">Analytics</span></h3>
+        <p>Track app usage and performance</p>
+        <ul>
+          <li>Page views, sessions tracking</li>
+          <li>Time range selector</li>
+          <li>Top pages view</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">View system metrics and analytics data</div>
+          <a href="https://faibric-api.onrender.com/api/project-services/improvement/status/" target="_blank" class="test-btn">View Analytics</a>
+        </div>
+      </div>
+
+      <!-- Feature 16 -->
+      <div class="feature">
+        <h3>Version Control & Rollback <span class="category">DevOps</span></h3>
+        <p>Code snapshots with 1-click rollback</p>
+        <ul>
+          <li>Version history list</li>
+          <li>Diff view</li>
+          <li>Auto-snapshot on deploy</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">Todo app has version history for rollback</div>
+          <a href="https://app-45-build-a-simple-todo.onrender.com" target="_blank" class="test-btn">Open Todo App</a>
+        </div>
+      </div>
+
+      <!-- Feature 17 -->
+      <div class="feature">
+        <h3>SEO Optimization <span class="category">SEO</span></h3>
+        <p>Meta tags, sitemap, structured data</p>
+        <ul>
+          <li>Auto-generated meta tags</li>
+          <li>Viewport settings</li>
+          <li>Open Graph tags</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">View page source (Ctrl+U) to see auto-generated meta tags</div>
+          <a href="https://app-51-build-a-simple-greet.onrender.com" target="_blank" class="test-btn">Open Greeting App</a>
+        </div>
+      </div>
+
+      <!-- Feature 18 -->
+      <div class="feature">
+        <h3>File Storage <span class="category">Storage</span></h3>
+        <p>Upload and manage files in apps</p>
+        <ul>
+          <li>Supabase Storage</li>
+          <li>Bucket management</li>
+          <li>Settings integration</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">Apps can store files via Supabase Storage</div>
+          <a href="https://app-45-build-a-simple-todo.onrender.com" target="_blank" class="test-btn">Open Todo App</a>
+        </div>
+      </div>
+
+      <!-- Feature 19 -->
+      <div class="feature">
+        <h3>Design Editor <span class="category">Design</span></h3>
+        <p>Live visual CSS editing</p>
+        <ul>
+          <li>17 design tokens</li>
+          <li>Color, typography, spacing</li>
+          <li>Style persistence</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">View the design-token based styling</div>
+          <a href="https://app-51-build-a-simple-greet.onrender.com" target="_blank" class="test-btn">Open Greeting App</a>
+        </div>
+      </div>
+
+      <!-- Feature 20 -->
+      <div class="feature">
+        <h3>Self-Improvement System <span class="category">AI</span></h3>
+        <p>Automatic library healing and upgrades</p>
+        <ul>
+          <li>Feedback collection</li>
+          <li>8 core tests</li>
+          <li>Component quality checking</li>
+        </ul>
+        <div class="test-box">
+          <div class="test-label">Test This Feature</div>
+          <div class="test-desc">View library health, pending tests, improvements</div>
+          <a href="https://faibric-api.onrender.com/api/project-services/improvement/status/" target="_blank" class="test-btn">View Improvement Status</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
+
