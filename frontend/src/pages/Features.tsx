@@ -158,7 +158,7 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Industry templates',
       'Component adaptation',
     ],
-    testUrl: 'https://faibric.vercel.app/create',
+    testUrl: 'https://faibric-frontend.onrender.com/create',
     testInstructions: 'Type any project idea - AI generates complete React app with components',
   },
   {
