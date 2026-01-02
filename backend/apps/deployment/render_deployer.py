@@ -485,11 +485,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             return code
         
         # Find the App function/component and rename it
-        # Pattern: function App, const App =, export default function App
+        # Pattern: function App, const App =, const App: Type =, export default function App
+        # NOTE: Must handle TypeScript type annotations like "const App: React.FC = () =>"
         app_patterns = [
             (r'export\s+default\s+function\s+App', 'function _OriginalApp'),
             (r'function\s+App\s*\(', 'function _OriginalApp('),
-            (r'const\s+App\s*=', 'const _OriginalApp ='),
+            (r'const\s+App:\s*[^=]+\s*=', 'const _OriginalApp: React.FC = '),  # TypeScript typed: const App: React.FC = 
+            (r'const\s+App\s*=', 'const _OriginalApp ='),  # Plain: const App =
         ]
         
         renamed = False
