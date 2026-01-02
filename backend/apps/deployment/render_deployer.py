@@ -654,7 +654,16 @@ export default App;
             "serviceDetails": {
                 "buildCommand": "npm install && npm run build",
                 "publishPath": "dist",
-                "pullRequestPreviewsEnabled": "no"
+                "pullRequestPreviewsEnabled": "no",
+                # SPA routing: rewrite all routes to index.html
+                # This enables /faibric admin panel and other client-side routes
+                "routes": [
+                    {
+                        "type": "rewrite",
+                        "source": "/*",
+                        "destination": "/index.html"
+                    }
+                ]
             }
         }
         
