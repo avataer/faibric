@@ -562,11 +562,26 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   }, []);
 '''
         
-        # Find function App and inject after opening brace
-        match = re.search(r'function App\s*\([^)]*\)\s*\{', code)
-        if match:
-            insert_pos = match.end()
-            code = code[:insert_pos] + admin_panel + code[insert_pos:]
+        # Find function App (supports multiple patterns)
+        # Pattern 1: function App() {
+        # Pattern 2: const App = () => {
+        # Pattern 3: export default function App() {
+        patterns = [
+            r'function App\s*\([^)]*\)\s*\{',
+            r'const App\s*=\s*\([^)]*\)\s*=>\s*\{',
+            r'const App\s*=\s*\(\)\s*=>\s*\{',
+            r'export default function App\s*\([^)]*\)\s*\{',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, code)
+            if match:
+                insert_pos = match.end()
+                code = code[:insert_pos] + admin_panel + code[insert_pos:]
+                print(f"[ADMIN] Injected admin panel using pattern: {pattern}")
+                break
+        else:
+            print(f"[ADMIN] WARNING: Could not find App function to inject admin panel")
         
         return code
     
