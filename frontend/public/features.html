@@ -103,56 +103,58 @@
 
     <!-- FEATURE 3: Hybrid Deployment -->
     <section id="f3" class="feature-section mb-12">
-      <h2 class="text-2xl font-bold mb-4 text-green-400">3. Hybrid Deployment</h2>
-      <p class="text-gray-400 mb-4">Vercel for static (fast), Render for full-stack</p>
+      <h2 class="text-2xl font-bold mb-4 text-green-400">3. Render Deployment</h2>
+      <p class="text-gray-400 mb-4">All apps deployed to Render (static sites load instantly, API may take ~30s to wake)</p>
       <div class="bg-gray-800 rounded-xl p-6">
-        <div id="deploy-status" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div class="bg-gray-900 p-4 rounded-lg">
+        <button onclick="wakeAllApps()" class="mb-4 px-4 py-2 bg-blue-600 rounded font-semibold hover:bg-blue-700">Wake All Apps</button>
+        <span id="wake-status" class="ml-4 text-gray-400"></span>
+        <div id="deploy-status" class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+          <div class="bg-gray-900 p-4 rounded-lg" id="app-stopwatch">
             <div class="flex items-center gap-2 mb-2">
-              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <div class="w-3 h-3 bg-gray-500 rounded-full" id="status-stopwatch"></div>
               <span class="font-semibold">Stopwatch</span>
             </div>
-            <div class="text-xs text-gray-500">Render Static</div>
+            <div class="text-xs text-gray-500">Static Site</div>
             <a href="https://app-49-build-a-stopwatch-wi.onrender.com" target="_blank" class="text-blue-400 text-xs hover:underline">Open →</a>
           </div>
-          <div class="bg-gray-900 p-4 rounded-lg">
+          <div class="bg-gray-900 p-4 rounded-lg" id="app-calculator">
             <div class="flex items-center gap-2 mb-2">
-              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <div class="w-3 h-3 bg-gray-500 rounded-full" id="status-calculator"></div>
               <span class="font-semibold">Calculator</span>
             </div>
-            <div class="text-xs text-gray-500">Render Static</div>
+            <div class="text-xs text-gray-500">Static Site</div>
             <a href="https://app-47-build-a-simple-calcu.onrender.com" target="_blank" class="text-blue-400 text-xs hover:underline">Open →</a>
           </div>
-          <div class="bg-gray-900 p-4 rounded-lg">
+          <div class="bg-gray-900 p-4 rounded-lg" id="app-todo">
             <div class="flex items-center gap-2 mb-2">
-              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <div class="w-3 h-3 bg-gray-500 rounded-full" id="status-todo"></div>
               <span class="font-semibold">Todo List</span>
             </div>
-            <div class="text-xs text-gray-500">Render Static</div>
+            <div class="text-xs text-gray-500">Static Site</div>
             <a href="https://app-45-build-a-simple-todo.onrender.com" target="_blank" class="text-blue-400 text-xs hover:underline">Open →</a>
           </div>
-          <div class="bg-gray-900 p-4 rounded-lg">
+          <div class="bg-gray-900 p-4 rounded-lg" id="app-counter">
             <div class="flex items-center gap-2 mb-2">
-              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <div class="w-3 h-3 bg-gray-500 rounded-full" id="status-counter"></div>
               <span class="font-semibold">Counter</span>
             </div>
-            <div class="text-xs text-gray-500">Render Static</div>
+            <div class="text-xs text-gray-500">Static Site</div>
             <a href="https://app-46-build-a-counter-with.onrender.com" target="_blank" class="text-blue-400 text-xs hover:underline">Open →</a>
           </div>
-          <div class="bg-gray-900 p-4 rounded-lg">
+          <div class="bg-gray-900 p-4 rounded-lg" id="app-hello">
             <div class="flex items-center gap-2 mb-2">
-              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <div class="w-3 h-3 bg-gray-500 rounded-full" id="status-hello"></div>
               <span class="font-semibold">Hello World</span>
             </div>
-            <div class="text-xs text-gray-500">Render Static</div>
+            <div class="text-xs text-gray-500">Static Site</div>
             <a href="https://app-50-build-a-simple-hello.onrender.com" target="_blank" class="text-blue-400 text-xs hover:underline">Open →</a>
           </div>
-          <div class="bg-gray-900 p-4 rounded-lg">
+          <div class="bg-gray-900 p-4 rounded-lg" id="app-api">
             <div class="flex items-center gap-2 mb-2">
-              <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              <div class="w-3 h-3 bg-gray-500 rounded-full" id="status-api"></div>
               <span class="font-semibold">API Backend</span>
             </div>
-            <div class="text-xs text-gray-500">Render Web Service</div>
+            <div class="text-xs text-gray-500">Web Service</div>
             <a href="https://faibric-api.onrender.com/api/health/" target="_blank" class="text-blue-400 text-xs hover:underline">Check →</a>
           </div>
         </div>
@@ -735,6 +737,41 @@
     }
     loadCrypto();
     setInterval(loadCrypto, 30000);
+
+    // Wake all apps
+    const appUrls = {
+      stopwatch: 'https://app-49-build-a-stopwatch-wi.onrender.com',
+      calculator: 'https://app-47-build-a-simple-calcu.onrender.com',
+      todo: 'https://app-45-build-a-simple-todo.onrender.com',
+      counter: 'https://app-46-build-a-counter-with.onrender.com',
+      hello: 'https://app-50-build-a-simple-hello.onrender.com',
+      api: 'https://faibric-api.onrender.com/api/health/'
+    };
+
+    async function checkApp(name, url) {
+      const statusEl = document.getElementById('status-' + name);
+      statusEl.className = 'w-3 h-3 bg-yellow-500 rounded-full animate-pulse';
+      try {
+        const r = await fetch(url, { mode: 'no-cors' });
+        statusEl.className = 'w-3 h-3 bg-green-500 rounded-full';
+        return true;
+      } catch(e) {
+        statusEl.className = 'w-3 h-3 bg-red-500 rounded-full';
+        return false;
+      }
+    }
+
+    async function wakeAllApps() {
+      document.getElementById('wake-status').textContent = 'Waking apps...';
+      const results = await Promise.all(
+        Object.entries(appUrls).map(([name, url]) => checkApp(name, url))
+      );
+      const ok = results.filter(r => r).length;
+      document.getElementById('wake-status').textContent = `${ok}/${results.length} apps responding`;
+    }
+
+    // Auto-check on load
+    wakeAllApps();
 
     // Admin tabs
     document.querySelectorAll('.admin-tab').forEach(btn => {
