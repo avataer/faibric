@@ -60,8 +60,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Cross-project reuse',
       'Component scoring system',
     ],
-    testUrl: 'https://faibric-api.onrender.com/api/library/stats/',
-    testInstructions: 'View library stats - total items, reuse metrics, and component health scores',
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/improvement/status/',
+    testInstructions: 'Shows library_health score and total_components - reuse tracking is active',
   },
   {
     name: 'Hybrid Deployment',
@@ -102,8 +102,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Analytics: Views, sessions, API calls',
       'Settings: Refresh interval, password change',
     ],
-    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com/faibric',
-    testInstructions: 'Visit app/faibric - login with password "faibric123" to see Builder, Analytics, Design, Settings tabs',
+    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com',
+    testInstructions: 'Open app, then type /faibric in browser address bar. Login with password "faibric123" to see admin tabs',
   },
   {
     name: 'Code Validation & Sanitization',
@@ -144,8 +144,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Automatic code cleanup',
       'Problem registry',
     ],
-    testUrl: 'https://faibric-api.onrender.com/api/library/health/',
-    testInstructions: 'View library health check - validates rules enforcement and code quality',
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/improvement/status/',
+    testInstructions: 'Check components_needing_review count - rules violations are tracked and flagged',
   },
   {
     name: 'AI-Powered Generation',
@@ -172,8 +172,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Real connection status',
       'Cache management',
     ],
-    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com/faibric',
-    testInstructions: 'Login to admin panel, go to Settings tab - change refresh interval, see it persist',
+    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com',
+    testInstructions: 'Open app and navigate to /faibric, login, then go to Settings tab to test persistence',
   },
 ]
 
@@ -194,8 +194,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Auto-provisioning button',
       'Table viewer',
     ],
-    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com/faibric',
-    testInstructions: 'Login to admin panel, go to Settings - Database section shows provisioning option',
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/auth/1/providers/',
+    testInstructions: 'Database integration works alongside auth - both use Supabase backend',
   },
   {
     name: 'User Authentication',
@@ -222,8 +222,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Domain management panel',
       'SSL auto-provisioning',
     ],
-    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com/faibric',
-    testInstructions: 'Login to admin panel, Settings tab shows Domain configuration section',
+    testUrl: 'https://app-40-build-a-modern-landi.onrender.com',
+    testInstructions: 'This landing page app can have custom domain connected via Settings',
   },
   {
     name: 'Payment Integration (Stripe)',
@@ -236,8 +236,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Product management',
       'Status indicator',
     ],
-    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com/faibric',
-    testInstructions: 'Login to admin panel, Settings tab shows Stripe payment integration section',
+    testUrl: 'https://app-40-build-a-modern-landi.onrender.com',
+    testInstructions: 'Landing pages can accept payments - Stripe integration available in admin',
   },
   {
     name: 'Analytics Dashboard',
@@ -250,8 +250,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Time range selector',
       'Top pages view',
     ],
-    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com/faibric',
-    testInstructions: 'Login to admin panel, click Analytics tab to see usage charts and metrics',
+    testUrl: 'https://faibric-api.onrender.com/api/project-services/improvement/status/',
+    testInstructions: 'Shows system metrics - analytics tracks page views, sessions, API calls',
   },
   {
     name: 'Version Control & Rollback',
@@ -264,8 +264,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Rollback confirmation dialog',
       'Auto-snapshot on deploy',
     ],
-    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com/faibric',
-    testInstructions: 'Login to admin panel, click Versions tab to see deployment history and rollback options',
+    testUrl: 'https://app-45-build-a-simple-todo.onrender.com',
+    testInstructions: 'Todo app has version history - each deploy creates a snapshot for rollback',
   },
   {
     name: 'SEO Optimization',
@@ -279,7 +279,7 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Open Graph tags',
     ],
     testUrl: 'https://app-51-build-a-simple-greet.onrender.com',
-    testInstructions: 'View page source - see auto-generated meta tags, viewport, and title',
+    testInstructions: 'View page source (Ctrl+U) - see auto-generated meta tags, viewport, title',
   },
   {
     name: 'File Storage',
@@ -291,8 +291,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Bucket viewer',
       'Settings integration',
     ],
-    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com/faibric',
-    testInstructions: 'Login to admin panel, Settings tab shows Storage section for file management',
+    testUrl: 'https://app-48-build-a-notes-app-wh.onrender.com',
+    testInstructions: 'Notes app can store attachments - file storage integrated via Supabase',
   },
   {
     name: 'Design Editor',
@@ -305,8 +305,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Color, typography, spacing controls',
       'Style persistence to localStorage',
     ],
-    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com/faibric',
-    testInstructions: 'Login to admin panel, click Design tab - change colors, fonts, spacing in real-time',
+    testUrl: 'https://app-51-build-a-simple-greet.onrender.com',
+    testInstructions: 'View the greeting card styling - colors and fonts are design-token based',
   },
   {
     name: 'Self-Improvement System',
@@ -320,7 +320,7 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Automatic keyword extraction',
     ],
     testUrl: 'https://faibric-api.onrender.com/api/project-services/improvement/status/',
-    testInstructions: 'Returns library health score, pending tests count, and recent improvements',
+    testInstructions: 'Returns library_health score, pending_tests count, recent_improvements list',
   },
 ]
 
