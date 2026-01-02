@@ -222,8 +222,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Domain management panel',
       'SSL auto-provisioning',
     ],
-    testUrl: 'https://app-40-build-a-modern-landi.onrender.com',
-    testInstructions: 'This landing page app can have custom domain connected via Settings',
+    testUrl: 'https://app-47-build-a-simple-calcu.onrender.com',
+    testInstructions: 'This calculator app can have custom domain connected via Settings',
   },
   {
     name: 'Payment Integration (Stripe)',
@@ -236,8 +236,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Product management',
       'Status indicator',
     ],
-    testUrl: 'https://app-40-build-a-modern-landi.onrender.com',
-    testInstructions: 'Landing pages can accept payments - Stripe integration available in admin',
+    testUrl: 'https://app-46-build-a-counter-with.onrender.com',
+    testInstructions: 'Apps can accept payments - Stripe integration available in admin',
   },
   {
     name: 'Analytics Dashboard',
@@ -291,8 +291,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Bucket viewer',
       'Settings integration',
     ],
-    testUrl: 'https://app-48-build-a-notes-app-wh.onrender.com',
-    testInstructions: 'Notes app can store attachments - file storage integrated via Supabase',
+    testUrl: 'https://app-45-build-a-simple-todo.onrender.com',
+    testInstructions: 'Todo app can store attachments - file storage integrated via Supabase',
   },
   {
     name: 'Design Editor',
