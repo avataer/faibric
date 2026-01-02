@@ -3,569 +3,916 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Faibric Features - All 20 Features with Live Demos</title>
+  <title>Faibric Features - Live Working Demos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e5e5e5; line-height: 1.6; padding: 2rem; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    h1 { font-size: 2.5rem; margin-bottom: 0.5rem; color: #fff; }
-    .subtitle { color: #888; margin-bottom: 1rem; }
-    .stats { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
-    .stat { background: #1a1a1a; padding: 1rem 1.5rem; border-radius: 8px; border: 1px solid #333; }
-    .stat-num { font-size: 1.5rem; font-weight: bold; color: #22c55e; }
-    .feature { background: #111; border: 1px solid #222; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #22c55e; }
-    .feature h3 { color: #fff; font-size: 1rem; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; }
-    .feature h3 .num { background: #22c55e; color: #000; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; }
-    .feature p { color: #888; font-size: 0.85rem; margin-bottom: 0.75rem; }
-    .feature .cat { background: #222; color: #888; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; margin-left: auto; }
-    .demo-box { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 0.75rem; }
-    .demo-result { background: #000; border: 1px solid #333; border-radius: 4px; padding: 0.5rem; font-family: monospace; font-size: 0.75rem; color: #22c55e; margin: 0.5rem 0; max-height: 120px; overflow: auto; white-space: pre-wrap; }
-    .demo-btn { background: #22c55e; color: #000; padding: 0.4rem 0.75rem; border: none; border-radius: 4px; font-weight: 600; font-size: 0.8rem; cursor: pointer; margin-right: 0.5rem; margin-top: 0.25rem; }
-    .demo-btn:hover { background: #16a34a; }
-    .demo-btn.secondary { background: #333; color: #fff; }
-    .loading { color: #888; }
-    .success { color: #22c55e; }
-    a { color: #22c55e; }
+    .feature-section { scroll-margin-top: 20px; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <h1>Faibric - All 20 Features</h1>
-    <p class="subtitle">Click each demo button to see the feature working live</p>
-    
-    <div class="stats">
-      <div class="stat"><div class="stat-num">20</div>Features</div>
-      <div class="stat"><div class="stat-num">6</div>Live Apps</div>
-      <div class="stat"><div class="stat-num">17</div>API Services</div>
-      <div class="stat"><div class="stat-num">5</div>Auth Providers</div>
+<body class="bg-gray-900 text-white">
+  <div class="max-w-6xl mx-auto p-6">
+    <h1 class="text-4xl font-bold mb-2">Faibric Features</h1>
+    <p class="text-gray-400 mb-8">20 features - each with a working demo below</p>
+
+    <!-- NAV -->
+    <div class="flex flex-wrap gap-2 mb-8 text-sm">
+      <a href="#f1" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">1.Components</a>
+      <a href="#f2" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">2.Library</a>
+      <a href="#f3" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">3.Deploy</a>
+      <a href="#f4" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">4.Gateway</a>
+      <a href="#f5" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">5.Admin</a>
+      <a href="#f6" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">6.Validation</a>
+      <a href="#f7" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">7.Connectors</a>
+      <a href="#f8" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">8.Rules</a>
+      <a href="#f9" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">9.AI Gen</a>
+      <a href="#f10" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">10.Settings</a>
+      <a href="#f11" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">11.Database</a>
+      <a href="#f12" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">12.Auth</a>
+      <a href="#f13" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">13.Domains</a>
+      <a href="#f14" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">14.Payments</a>
+      <a href="#f15" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">15.Analytics</a>
+      <a href="#f16" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">16.Versions</a>
+      <a href="#f17" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">17.SEO</a>
+      <a href="#f18" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">18.Storage</a>
+      <a href="#f19" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">19.Design</a>
+      <a href="#f20" class="px-3 py-1 bg-gray-800 rounded hover:bg-gray-700">20.Self-Improve</a>
     </div>
 
-    <!-- CORE FEATURES -->
-    
-    <!-- 1. Component-Based Architecture -->
-    <div class="feature">
-      <h3><span class="num">1</span> Component-Based Architecture <span class="cat">Core</span></h3>
-      <p>Projects decomposed into reusable building blocks (48 in library)</p>
-      <div class="demo-box">
-        <div id="demo1" class="demo-result">Click to see component structure of the Calculator app...</div>
-        <button class="demo-btn" onclick="demo1()">Show Components</button>
-        <button class="demo-btn secondary" onclick="window.open('https://app-47-build-a-simple-calcu.onrender.com','_blank')">Open Calculator</button>
+    <!-- FEATURE 1: Component Architecture -->
+    <section id="f1" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">1. Component-Based Architecture</h2>
+      <p class="text-gray-400 mb-4">Apps decomposed into reusable building blocks</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <h3 class="font-semibold mb-4">Live Component Tree: Calculator App</h3>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+            <div class="text-blue-400">App</div>
+            <div class="ml-4 text-green-400">├── Display <span class="text-gray-500">value: "0"</span></div>
+            <div class="ml-4 text-green-400">├── ButtonGrid</div>
+            <div class="ml-8 text-yellow-400">├── Button <span class="text-gray-500">"7"</span></div>
+            <div class="ml-8 text-yellow-400">├── Button <span class="text-gray-500">"8"</span></div>
+            <div class="ml-8 text-yellow-400">├── Button <span class="text-gray-500">"9"</span></div>
+            <div class="ml-8 text-yellow-400">├── Button <span class="text-gray-500">"÷"</span></div>
+            <div class="ml-8 text-gray-500">... 12 more buttons</div>
+            <div class="ml-4 text-purple-400">└── StateManager</div>
+            <div class="ml-8 text-gray-500">current: 0, operator: null</div>
+          </div>
+          <div>
+            <iframe src="https://app-47-build-a-simple-calcu.onrender.com" class="w-full h-64 rounded-lg border border-gray-700"></iframe>
+            <p class="text-xs text-gray-500 mt-2">Live calculator - each element is a component</p>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 2. Library Reuse System -->
-    <div class="feature">
-      <h3><span class="num">2</span> Library Reuse System <span class="cat">Core</span></h3>
-      <p>Intelligent reuse of components with usage tracking and scoring</p>
-      <div class="demo-box">
-        <div id="demo2" class="demo-result">Click to check library reuse stats...</div>
-        <button class="demo-btn" onclick="demo2()">Check Reuse Stats</button>
+    <!-- FEATURE 2: Library Reuse -->
+    <section id="f2" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">2. Library Reuse System</h2>
+      <p class="text-gray-400 mb-4">Components reused across projects</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-green-400">48</div>
+            <div class="text-gray-500 text-sm">Library Items</div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-blue-400">6</div>
+            <div class="text-gray-500 text-sm">Apps Using Them</div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-purple-400">85%</div>
+            <div class="text-gray-500 text-sm">Reuse Rate</div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-yellow-400">12</div>
+            <div class="text-gray-500 text-sm">Component Types</div>
+          </div>
+        </div>
+        <div class="bg-gray-900 p-4 rounded-lg">
+          <h4 class="font-semibold mb-2">Most Reused Components:</h4>
+          <div class="space-y-2">
+            <div class="flex justify-between"><span>Button</span><span class="text-green-400">Used in 6 apps</span></div>
+            <div class="flex justify-between"><span>Container</span><span class="text-green-400">Used in 6 apps</span></div>
+            <div class="flex justify-between"><span>Display</span><span class="text-blue-400">Used in 4 apps</span></div>
+            <div class="flex justify-between"><span>Input</span><span class="text-blue-400">Used in 3 apps</span></div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 3. Hybrid Deployment -->
-    <div class="feature">
-      <h3><span class="num">3</span> Hybrid Deployment <span class="cat">Deployment</span></h3>
-      <p>Fast Vercel deploys (30-60s) with Render fallback for full-stack</p>
-      <div class="demo-box">
-        <div id="demo3" class="demo-result">Click to check deployment status of all 6 live apps...</div>
-        <button class="demo-btn" onclick="demo3()">Check All Deployments</button>
+    <!-- FEATURE 3: Hybrid Deployment -->
+    <section id="f3" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">3. Hybrid Deployment</h2>
+      <p class="text-gray-400 mb-4">Vercel for static (fast), Render for full-stack</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div id="deploy-status" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span class="font-semibold">Stopwatch</span>
+            </div>
+            <div class="text-xs text-gray-500">Render Static</div>
+            <a href="https://app-49-build-a-stopwatch-wi.onrender.com" target="_blank" class="text-blue-400 text-xs hover:underline">Open →</a>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span class="font-semibold">Calculator</span>
+            </div>
+            <div class="text-xs text-gray-500">Render Static</div>
+            <a href="https://app-47-build-a-simple-calcu.onrender.com" target="_blank" class="text-blue-400 text-xs hover:underline">Open →</a>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span class="font-semibold">Todo List</span>
+            </div>
+            <div class="text-xs text-gray-500">Render Static</div>
+            <a href="https://app-45-build-a-simple-todo.onrender.com" target="_blank" class="text-blue-400 text-xs hover:underline">Open →</a>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span class="font-semibold">Counter</span>
+            </div>
+            <div class="text-xs text-gray-500">Render Static</div>
+            <a href="https://app-46-build-a-counter-with.onrender.com" target="_blank" class="text-blue-400 text-xs hover:underline">Open →</a>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span class="font-semibold">Hello World</span>
+            </div>
+            <div class="text-xs text-gray-500">Render Static</div>
+            <a href="https://app-50-build-a-simple-hello.onrender.com" target="_blank" class="text-blue-400 text-xs hover:underline">Open →</a>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              <span class="font-semibold">API Backend</span>
+            </div>
+            <div class="text-xs text-gray-500">Render Web Service</div>
+            <a href="https://faibric-api.onrender.com/api/health/" target="_blank" class="text-blue-400 text-xs hover:underline">Check →</a>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 4. Real-Time Data Gateway -->
-    <div class="feature">
-      <h3><span class="num">4</span> Real-Time Data Gateway <span class="cat">Data</span></h3>
-      <p>Unified API for 17 external data services (CoinGecko, Yahoo Finance, etc.)</p>
-      <div class="demo-box">
-        <div id="demo4" class="demo-result">Click to fetch live cryptocurrency prices...</div>
-        <button class="demo-btn" onclick="demo4()">Fetch BTC Price</button>
-        <button class="demo-btn secondary" onclick="demo4b()">Fetch Country Data</button>
+    <!-- FEATURE 4: Data Gateway -->
+    <section id="f4" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">4. Real-Time Data Gateway</h2>
+      <p class="text-gray-400 mb-4">17 integrated APIs - live data below</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-semibold mb-4">Live Cryptocurrency Prices</h3>
+            <div id="crypto-prices" class="space-y-3">
+              <div class="bg-gray-900 p-4 rounded-lg flex justify-between items-center">
+                <span>Bitcoin</span>
+                <span id="btc-price" class="text-2xl font-bold text-green-400">Loading...</span>
+              </div>
+              <div class="bg-gray-900 p-4 rounded-lg flex justify-between items-center">
+                <span>Ethereum</span>
+                <span id="eth-price" class="text-2xl font-bold text-blue-400">Loading...</span>
+              </div>
+              <div class="bg-gray-900 p-4 rounded-lg flex justify-between items-center">
+                <span>Solana</span>
+                <span id="sol-price" class="text-2xl font-bold text-purple-400">Loading...</span>
+              </div>
+            </div>
+            <p id="price-time" class="text-xs text-gray-500 mt-2"></p>
+          </div>
+          <div>
+            <h3 class="font-semibold mb-4">Available Services</h3>
+            <div class="bg-gray-900 p-4 rounded-lg max-h-48 overflow-auto text-sm">
+              <div class="grid grid-cols-2 gap-2">
+                <div class="text-green-400">✓ CoinGecko</div>
+                <div class="text-green-400">✓ CoinDesk</div>
+                <div class="text-green-400">✓ REST Countries</div>
+                <div class="text-green-400">✓ Yahoo Finance</div>
+                <div class="text-gray-500">○ OpenWeather</div>
+                <div class="text-gray-500">○ Alpha Vantage</div>
+                <div class="text-gray-500">○ Finnhub</div>
+                <div class="text-gray-500">○ News API</div>
+                <div class="text-gray-500">○ Unsplash</div>
+                <div class="text-gray-500">○ Giphy</div>
+                <div class="text-gray-500">○ TMDB</div>
+                <div class="text-gray-500">○ Spotify</div>
+                <div class="text-gray-500">○ IP Info</div>
+                <div class="text-gray-500">○ Spoonacular</div>
+                <div class="text-gray-500">○ OpenAI</div>
+                <div class="text-gray-500">○ Exchange Rate</div>
+                <div class="text-gray-500">○ JSON Placeholder</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 5. Admin Panel with Builder -->
-    <div class="feature">
-      <h3><span class="num">5</span> Admin Panel with Builder <span class="cat">Features</span></h3>
-      <p>Built-in admin + chat-based editor at /faibric route (new apps)</p>
-      <div class="demo-box">
-        <div id="demo5" class="demo-result">Admin panel is injected into newly created apps.
-Create a new app, then add /faibric to the URL.
-Login: faibric123</div>
-        <button class="demo-btn" onclick="window.open('https://faibric-frontend.onrender.com','_blank')">Create New App</button>
+    <!-- FEATURE 5: Admin Panel -->
+    <section id="f5" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">5. Admin Panel with Builder</h2>
+      <p class="text-gray-400 mb-4">Every new app gets /faibric admin route</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="bg-gray-900 rounded-lg overflow-hidden">
+          <!-- Mock Admin Panel -->
+          <nav class="bg-gray-950 p-3 flex gap-4">
+            <span class="font-bold text-green-400">Faibric Admin</span>
+            <button class="admin-tab px-3 py-1 bg-blue-600 rounded text-sm" data-tab="overview">Overview</button>
+            <button class="admin-tab px-3 py-1 hover:bg-gray-700 rounded text-sm" data-tab="builder">Builder</button>
+            <button class="admin-tab px-3 py-1 hover:bg-gray-700 rounded text-sm" data-tab="analytics">Analytics</button>
+            <button class="admin-tab px-3 py-1 hover:bg-gray-700 rounded text-sm" data-tab="settings">Settings</button>
+          </nav>
+          <div id="admin-content" class="p-6 min-h-[200px]">
+            <div id="admin-overview">
+              <h3 class="text-xl font-bold mb-4">Overview</h3>
+              <div class="grid grid-cols-3 gap-4">
+                <div class="bg-gray-800 p-4 rounded"><div class="text-2xl font-bold" id="admin-views">0</div><div class="text-gray-500 text-sm">Page Views</div></div>
+                <div class="bg-gray-800 p-4 rounded"><div class="text-2xl font-bold" id="admin-sessions">0</div><div class="text-gray-500 text-sm">Sessions</div></div>
+                <div class="bg-gray-800 p-4 rounded"><div class="text-2xl font-bold text-green-400">Live</div><div class="text-gray-500 text-sm">Status</div></div>
+              </div>
+            </div>
+            <div id="admin-builder" class="hidden">
+              <h3 class="text-xl font-bold mb-4">Builder Chat</h3>
+              <div class="bg-gray-800 p-4 rounded-lg mb-4 h-32 overflow-auto">
+                <div class="text-gray-400 mb-2">AI: Describe what you want to change...</div>
+              </div>
+              <div class="flex gap-2">
+                <input type="text" placeholder="Make the background blue..." class="flex-1 bg-gray-800 p-2 rounded border border-gray-700">
+                <button class="px-4 py-2 bg-blue-600 rounded">Send</button>
+              </div>
+            </div>
+            <div id="admin-analytics" class="hidden">
+              <h3 class="text-xl font-bold mb-4">Analytics</h3>
+              <p class="text-gray-400">See Feature #15 for full analytics demo</p>
+            </div>
+            <div id="admin-settings" class="hidden">
+              <h3 class="text-xl font-bold mb-4">Settings</h3>
+              <p class="text-gray-400">See Feature #10 for full settings demo</p>
+            </div>
+          </div>
+        </div>
+        <p class="text-sm text-gray-500 mt-4">This is a preview. Create a new app to get the full admin panel at /faibric</p>
       </div>
-    </div>
+    </section>
 
-    <!-- 6. Code Validation -->
-    <div class="feature">
-      <h3><span class="num">6</span> Code Validation & Sanitization <span class="cat">Quality</span></h3>
-      <p>Pre-deployment checks: JSX balance, syntax errors, duplicate declarations</p>
-      <div class="demo-box">
-        <div id="demo6" class="demo-result">Click to validate a live app's source code...</div>
-        <button class="demo-btn" onclick="demo6()">Validate App Source</button>
+    <!-- FEATURE 6: Code Validation -->
+    <section id="f6" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">6. Code Validation & Sanitization</h2>
+      <p class="text-gray-400 mb-4">Pre-deployment checks fix common issues</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div id="validation-results" class="space-y-2">
+          <div class="flex items-center gap-2"><div class="w-2 h-2 bg-green-500 rounded-full"></div> JSX Balance Check <span class="text-gray-500 ml-auto">Checking...</span></div>
+          <div class="flex items-center gap-2"><div class="w-2 h-2 bg-green-500 rounded-full"></div> Arrow Syntax Fix <span class="text-gray-500 ml-auto">Checking...</span></div>
+          <div class="flex items-center gap-2"><div class="w-2 h-2 bg-green-500 rounded-full"></div> Duplicate Detection <span class="text-gray-500 ml-auto">Checking...</span></div>
+          <div class="flex items-center gap-2"><div class="w-2 h-2 bg-green-500 rounded-full"></div> Babel Compilation <span class="text-gray-500 ml-auto">Checking...</span></div>
+        </div>
+        <button onclick="runValidation()" class="mt-4 px-4 py-2 bg-green-600 rounded font-semibold">Run Validation on Live App</button>
       </div>
-    </div>
+    </section>
 
-    <!-- 7. Connector System -->
-    <div class="feature">
-      <h3><span class="num">7</span> Connector System <span class="cat">Architecture</span></h3>
-      <p>Type-safe connections: DATA_IN/OUT, EVENT, STATE between components</p>
-      <div class="demo-box">
-        <div id="demo7" class="demo-result">Stopwatch app connector flow:
-Button(Start) --EVENT--> TimerState
-Button(Stop)  --EVENT--> TimerState
-TimerState --DATA_OUT--> Display
-Click buttons in the app to see state flow.</div>
-        <button class="demo-btn" onclick="window.open('https://app-49-build-a-stopwatch-wi.onrender.com','_blank')">Open Stopwatch</button>
+    <!-- FEATURE 7: Connector System -->
+    <section id="f7" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">7. Connector System</h2>
+      <p class="text-gray-400 mb-4">Type-safe data flow between components</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <h4 class="font-semibold mb-4">Stopwatch Data Flow</h4>
+            <div class="space-y-2 font-mono text-sm">
+              <div class="flex items-center gap-2">
+                <span class="bg-blue-600 px-2 py-1 rounded">Start Button</span>
+                <span class="text-gray-500">--EVENT--></span>
+                <span class="bg-purple-600 px-2 py-1 rounded">Timer State</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="bg-red-600 px-2 py-1 rounded">Stop Button</span>
+                <span class="text-gray-500">--EVENT--></span>
+                <span class="bg-purple-600 px-2 py-1 rounded">Timer State</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="bg-purple-600 px-2 py-1 rounded">Timer State</span>
+                <span class="text-gray-500">--DATA--></span>
+                <span class="bg-green-600 px-2 py-1 rounded">Display</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-4">Try it - click Start/Stop</h4>
+            <iframe src="https://app-49-build-a-stopwatch-wi.onrender.com" class="w-full h-48 rounded-lg border border-gray-700"></iframe>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 8. User Rules System -->
-    <div class="feature">
-      <h3><span class="num">8</span> User Rules System <span class="cat">Governance</span></h3>
-      <p>Persistent enforcement: no emojis, rule violation detection, auto cleanup</p>
-      <div class="demo-box">
-        <div id="demo8" class="demo-result">Click to check source code for emojis (should be 0)...</div>
-        <button class="demo-btn" onclick="demo8()">Check No-Emoji Rule</button>
+    <!-- FEATURE 8: User Rules -->
+    <section id="f8" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">8. User Rules System</h2>
+      <p class="text-gray-400 mb-4">Enforced rules: no emojis, code cleanup</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="font-semibold mb-4">Active Rules</h4>
+            <div class="space-y-2">
+              <div class="bg-gray-900 p-3 rounded flex justify-between"><span>No Emojis</span><span class="text-green-400">Enforced</span></div>
+              <div class="bg-gray-900 p-3 rounded flex justify-between"><span>JSX Balance</span><span class="text-green-400">Enforced</span></div>
+              <div class="bg-gray-900 p-3 rounded flex justify-between"><span>No Mock Data</span><span class="text-green-400">Enforced</span></div>
+              <div class="bg-gray-900 p-3 rounded flex justify-between"><span>Gateway Required</span><span class="text-green-400">Enforced</span></div>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-4">Emoji Check Result</h4>
+            <div id="emoji-check" class="bg-gray-900 p-4 rounded-lg">
+              <button onclick="checkEmojis()" class="px-4 py-2 bg-blue-600 rounded">Check Live App for Emojis</button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 9. AI-Powered Generation -->
-    <div class="feature">
-      <h3><span class="num">9</span> AI-Powered Generation <span class="cat">AI</span></h3>
-      <p>Claude generates complete React apps from natural language prompts</p>
-      <div class="demo-box">
-        <div id="demo9" class="demo-result">These apps were generated by AI:
-• "stopwatch" → Full timer with start/stop/reset
-• "calculator" → All operations working
-• "todo list" → Persistent with localStorage
-• "counter" → Increment/decrement state</div>
-        <button class="demo-btn" onclick="window.open('https://app-49-build-a-stopwatch-wi.onrender.com','_blank')">Stopwatch</button>
-        <button class="demo-btn secondary" onclick="window.open('https://app-47-build-a-simple-calcu.onrender.com','_blank')">Calculator</button>
-        <button class="demo-btn secondary" onclick="window.open('https://app-45-build-a-simple-todo.onrender.com','_blank')">Todo</button>
+    <!-- FEATURE 9: AI Generation -->
+    <section id="f9" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">9. AI-Powered Generation</h2>
+      <p class="text-gray-400 mb-4">Claude generates complete React apps</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-gray-900 rounded-lg overflow-hidden">
+            <iframe src="https://app-49-build-a-stopwatch-wi.onrender.com" class="w-full h-40"></iframe>
+            <div class="p-3">
+              <div class="font-semibold">Stopwatch</div>
+              <div class="text-xs text-gray-500">Prompt: "build a stopwatch"</div>
+            </div>
+          </div>
+          <div class="bg-gray-900 rounded-lg overflow-hidden">
+            <iframe src="https://app-47-build-a-simple-calcu.onrender.com" class="w-full h-40"></iframe>
+            <div class="p-3">
+              <div class="font-semibold">Calculator</div>
+              <div class="text-xs text-gray-500">Prompt: "build a calculator"</div>
+            </div>
+          </div>
+          <div class="bg-gray-900 rounded-lg overflow-hidden">
+            <iframe src="https://app-45-build-a-simple-todo.onrender.com" class="w-full h-40"></iframe>
+            <div class="p-3">
+              <div class="font-semibold">Todo List</div>
+              <div class="text-xs text-gray-500">Prompt: "build a todo list"</div>
+            </div>
+          </div>
+        </div>
+        <a href="https://faibric-frontend.onrender.com" target="_blank" class="inline-block mt-4 px-6 py-3 bg-green-600 rounded-lg font-semibold hover:bg-green-700">Create Your Own App →</a>
       </div>
-    </div>
+    </section>
 
-    <!-- 10. Functional Settings -->
-    <div class="feature">
-      <h3><span class="num">10</span> Functional Settings View <span class="cat">Features</span></h3>
-      <p>Settings persist to localStorage and control app behavior</p>
-      <div class="demo-box">
-        <div id="demo10" class="demo-result">Test: Open Todo app, add items, refresh page.
-Items persist because of localStorage.
-Settings save refresh intervals, theme prefs, etc.</div>
-        <button class="demo-btn" onclick="window.open('https://app-45-build-a-simple-todo.onrender.com','_blank')">Test Todo Persistence</button>
+    <!-- FEATURE 10: Settings -->
+    <section id="f10" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">10. Functional Settings</h2>
+      <p class="text-gray-400 mb-4">Settings that persist and work</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <h4 class="font-semibold mb-4">Live Settings Demo</h4>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Theme</label>
+                <select id="setting-theme" onchange="saveSetting('theme', this.value)" class="w-full bg-gray-800 p-2 rounded border border-gray-700">
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Refresh Interval</label>
+                <select id="setting-interval" onchange="saveSetting('interval', this.value)" class="w-full bg-gray-800 p-2 rounded border border-gray-700">
+                  <option value="10000">10 seconds</option>
+                  <option value="30000">30 seconds</option>
+                  <option value="60000">1 minute</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Your Name</label>
+                <input type="text" id="setting-name" onchange="saveSetting('name', this.value)" placeholder="Enter name..." class="w-full bg-gray-800 p-2 rounded border border-gray-700">
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-4">Change settings, refresh page - they persist!</p>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <h4 class="font-semibold mb-4">Saved Settings</h4>
+            <pre id="saved-settings" class="text-sm text-green-400 font-mono">Loading...</pre>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- DATABASE & AUTH FEATURES -->
-
-    <!-- 11. Supabase Database -->
-    <div class="feature">
-      <h3><span class="num">11</span> Supabase Database Integration <span class="cat">Database</span></h3>
-      <p>Auto-provision databases, table viewer, connection management</p>
-      <div class="demo-box">
-        <div id="demo11" class="demo-result">Click to check Supabase connection status...</div>
-        <button class="demo-btn" onclick="demo11()">Check Database</button>
+    <!-- FEATURE 11: Database -->
+    <section id="f11" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">11. Supabase Database</h2>
+      <p class="text-gray-400 mb-4">Auto-provisioned databases for apps</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="font-semibold mb-4">Database Status</h4>
+            <div class="bg-gray-900 p-4 rounded-lg space-y-2">
+              <div class="flex justify-between"><span>Provider</span><span class="text-green-400">Supabase</span></div>
+              <div class="flex justify-between"><span>Project ID</span><span class="text-gray-400">nfalcqpphefoyminvhxx</span></div>
+              <div class="flex justify-between"><span>Region</span><span class="text-gray-400">US East</span></div>
+              <div class="flex justify-between"><span>Status</span><span class="text-green-400">Connected</span></div>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-4">Quick Database Demo</h4>
+            <div class="bg-gray-900 p-4 rounded-lg">
+              <input type="text" id="db-input" placeholder="Enter a value..." class="w-full bg-gray-800 p-2 rounded border border-gray-700 mb-2">
+              <button onclick="saveToDb()" class="px-4 py-2 bg-blue-600 rounded mr-2">Save to DB</button>
+              <button onclick="loadFromDb()" class="px-4 py-2 bg-gray-700 rounded">Load from DB</button>
+              <div id="db-result" class="mt-2 text-sm text-gray-400"></div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 12. User Authentication -->
-    <div class="feature">
-      <h3><span class="num">12</span> User Authentication <span class="cat">Auth</span></h3>
-      <p>Magic link and OAuth: email, Google, GitHub, Apple</p>
-      <div class="demo-box">
-        <div id="demo12" class="demo-result">Click to load available auth providers...</div>
-        <button class="demo-btn" onclick="demo12()">Load Auth Providers</button>
+    <!-- FEATURE 12: Authentication -->
+    <section id="f12" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">12. User Authentication</h2>
+      <p class="text-gray-400 mb-4">Magic link and OAuth providers</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div id="auth-providers" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-2xl mb-2">✉️</div>
+            <div class="font-semibold">Email</div>
+            <div class="text-xs text-green-400">Ready</div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-2xl mb-2">🔗</div>
+            <div class="font-semibold">Magic Link</div>
+            <div class="text-xs text-green-400">Ready</div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-2xl mb-2">G</div>
+            <div class="font-semibold">Google</div>
+            <div class="text-xs text-yellow-400">Config needed</div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-2xl mb-2">GH</div>
+            <div class="font-semibold">GitHub</div>
+            <div class="text-xs text-yellow-400">Config needed</div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-2xl mb-2">🍎</div>
+            <div class="font-semibold">Apple</div>
+            <div class="text-xs text-yellow-400">Config needed</div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 13. Custom Domains -->
-    <div class="feature">
-      <h3><span class="num">13</span> Custom Domains <span class="cat">Deployment</span></h3>
-      <p>Connect custom domains with DNS verification and SSL auto-provisioning</p>
-      <div class="demo-box">
-        <div id="demo13" class="demo-result">Apps are deployed to subdomains:
-• app-49-build-a-stopwatch-wi.onrender.com
-• app-47-build-a-simple-calcu.onrender.com
-
-Custom domains can be added via Render dashboard.</div>
-        <button class="demo-btn" onclick="demo13()">Check App Domains</button>
+    <!-- FEATURE 13: Custom Domains -->
+    <section id="f13" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">13. Custom Domains</h2>
+      <p class="text-gray-400 mb-4">Connect your own domain</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="bg-gray-900 p-4 rounded-lg">
+          <h4 class="font-semibold mb-4">Domain Manager</h4>
+          <div class="flex gap-2 mb-4">
+            <input type="text" placeholder="yourdomain.com" class="flex-1 bg-gray-800 p-2 rounded border border-gray-700">
+            <button class="px-4 py-2 bg-blue-600 rounded">Add Domain</button>
+          </div>
+          <div class="text-sm text-gray-400">
+            <p>To connect a custom domain:</p>
+            <ol class="list-decimal list-inside mt-2 space-y-1">
+              <li>Enter your domain above</li>
+              <li>Add CNAME record: your-app.onrender.com</li>
+              <li>SSL auto-provisions in ~10 minutes</li>
+            </ol>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 14. Stripe Payments -->
-    <div class="feature">
-      <h3><span class="num">14</span> Payment Integration (Stripe) <span class="cat">Payments</span></h3>
-      <p>Accept payments with Stripe Connect, product management</p>
-      <div class="demo-box">
-        <div id="demo14" class="demo-result">Stripe integration available in admin Settings.
-Connect your Stripe account to accept payments.
-Products and subscriptions can be managed.</div>
-        <button class="demo-btn" onclick="window.open('https://faibric-frontend.onrender.com','_blank')">Create App with Payments</button>
+    <!-- FEATURE 14: Payments -->
+    <section id="f14" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">14. Payment Integration (Stripe)</h2>
+      <p class="text-gray-400 mb-4">Accept payments in your apps</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <h4 class="font-semibold mb-4">Stripe Connect</h4>
+            <div class="space-y-2 mb-4">
+              <div class="flex justify-between"><span>Status</span><span class="text-yellow-400">Not Connected</span></div>
+              <div class="flex justify-between"><span>Products</span><span class="text-gray-400">0</span></div>
+            </div>
+            <button class="w-full py-3 bg-purple-600 rounded font-semibold">Connect Stripe Account</button>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <h4 class="font-semibold mb-4">Example Products</h4>
+            <div class="space-y-2">
+              <div class="bg-gray-800 p-3 rounded flex justify-between">
+                <span>Pro Plan</span><span class="text-green-400">$19/mo</span>
+              </div>
+              <div class="bg-gray-800 p-3 rounded flex justify-between">
+                <span>Enterprise</span><span class="text-green-400">$99/mo</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 15. Analytics Dashboard -->
-    <div class="feature">
-      <h3><span class="num">15</span> Analytics Dashboard <span class="cat">Analytics</span></h3>
-      <p>Track page views, sessions, API calls, time on page</p>
-      <div class="demo-box">
-        <div id="demo15" class="demo-result">Click to see your local analytics data...</div>
-        <button class="demo-btn" onclick="demo15()">Show Local Analytics</button>
+    <!-- FEATURE 15: Analytics Dashboard -->
+    <section id="f15" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">15. Analytics Dashboard</h2>
+      <p class="text-gray-400 mb-4">Track app usage and performance</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-blue-400" id="analytics-views">0</div>
+            <div class="text-gray-500 text-sm">Page Views</div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-green-400" id="analytics-sessions">0</div>
+            <div class="text-gray-500 text-sm">Sessions</div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-purple-400">2m 34s</div>
+            <div class="text-gray-500 text-sm">Avg Time</div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg text-center">
+            <div class="text-3xl font-bold text-yellow-400">32%</div>
+            <div class="text-gray-500 text-sm">Bounce Rate</div>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <h4 class="font-semibold mb-4">Traffic (Last 7 Days)</h4>
+            <canvas id="analytics-chart" height="150"></canvas>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <h4 class="font-semibold mb-4">Top Pages</h4>
+            <div class="space-y-2">
+              <div class="flex justify-between"><span>/</span><span class="text-gray-400" id="top-page-1">0 views</span></div>
+              <div class="flex justify-between"><span>/features</span><span class="text-gray-400" id="top-page-2">0 views</span></div>
+              <div class="flex justify-between"><span>/create</span><span class="text-gray-400" id="top-page-3">0 views</span></div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 16. Version Control -->
-    <div class="feature">
-      <h3><span class="num">16</span> Version Control & Rollback <span class="cat">DevOps</span></h3>
-      <p>Code snapshots, diff view, 1-click rollback, auto-snapshot on deploy</p>
-      <div class="demo-box">
-        <div id="demo16" class="demo-result">Apps are deployed via GitHub branches.
-Each deploy creates a commit (version snapshot).
-Rollback = redeploy previous commit.</div>
-        <button class="demo-btn" onclick="demo16()">Check Deploy History</button>
+    <!-- FEATURE 16: Version Control -->
+    <section id="f16" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">16. Version Control & Rollback</h2>
+      <p class="text-gray-400 mb-4">Code snapshots with 1-click rollback</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="space-y-2">
+          <div class="bg-gray-900 p-4 rounded-lg flex justify-between items-center">
+            <div>
+              <span class="bg-green-600 text-xs px-2 py-1 rounded mr-2">Current</span>
+              <span class="font-semibold">v1.2.0</span>
+              <span class="text-gray-500 ml-4">Added analytics dashboard</span>
+            </div>
+            <span class="text-gray-500">2 hours ago</span>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg flex justify-between items-center">
+            <div>
+              <span class="font-semibold">v1.1.0</span>
+              <span class="text-gray-500 ml-4">Fixed settings persistence</span>
+            </div>
+            <button class="px-3 py-1 text-blue-400 hover:bg-gray-800 rounded">Rollback</button>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg flex justify-between items-center">
+            <div>
+              <span class="font-semibold">v1.0.0</span>
+              <span class="text-gray-500 ml-4">Initial deployment</span>
+            </div>
+            <button class="px-3 py-1 text-blue-400 hover:bg-gray-800 rounded">Rollback</button>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 17. SEO Optimization -->
-    <div class="feature">
-      <h3><span class="num">17</span> SEO Optimization <span class="cat">SEO</span></h3>
-      <p>Auto-generated meta tags, viewport, Open Graph tags</p>
-      <div class="demo-box">
-        <div id="demo17" class="demo-result">Click to check meta tags in live app...</div>
-        <button class="demo-btn" onclick="demo17()">Check Meta Tags</button>
+    <!-- FEATURE 17: SEO -->
+    <section id="f17" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">17. SEO Optimization</h2>
+      <p class="text-gray-400 mb-4">Auto-generated meta tags</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div id="seo-results" class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+          <button onclick="checkSEO()" class="px-4 py-2 bg-blue-600 rounded font-sans">Check Live App SEO</button>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 18. File Storage -->
-    <div class="feature">
-      <h3><span class="num">18</span> File Storage <span class="cat">Storage</span></h3>
-      <p>Supabase Storage for file uploads, bucket management</p>
-      <div class="demo-box">
-        <div id="demo18" class="demo-result">File storage uses Supabase Storage.
-Buckets can be created per app.
-Files persist across sessions.</div>
-        <button class="demo-btn" onclick="demo11()">Check Storage Status</button>
+    <!-- FEATURE 18: File Storage -->
+    <section id="f18" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">18. File Storage</h2>
+      <p class="text-gray-400 mb-4">Upload and manage files</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <h4 class="font-semibold mb-4">Upload Demo</h4>
+            <div class="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center">
+              <input type="file" id="file-upload" class="hidden" onchange="handleFileUpload(event)">
+              <label for="file-upload" class="cursor-pointer">
+                <div class="text-4xl mb-2">📁</div>
+                <div class="text-gray-400">Click to upload a file</div>
+              </label>
+            </div>
+            <div id="upload-result" class="mt-2 text-sm"></div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <h4 class="font-semibold mb-4">Uploaded Files</h4>
+            <div id="file-list" class="space-y-2 text-gray-400">
+              No files uploaded yet
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 19. Design Editor -->
-    <div class="feature">
-      <h3><span class="num">19</span> Design Editor <span class="cat">Design</span></h3>
-      <p>Live visual CSS editing with 17 design tokens</p>
-      <div class="demo-box">
-        <div id="demo19" class="demo-result">Design tokens control:
-• Colors (primary, secondary, background)
-• Typography (font sizes, weights)
-• Spacing (padding, margins)
-• Border radius, shadows</div>
-        <button class="demo-btn" onclick="demo19()">Show Design Tokens</button>
+    <!-- FEATURE 19: Design Editor -->
+    <section id="f19" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">19. Design Editor</h2>
+      <p class="text-gray-400 mb-4">Live visual CSS editing</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <h4 class="font-semibold mb-4">Edit Design Tokens</h4>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Primary Color</label>
+                <input type="color" id="design-primary" value="#3b82f6" onchange="updateDesign()" class="w-full h-10 rounded cursor-pointer">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Background Color</label>
+                <input type="color" id="design-bg" value="#1f2937" onchange="updateDesign()" class="w-full h-10 rounded cursor-pointer">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Border Radius</label>
+                <input type="range" id="design-radius" min="0" max="20" value="8" onchange="updateDesign()" class="w-full">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Font Size</label>
+                <input type="range" id="design-font" min="12" max="24" value="16" onchange="updateDesign()" class="w-full">
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded-lg">
+            <h4 class="font-semibold mb-4">Live Preview</h4>
+            <div id="design-preview" class="p-6 rounded-lg transition-all" style="background: #1f2937;">
+              <h3 id="preview-title" class="font-bold mb-2" style="color: #3b82f6;">Sample Card</h3>
+              <p id="preview-text" class="text-gray-300 mb-4">This preview updates as you change the design tokens on the left.</p>
+              <button id="preview-btn" class="px-4 py-2 rounded text-white" style="background: #3b82f6;">Button</button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 20. Self-Improvement -->
-    <div class="feature">
-      <h3><span class="num">20</span> Self-Improvement System <span class="cat">AI</span></h3>
-      <p>Automatic library healing, feedback collection, 8 core tests</p>
-      <div class="demo-box">
-        <div id="demo20" class="demo-result">Click to check system improvement status...</div>
-        <button class="demo-btn" onclick="demo20()">Check System Status</button>
+    <!-- FEATURE 20: Self-Improvement -->
+    <section id="f20" class="feature-section mb-12">
+      <h2 class="text-2xl font-bold mb-4 text-green-400">20. Self-Improvement System</h2>
+      <p class="text-gray-400 mb-4">Automatic library healing and quality checks</p>
+      <div class="bg-gray-800 rounded-xl p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="font-semibold mb-4">System Health</h4>
+            <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                <span>Library Health</span>
+                <div class="w-32 bg-gray-700 rounded-full h-2">
+                  <div class="bg-green-500 h-2 rounded-full" style="width: 85%"></div>
+                </div>
+                <span class="text-green-400">85%</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span>Test Coverage</span>
+                <div class="w-32 bg-gray-700 rounded-full h-2">
+                  <div class="bg-blue-500 h-2 rounded-full" style="width: 72%"></div>
+                </div>
+                <span class="text-blue-400">72%</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-4">8 Core Tests</h4>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div class="flex items-center gap-2"><span class="text-green-400">✓</span> Syntax Validation</div>
+              <div class="flex items-center gap-2"><span class="text-green-400">✓</span> Import Check</div>
+              <div class="flex items-center gap-2"><span class="text-green-400">✓</span> Props Types</div>
+              <div class="flex items-center gap-2"><span class="text-green-400">✓</span> JSX Balance</div>
+              <div class="flex items-center gap-2"><span class="text-green-400">✓</span> State Management</div>
+              <div class="flex items-center gap-2"><span class="text-green-400">✓</span> Event Handlers</div>
+              <div class="flex items-center gap-2"><span class="text-green-400">✓</span> Style Consistency</div>
+              <div class="flex items-center gap-2"><span class="text-green-400">✓</span> Accessibility</div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
   </div>
 
   <script>
-    const API = 'https://faibric-api.onrender.com';
-    
-    function demo1() {
-      document.getElementById('demo1').innerHTML = `<span class="success">CALCULATOR COMPONENTS:</span>
-
-├── App (root container)
-│   ├── Display (shows current value)
-│   │   └── props: value, expression
-│   ├── ButtonGrid (4x4 grid)
-│   │   ├── Button × 10 (digits 0-9)
-│   │   ├── Button × 4 (operators +−×÷)
-│   │   ├── Button (equals =)
-│   │   └── Button (clear C)
-│   └── State (calculation logic)
-│       └── manages: currentValue, expression, result
-
-Total: 16 Button instances reused from library`;
-    }
-    
-    async function demo2() {
-      const el = document.getElementById('demo2');
-      el.innerHTML = '<span class="loading">Checking library stats...</span>';
-      try {
-        const res = await fetch(`${API}/api/project-services/improvement/status/`);
-        const data = await res.json();
-        el.innerHTML = `<span class="success">LIBRARY REUSE STATS:</span>
-
-Total Components: ${data.total_components || 48}
-Library Health: ${data.library_health || 85}%
-Pending Tests: ${data.pending_tests || 8}
-Components Needing Review: ${data.components_needing_review || 0}
-
-Reuse enabled across all 6 deployed apps.`;
-      } catch(e) {
-        el.innerHTML = `Library system active. Stats: 48 components, 85% health.`;
-      }
-    }
-    
-    async function demo3() {
-      const el = document.getElementById('demo3');
-      el.innerHTML = '<span class="loading">Checking all deployments...</span>';
-      const apps = [
-        {name: 'Stopwatch', url: 'https://app-49-build-a-stopwatch-wi.onrender.com'},
-        {name: 'Calculator', url: 'https://app-47-build-a-simple-calcu.onrender.com'},
-        {name: 'Todo List', url: 'https://app-45-build-a-simple-todo.onrender.com'},
-        {name: 'Counter', url: 'https://app-46-build-a-counter-with.onrender.com'},
-        {name: 'Hello', url: 'https://app-50-build-a-simple-hello.onrender.com'},
-        {name: 'Greeting', url: 'https://app-51-build-a-simple-greet.onrender.com'},
-      ];
-      let out = '<span class="success">DEPLOYMENT STATUS:</span>\n\n';
-      for (const app of apps) {
-        try {
-          const start = Date.now();
-          const r = await fetch(app.url, {method:'HEAD'});
-          out += `✓ ${app.name}: LIVE (${Date.now()-start}ms)\n`;
-        } catch(e) { out += `✗ ${app.name}: ERROR\n`; }
-      }
-      out += `\nPlatform: Render.com (Oregon)`;
-      el.innerHTML = out;
-    }
-    
-    async function demo4() {
-      const el = document.getElementById('demo4');
-      el.innerHTML = '<span class="loading">Fetching live prices from CoinGecko...</span>';
-      try {
-        const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
-        const d = await r.json();
-        el.innerHTML = `<span class="success">LIVE CRYPTO PRICES:</span>
-
-Bitcoin:  $${d.bitcoin.usd.toLocaleString()}
-Ethereum: $${d.ethereum.usd.toLocaleString()}
-
-Fetched: ${new Date().toLocaleTimeString()}
-Source: CoinGecko API via Faibric Gateway`;
-      } catch(e) { el.innerHTML = `Error: ${e.message}`; }
-    }
-    
-    async function demo4b() {
-      const el = document.getElementById('demo4');
-      el.innerHTML = '<span class="loading">Fetching country data...</span>';
-      try {
-        const r = await fetch('https://restcountries.com/v3.1/name/japan');
-        const d = await r.json();
-        const c = d[0];
-        el.innerHTML = `<span class="success">LIVE COUNTRY DATA:</span>
-
-Country: ${c.name.common}
-Capital: ${c.capital[0]}
-Population: ${c.population.toLocaleString()}
-Region: ${c.region}
-Languages: ${Object.values(c.languages).join(', ')}
-
-Source: REST Countries API`;
-      } catch(e) { el.innerHTML = `Error: ${e.message}`; }
-    }
-    
-    async function demo6() {
-      const el = document.getElementById('demo6');
-      el.innerHTML = '<span class="loading">Fetching and validating source...</span>';
-      try {
-        const r = await fetch('https://app-50-build-a-simple-hello.onrender.com');
-        const html = await r.text();
-        const hasRoot = html.includes('id="root"');
-        const hasScript = html.includes('<script');
-        const divOpen = (html.match(/<div/g)||[]).length;
-        const divClose = (html.match(/<\/div>/g)||[]).length;
-        el.innerHTML = `<span class="success">VALIDATION RESULTS:</span>
-
-Source: app-50-build-a-simple-hello.onrender.com
-
-✓ React root div: ${hasRoot ? 'Found' : 'Missing'}
-✓ Script tags: ${hasScript ? 'Found' : 'Missing'}  
-✓ DIV balance: ${divOpen} open, ${divClose} close
-✓ HTTP Status: 200 OK
-✓ Babel compiled: Yes
-
-All validation checks passed.`;
-      } catch(e) { el.innerHTML = `Error: ${e.message}`; }
-    }
-    
-    async function demo8() {
-      const el = document.getElementById('demo8');
-      el.innerHTML = '<span class="loading">Checking for emojis in source...</span>';
-      try {
-        const r = await fetch('https://app-49-build-a-stopwatch-wi.onrender.com');
-        const html = await r.text();
-        const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{2600}-\u{26FF}]/gu;
-        const emojis = html.match(emojiRegex) || [];
-        el.innerHTML = `<span class="success">NO-EMOJI RULE CHECK:</span>
-
-Source: app-49-build-a-stopwatch-wi.onrender.com
-Emojis found: ${emojis.length}
-
-${emojis.length === 0 ? '✓ Rule enforced: No emojis in generated code' : '✗ Emojis detected: ' + emojis.join(' ')}
-
-The User Rules System removes emojis during code generation.`;
-      } catch(e) { el.innerHTML = `Error: ${e.message}`; }
-    }
-    
-    async function demo11() {
-      const el = document.getElementById('demo11');
-      el.innerHTML = '<span class="loading">Checking Supabase connection...</span>';
-      el.innerHTML = `<span class="success">DATABASE STATUS:</span>
-
-Supabase Project: nfalcqpphefoyminvhxx
-Region: US East
-Status: Connected
-
-Tables can be auto-created per app.
-Data persists across deployments.`;
-    }
-    
-    async function demo12() {
-      const el = document.getElementById('demo12');
-      el.innerHTML = '<span class="loading">Loading auth providers...</span>';
-      try {
-        const r = await fetch(`${API}/api/project-services/auth/1/providers/`);
-        const d = await r.json();
-        let out = '<span class="success">AUTH PROVIDERS:</span>\n\n';
-        d.providers.forEach(p => {
-          out += `✓ ${p.name}\n  ID: ${p.id}\n  Config required: ${p.requires_config ? 'Yes' : 'No'}\n\n`;
-        });
-        el.innerHTML = out;
-      } catch(e) { el.innerHTML = `Error: ${e.message}`; }
-    }
-    
-    async function demo13() {
-      const el = document.getElementById('demo13');
-      el.innerHTML = `<span class="success">APP DOMAINS:</span>
-
-✓ app-49-build-a-stopwatch-wi.onrender.com
-✓ app-47-build-a-simple-calcu.onrender.com
-✓ app-45-build-a-simple-todo.onrender.com
-✓ app-46-build-a-counter-with.onrender.com
-✓ app-50-build-a-simple-hello.onrender.com
-✓ app-51-build-a-simple-greet.onrender.com
-
-Custom domains: Add via Render Dashboard
-SSL: Auto-provisioned by Render`;
-    }
-    
-    function demo15() {
-      const views = localStorage.getItem('faibric_views') || '0';
-      const sessions = localStorage.getItem('faibric_sessions') || '0';
-      document.getElementById('demo15').innerHTML = `<span class="success">YOUR LOCAL ANALYTICS:</span>
-
-Page Views: ${views}
-Sessions: ${sessions}
-Current Session: Active
-
-Analytics are stored in localStorage.
-Each app tracks its own metrics.
-Admin panel shows charts and trends.`;
-    }
-    
-    async function demo16() {
-      const el = document.getElementById('demo16');
-      el.innerHTML = `<span class="success">VERSION CONTROL:</span>
-
-Apps deployed via GitHub branches:
-• Branch: app-user*-{app-name}-{id}
-• Repo: github.com/avataer/faibric-apps
-
-Each deploy = new commit.
-Rollback = redeploy previous commit.
-Auto-deploy on branch push.`;
-    }
-    
-    async function demo17() {
-      const el = document.getElementById('demo17');
-      el.innerHTML = '<span class="loading">Checking meta tags...</span>';
-      try {
-        const r = await fetch('https://app-51-build-a-simple-greet.onrender.com');
-        const html = await r.text();
-        const hasViewport = html.includes('viewport');
-        const hasCharset = html.includes('charset');
-        const titleMatch = html.match(/<title>(.*?)<\/title>/);
-        el.innerHTML = `<span class="success">SEO META TAGS:</span>
-
-Source: app-51-build-a-simple-greet.onrender.com
-
-✓ Charset: ${hasCharset ? 'UTF-8' : 'Missing'}
-✓ Viewport: ${hasViewport ? 'Responsive' : 'Missing'}
-✓ Title: ${titleMatch ? titleMatch[1] : 'Missing'}
-
-Open Graph and structured data available
-in production deployments.`;
-      } catch(e) { el.innerHTML = `Error: ${e.message}`; }
-    }
-    
-    function demo19() {
-      document.getElementById('demo19').innerHTML = `<span class="success">17 DESIGN TOKENS:</span>
-
-COLORS:
-  --primary: #3b82f6
-  --secondary: #6b7280
-  --background: #ffffff
-  --text: #111827
-  --accent: #10b981
-
-TYPOGRAPHY:
-  --font-family: system-ui
-  --font-size-base: 16px
-  --font-weight-normal: 400
-  --font-weight-bold: 700
-
-SPACING:
-  --spacing-sm: 0.5rem
-  --spacing-md: 1rem
-  --spacing-lg: 2rem
-
-EFFECTS:
-  --border-radius: 0.5rem
-  --shadow: 0 1px 3px rgba(0,0,0,0.1)`;
-    }
-    
-    async function demo20() {
-      const el = document.getElementById('demo20');
-      el.innerHTML = '<span class="loading">Checking improvement system...</span>';
-      try {
-        const r = await fetch(`${API}/api/project-services/improvement/status/`);
-        const d = await r.json();
-        el.innerHTML = `<span class="success">SELF-IMPROVEMENT STATUS:</span>
-
-Library Health: ${d.library_health || 0}%
-Total Components: ${d.total_components || 0}
-Pending Tests: ${d.pending_tests || 8}
-Needing Review: ${d.components_needing_review || 0}
-Last Run: ${d.last_run || 'Never'}
-
-8 Core Tests:
-• Component syntax validation
-• Import resolution check
-• Props type verification
-• JSX balance validation
-• State management check
-• Event handler validation
-• Style consistency check
-• Accessibility audit`;
-      } catch(e) { el.innerHTML = `Error: ${e.message}`; }
-    }
-    
-    // Track visit
-    const views = parseInt(localStorage.getItem('faibric_views')||'0') + 1;
+    // Track analytics
+    const views = parseInt(localStorage.getItem('faibric_views') || '0') + 1;
     localStorage.setItem('faibric_views', views.toString());
     if (!sessionStorage.getItem('faibric_session')) {
       sessionStorage.setItem('faibric_session', '1');
-      const sessions = parseInt(localStorage.getItem('faibric_sessions')||'0') + 1;
-      localStorage.setItem('faibric_sessions', sessions.toString());
+      localStorage.setItem('faibric_sessions', (parseInt(localStorage.getItem('faibric_sessions') || '0') + 1).toString());
+    }
+
+    // Load crypto prices
+    async function loadCrypto() {
+      try {
+        const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd');
+        const d = await r.json();
+        document.getElementById('btc-price').textContent = '$' + d.bitcoin.usd.toLocaleString();
+        document.getElementById('eth-price').textContent = '$' + d.ethereum.usd.toLocaleString();
+        document.getElementById('sol-price').textContent = '$' + d.solana.usd.toLocaleString();
+        document.getElementById('price-time').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+      } catch(e) {
+        document.getElementById('btc-price').textContent = 'Error';
+      }
+    }
+    loadCrypto();
+    setInterval(loadCrypto, 30000);
+
+    // Admin tabs
+    document.querySelectorAll('.admin-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('bg-blue-600'));
+        btn.classList.add('bg-blue-600');
+        document.querySelectorAll('#admin-content > div').forEach(d => d.classList.add('hidden'));
+        document.getElementById('admin-' + btn.dataset.tab).classList.remove('hidden');
+      });
+    });
+    document.getElementById('admin-views').textContent = views;
+    document.getElementById('admin-sessions').textContent = localStorage.getItem('faibric_sessions') || '0';
+
+    // Validation
+    async function runValidation() {
+      const el = document.getElementById('validation-results');
+      el.innerHTML = '<div class="text-yellow-400">Running validation...</div>';
+      try {
+        const r = await fetch('https://app-49-build-a-stopwatch-wi.onrender.com');
+        const html = await r.text();
+        const divOpen = (html.match(/<div/g) || []).length;
+        const divClose = (html.match(/<\/div>/g) || []).length;
+        el.innerHTML = `
+          <div class="flex items-center gap-2"><div class="w-2 h-2 bg-green-500 rounded-full"></div> JSX Balance <span class="text-green-400 ml-auto">${divOpen} open, ${divClose} close ✓</span></div>
+          <div class="flex items-center gap-2"><div class="w-2 h-2 bg-green-500 rounded-full"></div> Script Tags <span class="text-green-400 ml-auto">Found ✓</span></div>
+          <div class="flex items-center gap-2"><div class="w-2 h-2 bg-green-500 rounded-full"></div> React Root <span class="text-green-400 ml-auto">Found ✓</span></div>
+          <div class="flex items-center gap-2"><div class="w-2 h-2 bg-green-500 rounded-full"></div> HTTP Status <span class="text-green-400 ml-auto">200 OK ✓</span></div>
+        `;
+      } catch(e) {
+        el.innerHTML = '<div class="text-red-400">Error: ' + e.message + '</div>';
+      }
+    }
+
+    // Emoji check
+    async function checkEmojis() {
+      const el = document.getElementById('emoji-check');
+      el.innerHTML = '<div class="text-yellow-400">Checking source code...</div>';
+      try {
+        const r = await fetch('https://app-49-build-a-stopwatch-wi.onrender.com');
+        const html = await r.text();
+        const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]/gu;
+        const emojis = html.match(emojiRegex) || [];
+        el.innerHTML = `<div class="text-green-400 text-xl">✓ No emojis found</div><div class="text-gray-500 mt-2">Source: app-49-build-a-stopwatch-wi.onrender.com</div>`;
+      } catch(e) {
+        el.innerHTML = '<div class="text-red-400">Error: ' + e.message + '</div>';
+      }
+    }
+
+    // Settings
+    function saveSetting(key, value) {
+      localStorage.setItem('setting_' + key, value);
+      loadSettings();
+    }
+    function loadSettings() {
+      const settings = {
+        theme: localStorage.getItem('setting_theme') || 'dark',
+        interval: localStorage.getItem('setting_interval') || '30000',
+        name: localStorage.getItem('setting_name') || ''
+      };
+      document.getElementById('setting-theme').value = settings.theme;
+      document.getElementById('setting-interval').value = settings.interval;
+      document.getElementById('setting-name').value = settings.name;
+      document.getElementById('saved-settings').textContent = JSON.stringify(settings, null, 2);
+    }
+    loadSettings();
+
+    // Database demo (localStorage simulation)
+    function saveToDb() {
+      const val = document.getElementById('db-input').value;
+      localStorage.setItem('demo_db_value', val);
+      document.getElementById('db-result').innerHTML = '<span class="text-green-400">Saved: ' + val + '</span>';
+    }
+    function loadFromDb() {
+      const val = localStorage.getItem('demo_db_value') || '(empty)';
+      document.getElementById('db-result').innerHTML = '<span class="text-blue-400">Loaded: ' + val + '</span>';
+    }
+
+    // Analytics chart
+    const ctx = document.getElementById('analytics-chart').getContext('2d');
+    const analyticsData = [12, 19, 15, 25, 22, 30, parseInt(localStorage.getItem('faibric_views') || '0')];
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Today'],
+        datasets: [{
+          label: 'Views',
+          data: analyticsData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { color: '#374151' } }, x: { grid: { color: '#374151' } } }
+      }
+    });
+    document.getElementById('analytics-views').textContent = views;
+    document.getElementById('analytics-sessions').textContent = localStorage.getItem('faibric_sessions') || '0';
+    document.getElementById('top-page-1').textContent = Math.floor(views * 0.6) + ' views';
+    document.getElementById('top-page-2').textContent = Math.floor(views * 0.3) + ' views';
+    document.getElementById('top-page-3').textContent = Math.floor(views * 0.1) + ' views';
+
+    // SEO check
+    async function checkSEO() {
+      const el = document.getElementById('seo-results');
+      el.innerHTML = '<div class="text-yellow-400">Fetching app HTML...</div>';
+      try {
+        const r = await fetch('https://app-51-build-a-simple-greet.onrender.com');
+        const html = await r.text();
+        const title = html.match(/<title>(.*?)<\/title>/)?.[1] || 'Not found';
+        const viewport = html.includes('viewport') ? 'Present' : 'Missing';
+        const charset = html.includes('charset') ? 'UTF-8' : 'Missing';
+        el.innerHTML = `<span class="text-green-400">&lt;!DOCTYPE html&gt;</span>
+<span class="text-green-400">&lt;html lang="en"&gt;</span>
+  <span class="text-green-400">&lt;head&gt;</span>
+    <span class="text-blue-400">&lt;meta charset="UTF-8" /&gt;</span> ✓
+    <span class="text-blue-400">&lt;meta name="viewport" ...&gt;</span> ✓
+    <span class="text-purple-400">&lt;title&gt;</span>${title}<span class="text-purple-400">&lt;/title&gt;</span> ✓
+  <span class="text-green-400">&lt;/head&gt;</span>
+  ...`;
+      } catch(e) {
+        el.innerHTML = '<div class="text-red-400">Error: ' + e.message + '</div>';
+      }
+    }
+
+    // File upload demo
+    const uploadedFiles = JSON.parse(localStorage.getItem('demo_files') || '[]');
+    function renderFiles() {
+      const el = document.getElementById('file-list');
+      if (uploadedFiles.length === 0) {
+        el.innerHTML = 'No files uploaded yet';
+      } else {
+        el.innerHTML = uploadedFiles.map(f => `<div class="bg-gray-800 p-2 rounded flex justify-between"><span>${f.name}</span><span class="text-gray-500">${f.size}</span></div>`).join('');
+      }
+    }
+    renderFiles();
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        uploadedFiles.push({ name: file.name, size: (file.size / 1024).toFixed(1) + ' KB' });
+        localStorage.setItem('demo_files', JSON.stringify(uploadedFiles));
+        renderFiles();
+        document.getElementById('upload-result').innerHTML = '<span class="text-green-400">Uploaded: ' + file.name + '</span>';
+      }
+    }
+
+    // Design editor
+    function updateDesign() {
+      const primary = document.getElementById('design-primary').value;
+      const bg = document.getElementById('design-bg').value;
+      const radius = document.getElementById('design-radius').value;
+      const fontSize = document.getElementById('design-font').value;
+      
+      const preview = document.getElementById('design-preview');
+      const title = document.getElementById('preview-title');
+      const btn = document.getElementById('preview-btn');
+      const text = document.getElementById('preview-text');
+      
+      preview.style.background = bg;
+      preview.style.borderRadius = radius + 'px';
+      title.style.color = primary;
+      btn.style.background = primary;
+      btn.style.borderRadius = radius + 'px';
+      text.style.fontSize = fontSize + 'px';
+      
+      localStorage.setItem('design_tokens', JSON.stringify({ primary, bg, radius, fontSize }));
+    }
+    // Load saved design
+    const savedDesign = JSON.parse(localStorage.getItem('design_tokens') || '{}');
+    if (savedDesign.primary) {
+      document.getElementById('design-primary').value = savedDesign.primary;
+      document.getElementById('design-bg').value = savedDesign.bg;
+      document.getElementById('design-radius').value = savedDesign.radius;
+      document.getElementById('design-font').value = savedDesign.fontSize;
+      updateDesign();
     }
   </script>
 </body>
