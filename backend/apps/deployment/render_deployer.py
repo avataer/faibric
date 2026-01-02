@@ -371,7 +371,7 @@ export default {
             "include": ["vite.config.ts"]
         }, indent=2)
         
-        # index.html
+        # index.html - with SPA routing handler for 404 redirects
         files['index.html'] = f"""<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -379,6 +379,16 @@ export default {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{project.name}</title>
     <style>* {{ margin: 0; padding: 0; box-sizing: border-box; }}</style>
+    <script>
+      // Handle SPA redirect from 404.html
+      (function(){{
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {{
+          history.replaceState(null, null, redirect);
+        }}
+      }})();
+    </script>
   </head>
   <body>
     <div id="root"></div>
@@ -426,8 +436,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         for comp_name, comp_code in frontend_code.get('components', {}).items():
             files[f'src/components/{comp_name}.tsx'] = comp_code
         
-        # render.yaml - CRITICAL: SPA routing configuration
-        # Without this, direct URL access returns 404
+        # render.yaml - SPA routing configuration (used by Blueprint deploys)
         files['render.yaml'] = f"""services:
   - type: web
     name: app-{project.id}
@@ -439,6 +448,26 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         source: /*
         destination: /index.html
 """
+        
+        # CRITICAL: _redirects file for Render static site SPA routing
+        # This file must be in public/ so Vite copies it to dist/
+        # Without this, routes like /faibric return 404
+        files['public/_redirects'] = """/* /index.html 200"""
+        
+        # Also add a 404.html that redirects to index.html (fallback for some hosts)
+        files['public/404.html'] = """<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting...</title>
+  <script>
+    // SPA redirect: store the original path and redirect to /
+    sessionStorage.redirect = location.href;
+    location.replace('/');
+  </script>
+</head>
+<body></body>
+</html>"""
         
         return files
     
