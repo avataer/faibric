@@ -9,8 +9,18 @@ from django.http import JsonResponse
 
 
 def health_check(request):
-    """Health check endpoint for Render.com"""
-    return JsonResponse({'status': 'healthy', 'service': 'faibric-api'})
+    """Health check endpoint for Render.com with deployment status."""
+    try:
+        from apps.deployment.env_validator import get_deployment_status
+        deploy_status = get_deployment_status()
+    except Exception:
+        deploy_status = {'error': 'Could not check deployment status'}
+    
+    return JsonResponse({
+        'status': 'healthy',
+        'service': 'faibric-api',
+        'deployment': deploy_status,
+    })
 
 
 urlpatterns = [
