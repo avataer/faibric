@@ -270,12 +270,16 @@ class CodeValidator:
                                 tag_stack = tag_stack[:i]
                                 break
                 else:
+                    # Extra closing tag with no matching open - AUTO-FIX by removing it
                     nesting_errors.append(ValidationError(
                         error_type="jsx_nesting",
-                        message=f"Line {line_num}: Closing </{tag_name}> with no matching open tag",
+                        message=f"Line {line_num}: Removing orphan </{tag_name}> with no matching open tag",
                         line_number=line_num,
-                        severity="error"
+                        severity="warning",
+                        auto_fix=f"Removed orphan </{tag_name}>"
                     ))
+                    # Remove the orphan closing tag from code
+                    code = code[:match.start()] + code[match.end():]
             else:
                 tag_stack.append((tag_name, line_num))
         
