@@ -102,8 +102,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Analytics: Views, sessions, API calls',
       'Settings: Refresh interval, password change',
     ],
-    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com',
-    testInstructions: 'Open app, then type /faibric in browser address bar. Login with password "faibric123" to see admin tabs',
+    testUrl: 'https://app-59-build-a-simple-click.onrender.com/faibric',
+    testInstructions: 'Click link to open admin panel directly. Login with password "faibric123" to see Overview, Settings tabs',
   },
   {
     name: 'Code Validation & Sanitization',
@@ -172,8 +172,8 @@ const IMPLEMENTED_FEATURES: Feature[] = [
       'Real connection status',
       'Cache management',
     ],
-    testUrl: 'https://app-49-build-a-stopwatch-wi.onrender.com',
-    testInstructions: 'Open app and navigate to /faibric, login, then go to Settings tab to test persistence',
+    testUrl: 'https://app-59-build-a-simple-click.onrender.com/faibric',
+    testInstructions: 'Open admin panel, login with "faibric123", go to Settings tab - change password persists to localStorage',
   },
 ]
 
@@ -245,13 +245,13 @@ const RECENTLY_COMPLETED: Feature[] = [
     status: 'implemented',
     category: 'Analytics',
     details: [
-      'Tracking service',
-      'Dashboard with charts',
-      'Time range selector',
-      'Top pages view',
+      'Page view tracking',
+      'Session counting',
+      'Overview stats in admin panel',
+      'localStorage-based metrics',
     ],
-    testUrl: 'https://faibric-api.onrender.com/api/project-services/improvement/status/',
-    testInstructions: 'Shows system metrics - analytics tracks page views, sessions, API calls',
+    testUrl: 'https://app-59-build-a-simple-click.onrender.com/faibric',
+    testInstructions: 'Open admin panel, login with "faibric123" - Overview tab shows Page Views and Sessions counters (tracked in localStorage)',
   },
   {
     name: 'Version Control & Rollback',
@@ -305,8 +305,8 @@ const RECENTLY_COMPLETED: Feature[] = [
       'Color, typography, spacing controls',
       'Style persistence to localStorage',
     ],
-    testUrl: 'https://app-51-build-a-simple-greet.onrender.com',
-    testInstructions: 'View the greeting card styling - colors and fonts are design-token based',
+    testUrl: 'https://app-59-build-a-simple-click.onrender.com',
+    testInstructions: 'View the counter app - Tailwind CSS classes for styling. Use /faibric admin panel to see design token system',
   },
   {
     name: 'Self-Improvement System',
