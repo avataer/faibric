@@ -274,3 +274,4 @@ def display_all_rules() -> str:
     return get_rules_registry().display_rules()
 
 
+

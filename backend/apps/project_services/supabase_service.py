@@ -329,3 +329,4 @@ const delete{table_name.title()[:-1] if table_name.endswith('s') else table_name
 supabase_service = SupabaseService()
 
 
+

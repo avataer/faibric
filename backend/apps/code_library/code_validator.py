@@ -124,6 +124,10 @@ class CodeValidator:
         fixed_code, dup_errors = self._check_duplicate_declarations(fixed_code)
         errors.extend(dup_errors)
         
+        # ENFORCEMENT: Check for undefined TypeScript types and auto-generate them
+        fixed_code, type_errors = self._check_undefined_types(fixed_code)
+        errors.extend(type_errors)
+        
         # ENFORCEMENT: Check Gateway URL usage (not just instructions)
         gateway_warnings = self._check_gateway_usage(fixed_code)
         warnings.extend(gateway_warnings)
@@ -690,6 +694,182 @@ class CodeValidator:
                 ))
         
         return warnings
+    
+    def _check_undefined_types(self, code: str) -> Tuple[str, List[ValidationError]]:
+        """
+        ENFORCEMENT: Detect and auto-generate missing TypeScript interface definitions.
+        
+        The AI often uses types like `KanbanCard` or `Product` in function signatures
+        but forgets to define them. This causes Babel runtime errors.
+        
+        This function:
+        1. Finds all PascalCase type references in type annotations
+        2. Checks if they're defined as interface/type
+        3. Auto-generates missing interfaces based on usage context
+        """
+        errors = []
+        
+        # Find all type usages in the code (PascalCase words after : or in generics)
+        # Patterns: `: TypeName`, `<TypeName>`, `TypeName[]`, `Omit<TypeName,`
+        type_usage_patterns = [
+            r':\s*([A-Z][a-zA-Z0-9]+)(?:\[\])?(?:\s*[;,\)\}]|\s*=>)',  # : TypeName or : TypeName[]
+            r'<([A-Z][a-zA-Z0-9]+)(?:\s*,|\s*>)',  # <TypeName, or <TypeName>
+            r'Omit<([A-Z][a-zA-Z0-9]+)',  # Omit<TypeName
+            r'Partial<([A-Z][a-zA-Z0-9]+)',  # Partial<TypeName
+            r'Pick<([A-Z][a-zA-Z0-9]+)',  # Pick<TypeName
+            r'Record<[^,]+,\s*([A-Z][a-zA-Z0-9]+)',  # Record<string, TypeName>
+        ]
+        
+        used_types = set()
+        for pattern in type_usage_patterns:
+            matches = re.findall(pattern, code)
+            used_types.update(matches)
+        
+        # Built-in/common types that don't need definitions
+        builtin_types = {
+            'React', 'ReactNode', 'ReactElement', 'FC', 'Component',
+            'HTMLElement', 'HTMLDivElement', 'HTMLInputElement', 'HTMLButtonElement',
+            'MouseEvent', 'ChangeEvent', 'FormEvent', 'KeyboardEvent',
+            'SetStateAction', 'Dispatch', 'RefObject', 'MutableRefObject',
+            'Promise', 'Error', 'Date', 'RegExp', 'Map', 'Set', 'Array',
+            'Record', 'Partial', 'Required', 'Readonly', 'Pick', 'Omit',
+            'String', 'Number', 'Boolean', 'Object', 'Function', 'Symbol',
+            'CSSProperties', 'PropsWithChildren', 'ComponentProps',
+            'SVGProps', 'InputHTMLAttributes', 'ButtonHTMLAttributes',
+        }
+        
+        # Find already-defined types
+        defined_pattern = r'(?:interface|type)\s+([A-Z][a-zA-Z0-9]+)'
+        defined_types = set(re.findall(defined_pattern, code))
+        
+        # Find missing types
+        missing_types = used_types - builtin_types - defined_types
+        
+        if not missing_types:
+            return code, errors
+        
+        # Generate interface definitions for missing types
+        generated_interfaces = []
+        
+        for type_name in sorted(missing_types):
+            # Try to infer the interface structure from usage context
+            interface_def = self._infer_interface_definition(type_name, code)
+            generated_interfaces.append(interface_def)
+            errors.append(ValidationError(
+                error_type="missing_type_definition",
+                message=f"Auto-generated missing interface: {type_name}",
+                severity="warning",
+                auto_fix=f"Generated interface {type_name}"
+            ))
+        
+        # Insert generated interfaces after "// Interfaces" comment or at the top of the script
+        interfaces_block = '\n\n'.join(generated_interfaces)
+        
+        if '// Interfaces' in code:
+            # Insert after the comment
+            code = code.replace('// Interfaces', f'// Interfaces\n{interfaces_block}', 1)
+        else:
+            # Find the first const/function declaration and insert before it
+            first_decl = re.search(r'^(const|function|let|var)\s+\w+', code, re.MULTILINE)
+            if first_decl:
+                insert_pos = first_decl.start()
+                code = code[:insert_pos] + f'// Auto-generated interfaces\n{interfaces_block}\n\n' + code[insert_pos:]
+            else:
+                # Fallback: insert at very beginning
+                code = f'// Auto-generated interfaces\n{interfaces_block}\n\n' + code
+        
+        return code, errors
+    
+    def _infer_interface_definition(self, type_name: str, code: str) -> str:
+        """
+        Infer an interface definition based on how the type is used in the code.
+        
+        Uses heuristics based on the type name and context.
+        """
+        # Look for usage patterns to infer fields
+        fields = []
+        
+        # Common patterns based on type name
+        type_lower = type_name.lower()
+        
+        # Kanban/Task/Card types
+        if 'card' in type_lower or 'task' in type_lower or 'item' in type_lower:
+            fields = [
+                'id: string;',
+                'title: string;',
+                'description?: string;',
+                'status?: string;',
+                'priority?: string;',
+                'dueDate?: string;',
+                'assignee?: { id: string; name: string; avatar?: string };',
+                'columnId?: string;',
+            ]
+        # Column/List types
+        elif 'column' in type_lower or 'list' in type_lower:
+            fields = [
+                'id: string;',
+                'title: string;',
+                'cards?: any[];',
+                'items?: any[];',
+            ]
+        # User/Member/Assignee types
+        elif 'user' in type_lower or 'member' in type_lower or 'assignee' in type_lower:
+            fields = [
+                'id: string;',
+                'name: string;',
+                'email?: string;',
+                'avatar?: string;',
+            ]
+        # Product types
+        elif 'product' in type_lower:
+            fields = [
+                'id: string;',
+                'name: string;',
+                'price: number;',
+                'description?: string;',
+                'image?: string;',
+                'category?: string;',
+                'inStock?: boolean;',
+            ]
+        # Chart/Data types
+        elif 'chart' in type_lower or 'data' in type_lower:
+            fields = [
+                'label: string;',
+                'value: number;',
+                'color?: string;',
+            ]
+        # Navigation types
+        elif 'nav' in type_lower or 'menu' in type_lower:
+            fields = [
+                'id: string;',
+                'label: string;',
+                'icon?: string;',
+                'href?: string;',
+            ]
+        # Props types - look for component usage
+        elif type_lower.endswith('props'):
+            component_name = type_name[:-5]  # Remove 'Props'
+            # Look for how this component is used
+            usage_pattern = rf'<{component_name}\s+([^>]+)'
+            match = re.search(usage_pattern, code)
+            if match:
+                # Extract prop names from usage
+                props_str = match.group(1)
+                prop_names = re.findall(r'(\w+)=', props_str)
+                for prop in prop_names:
+                    fields.append(f'{prop}?: any;')
+            if not fields:
+                fields = ['children?: React.ReactNode;']
+        # Default generic object
+        else:
+            fields = [
+                'id: string;',
+                '[key: string]: any;',
+            ]
+        
+        return f"""interface {type_name} {{
+  {chr(10) + "  ".join(fields) if fields else "  [key: string]: any;"}
+}}"""
 
 
 # Global instance

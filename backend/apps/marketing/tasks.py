@@ -296,3 +296,4 @@ def ai_analyze_changes_task(competitor_id: str, days: int = 7):
 
 
 
+

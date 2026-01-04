@@ -320,3 +320,4 @@ const SimpleLineChart = ({ data }) => {
 analytics_service = AnalyticsService()
 
 
+
