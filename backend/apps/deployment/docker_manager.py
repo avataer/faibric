@@ -6,6 +6,8 @@ import tarfile
 from io import BytesIO
 from django.conf import settings
 
+from .url_generator import url_generator
+
 
 class DockerManager:
     """Manage Docker containers for user apps"""
@@ -310,10 +312,13 @@ class DomainManager:
         self.base_domain = settings.APP_SUBDOMAIN_BASE
     
     def assign_subdomain(self, project):
-        """Assign subdomain to a project - must match FastReactDeployer"""
-        username = project.user.username.lower().replace('_', '-').replace(' ', '-')
-        project_slug = project.name.lower().replace(' ', '-').replace('_', '-')[:30]
-        return f"{username}-{project_slug}-{project.id}"
+        """
+        Assign subdomain to a project.
+        
+        Uses centralized URL generator - SINGLE SOURCE OF TRUTH.
+        Format: app{random_lowercase_alphanumeric}
+        """
+        return url_generator.generate_slug(project.id)
     
     def get_full_url(self, subdomain):
         """Get full URL for a subdomain"""
@@ -337,11 +342,10 @@ class DomainManager:
         Returns:
             container_id: ID of created container
         """
-        # Generate unique container name
-        username = project.user.username.lower().replace('_', '-')
-        project_name = project.name.lower().replace(' ', '-').replace('_', '-')
-        container_name = f"app-{username}-{project_name}-{project.id}"
-        subdomain = f"{username}-{project_name}"
+        # Generate unique container name using centralized URL generator
+        slug = url_generator.generate_slug(project.id)
+        container_name = slug
+        subdomain = slug
         
         try:
             # Create a simple Flask app with the generated info

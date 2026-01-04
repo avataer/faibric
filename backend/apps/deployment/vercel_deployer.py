@@ -24,6 +24,8 @@ import base64
 from typing import Dict, Optional, Tuple
 from pathlib import Path
 
+from .url_generator import url_generator
+
 logger = logging.getLogger(__name__)
 
 # Vercel API
@@ -118,7 +120,8 @@ class VercelDeployer:
             files = self._generate_files(app_code, project_name, project_id)
             
             # Step 2: Create deployment via Vercel API
-            deployment = self._create_deployment(project_name, files)
+            # Pass project_id for URL generation
+            deployment = self._create_deployment(project_name, files, int(project_id) if project_id else None)
             
             if not deployment.get('id'):
                 return {
@@ -128,9 +131,10 @@ class VercelDeployer:
                 }
             
             # Step 2.5: Disable SSO protection so URL is publicly accessible
-            clean_name = project_name.lower().replace("_", "-").replace(" ", "-")
-            clean_name = ''.join(c for c in clean_name if c.isalnum() or c == '-')[:50]
-            self._disable_sso_protection(clean_name)
+            # Get the project name from deployment response
+            project_slug = deployment.get('name', '')
+            if project_slug:
+                self._disable_sso_protection(project_slug)
             
             # Step 3: Wait for deployment to be ready
             deployment_url = self._wait_for_ready(deployment['id'])
@@ -478,12 +482,13 @@ function App() {
             "encoding": "base64"  # Tell Vercel to decode the base64
         }
     
-    def _create_deployment(self, project_name: str, files: list) -> dict:
+    def _create_deployment(self, project_name: str, files: list, project_id: int = None) -> dict:
         """Create a deployment via Vercel API."""
         
-        # Clean project name for Vercel (lowercase, no special chars)
-        clean_name = project_name.lower().replace("_", "-").replace(" ", "-")
-        clean_name = ''.join(c for c in clean_name if c.isalnum() or c == '-')[:50]
+        # Use centralized URL generator for slug (ONLY lowercase + numbers)
+        # This is the SINGLE SOURCE OF TRUTH for URL generation
+        clean_name = url_generator.generate_slug(project_id)
+        logger.info(f"[VERCEL] Using generated slug: {clean_name}")
         
         # Static deployment - no build, no npm install
         # Just serve the HTML file directly

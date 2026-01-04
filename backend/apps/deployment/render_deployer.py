@@ -13,6 +13,8 @@ import hashlib
 import requests
 from django.conf import settings
 
+from .url_generator import url_generator
+
 
 class RenderDeployer:
     """
@@ -75,17 +77,13 @@ class RenderDeployer:
             raise Exception(f"Failed to deploy to Render: {str(e)}")
     
     def _get_branch_name(self, project):
-        """Generate unique branch name for project"""
-        import re
-        username = project.user.username.lower()
-        # Remove all non-alphanumeric chars except hyphen
-        username = re.sub(r'[^a-z0-9-]', '', username)[:15]
+        """
+        Generate unique branch name for project.
         
-        project_slug = project.name.lower()
-        # Remove all non-alphanumeric chars except hyphen
-        project_slug = re.sub(r'[^a-z0-9-]', '', project_slug.replace(' ', '-'))[:20]
-        
-        return f"app-{username}-{project_slug}-{project.id}"
+        Uses centralized URL generator - SINGLE SOURCE OF TRUTH.
+        Format: app{random_lowercase_alphanumeric}
+        """
+        return url_generator.generate_branch(project.id)
     
     def _extract_frontend_code(self, project):
         """Extract frontend code from project"""

@@ -13,6 +13,8 @@ import hashlib
 from io import BytesIO
 from django.conf import settings
 
+from ..url_generator import url_generator
+
 
 class FastReactDeployer:
     """
@@ -94,12 +96,9 @@ RUN npm install --legacy-peer-deps
     
     def deploy_react_app(self, project):
         """Deploy React app with optimized build"""
-        # Use consistent subdomain generation (must match DomainManager)
-        username = project.user.username.lower().replace('_', '-').replace(' ', '-')
-        # Shorten project name but keep it unique with ID
-        project_slug = project.name.lower().replace(' ', '-').replace('_', '-')[:30]
-        subdomain = f"{username}-{project_slug}-{project.id}"
-        container_name = f"app-{subdomain}"
+        # Use centralized URL generator - SINGLE SOURCE OF TRUTH
+        subdomain = url_generator.generate_slug(project.id)
+        container_name = subdomain
         
         try:
             # Stop existing container if any
