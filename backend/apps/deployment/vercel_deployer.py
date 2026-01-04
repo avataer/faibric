@@ -673,6 +673,8 @@ function App() {
             
             if resp.status_code in (200, 201):
                 logger.info(f"[VERCEL] Added custom domain: {domain}")
+                # Issue SSL certificate for the domain
+                self._issue_ssl_certificate(domain)
             elif resp.status_code == 409:
                 # Domain already exists, that's fine
                 logger.info(f"[VERCEL] Domain already configured: {domain}")
@@ -681,6 +683,32 @@ function App() {
                 logger.warning(f"[VERCEL] Could not add domain {domain}: {error}")
         except Exception as e:
             logger.warning(f"[VERCEL] Error adding custom domain: {e}")
+    
+    def _issue_ssl_certificate(self, domain: str):
+        """
+        Request an SSL certificate for a domain from Vercel/Let's Encrypt.
+        
+        This is required for HTTPS to work on custom domains.
+        """
+        try:
+            params = {"teamId": self.team_id} if self.team_id else {}
+            
+            resp = requests.post(
+                f"{VERCEL_API_URL}/v6/certs",
+                headers=self.headers,
+                params=params,
+                json={"domains": [domain]},
+                timeout=30
+            )
+            
+            if resp.status_code in (200, 201):
+                cert_data = resp.json()
+                logger.info(f"[VERCEL] SSL certificate issued for {domain}, expires: {cert_data.get('expiration')}")
+            else:
+                error = resp.json().get('error', {}).get('message', resp.text)
+                logger.warning(f"[VERCEL] Could not issue SSL cert for {domain}: {error}")
+        except Exception as e:
+            logger.warning(f"[VERCEL] Error issuing SSL certificate: {e}")
     
     def _wait_for_ready(self, deployment_id: str, timeout: int = 180) -> Optional[str]:
         """Wait for deployment to be ready and return the URL."""
