@@ -169,28 +169,14 @@ class CodeValidator:
         errors = []
         nesting_errors = []
         
-        # CHECK 1: Fix "return (" followed directly by "{" without wrapper
-        # This means multiple JSX expressions without a Fragment wrapper
-        # Pattern: `return (\n    {something}` should be `return (\n    <>\n    {something}` 
-        return_no_wrapper_pattern = re.compile(
-            r'(return\s*\(\s*\n\s*)(\{[^}]+\}\s*\n\s*\{)',
-            re.MULTILINE
-        )
-        if return_no_wrapper_pattern.search(code):
-            # Add Fragment wrapper
-            code = return_no_wrapper_pattern.sub(r'\1<>\n        \2', code)
-            # Also need to close the fragment before the closing paren
-            # Find the return statement's closing ) and add </>
-            errors.append(ValidationError(
-                error_type="jsx_missing_wrapper",
-                message="Auto-fixed: Added Fragment wrapper around multiple JSX children",
-                severity="warning",
-                auto_fix="Added <> and </> wrapper"
-            ))
+        # CHECK 1: Fix "return (" followed by "{" or just whitespace (no JSX wrapper)
+        # This is a common AI bug where return ( is followed by {expressions} without a wrapper
+        # We need to wrap the entire return body in <> and </>
+        code = self._fix_unwrapped_return_statements(code, errors)
         
         # CHECK 2: Fix incomplete component tags - missing component name
         # Pattern: `&& (\n    apiData={...}` should be `&& <AnalyticsView\n    apiData={...}`
-        # This happens when AI generates broken JSX like `{condition && (\n    props={value}` 
+        # This happens when AI generates broken JSX
         incomplete_component_pattern = re.compile(
             r'(\&\&\s*\(\s*\n\s*)(\w+\s*=\s*\{)',
             re.MULTILINE
@@ -740,6 +726,101 @@ class CodeValidator:
                 ))
         
         return warnings
+    
+    def _fix_unwrapped_return_statements(self, code: str, errors: List[ValidationError]) -> str:
+        """
+        Fix return statements that have multiple JSX children without a Fragment wrapper.
+        
+        Pattern detected:
+            return (
+                {condition && <Component />}
+                {condition2 && <Component2 />}
+            );
+        
+        Fixed to:
+            return (
+                <>
+                    {condition && <Component />}
+                    {condition2 && <Component2 />}
+                </>
+            );
+        """
+        lines = code.split('\n')
+        result_lines = []
+        i = 0
+        
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+            
+            # Detect "return (" pattern
+            if stripped == 'return (' or stripped.endswith('return ('):
+                # Look at next non-empty line
+                j = i + 1
+                while j < len(lines) and not lines[j].strip():
+                    j += 1
+                
+                if j < len(lines):
+                    next_line = lines[j].strip()
+                    # If next line starts with { and not a JSX element, wrap with Fragment
+                    if next_line.startswith('{') and not next_line.startswith('{/*'):
+                        # This is a return with multiple expressions, needs Fragment
+                        # Find the matching closing );
+                        indent = len(line) - len(line.lstrip())
+                        inner_indent = ' ' * (indent + 4)
+                        
+                        # Add the return line
+                        result_lines.append(line)
+                        # Add Fragment opening
+                        result_lines.append(inner_indent + '<>')
+                        
+                        # Find all lines until );
+                        j = i + 1
+                        content_lines = []
+                        paren_depth = 1
+                        
+                        while j < len(lines) and paren_depth > 0:
+                            content_line = lines[j]
+                            content_stripped = content_line.strip()
+                            
+                            # Count parens
+                            paren_depth += content_stripped.count('(') - content_stripped.count(')')
+                            
+                            if paren_depth <= 0:
+                                # This is the closing );
+                                break
+                            
+                            content_lines.append(content_line)
+                            j += 1
+                        
+                        # Add content lines with extra indent
+                        for content_line in content_lines:
+                            if content_line.strip():
+                                result_lines.append('    ' + content_line)
+                            else:
+                                result_lines.append(content_line)
+                        
+                        # Add Fragment closing
+                        result_lines.append(inner_indent + '</>')
+                        
+                        # Add the closing );
+                        if j < len(lines):
+                            result_lines.append(lines[j])
+                        
+                        errors.append(ValidationError(
+                            error_type="jsx_missing_wrapper",
+                            message="Auto-fixed: Added Fragment wrapper around multiple JSX children in return statement",
+                            severity="warning",
+                            auto_fix="Added <> and </> wrapper"
+                        ))
+                        
+                        i = j + 1
+                        continue
+            
+            result_lines.append(line)
+            i += 1
+        
+        return '\n'.join(result_lines)
     
     def _check_undefined_types(self, code: str) -> Tuple[str, List[ValidationError]]:
         """
