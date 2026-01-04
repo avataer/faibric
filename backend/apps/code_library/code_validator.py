@@ -163,9 +163,45 @@ class CodeValidator:
         - Mismatched closing tags (closing </button> when </nav> expected)
         - Improperly nested elements
         - ORPHANED JSX after export default (causes "Expected identifier" errors)
+        - Missing Fragment wrapper around multiple JSX children
+        - Incomplete component tags (missing component name)
         """
         errors = []
         nesting_errors = []
+        
+        # CHECK 1: Fix "return (" followed directly by "{" without wrapper
+        # This means multiple JSX expressions without a Fragment wrapper
+        # Pattern: `return (\n    {something}` should be `return (\n    <>\n    {something}` 
+        return_no_wrapper_pattern = re.compile(
+            r'(return\s*\(\s*\n\s*)(\{[^}]+\}\s*\n\s*\{)',
+            re.MULTILINE
+        )
+        if return_no_wrapper_pattern.search(code):
+            # Add Fragment wrapper
+            code = return_no_wrapper_pattern.sub(r'\1<>\n        \2', code)
+            # Also need to close the fragment before the closing paren
+            # Find the return statement's closing ) and add </>
+            errors.append(ValidationError(
+                error_type="jsx_missing_wrapper",
+                message="Auto-fixed: Added Fragment wrapper around multiple JSX children",
+                severity="warning",
+                auto_fix="Added <> and </> wrapper"
+            ))
+        
+        # CHECK 2: Fix incomplete component tags - missing component name
+        # Pattern: `&& (\n    apiData={...}` should be `&& <AnalyticsView\n    apiData={...}`
+        # This happens when AI generates broken JSX like `{condition && (\n    props={value}` 
+        incomplete_component_pattern = re.compile(
+            r'(\&\&\s*\(\s*\n\s*)(\w+\s*=\s*\{)',
+            re.MULTILINE
+        )
+        if incomplete_component_pattern.search(code):
+            errors.append(ValidationError(
+                error_type="jsx_incomplete_component",
+                message="Detected incomplete component tag (missing component name after &&)",
+                severity="error",
+                auto_fix=None  # Can't auto-fix - don't know which component
+            ))
         
         # FIRST: Remove orphaned JSX after the App function closes or after export
         # This is a common AI generation bug - AI leaves orphaned </div> tags
