@@ -167,40 +167,50 @@ class CodeValidator:
         errors = []
         nesting_errors = []
         
-        # FIRST: Remove orphaned JSX after export default
-        # This is a common AI generation bug
+        # FIRST: Remove orphaned JSX after the App function closes or after export
+        # This is a common AI generation bug - AI leaves orphaned </div> tags
+        # The pattern looks like: `};` then `</div>` then `export default`
         lines = code.split('\n')
         cleaned_lines = []
         export_seen = False
+        after_app_function = False  # Track when we're past the App function body
         
-        for line in lines:
+        for i, line in enumerate(lines):
             stripped = line.strip()
+            
+            # Detect when App function closes (pattern: `};` on its own line)
+            # This happens after the return statement closes
+            if stripped == '};' and not export_seen:
+                after_app_function = True
             
             if 'export default' in line:
                 export_seen = True
+                after_app_function = False  # Reset after export is processed
             
-            # After export, remove any JSX lines
-            if export_seen:
-                # Skip orphaned JSX tags after export
+            # Between function close and export, or after export - remove orphaned JSX
+            skip_line = False
+            if after_app_function or export_seen:
+                # Skip orphaned JSX closing tags like </div>
                 if stripped.startswith('</') and stripped.endswith('>'):
                     errors.append(ValidationError(
                         error_type="jsx_orphaned",
-                        message=f"Auto-fixed: Removed orphaned closing tag after export: {stripped}",
+                        message=f"Auto-fixed: Removed orphaned closing tag: {stripped}",
                         severity="warning",
                         auto_fix=f"Removed {stripped}"
                     ))
-                    continue
-                if stripped.startswith('<') and not stripped.startswith('//'):
-                    # Skip any JSX after export
+                    skip_line = True
+                # Skip orphaned JSX opening tags
+                elif stripped.startswith('<') and not stripped.startswith('//') and not 'export' in stripped:
                     errors.append(ValidationError(
                         error_type="jsx_orphaned", 
-                        message=f"Auto-fixed: Removed orphaned JSX after export: {stripped[:50]}",
+                        message=f"Auto-fixed: Removed orphaned JSX: {stripped[:50]}",
                         severity="warning",
                         auto_fix=f"Removed orphaned JSX"
                     ))
-                    continue
+                    skip_line = True
             
-            cleaned_lines.append(line)
+            if not skip_line:
+                cleaned_lines.append(line)
         
         code = '\n'.join(cleaned_lines)
         
