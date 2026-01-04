@@ -135,6 +135,10 @@ class VercelDeployer:
             project_slug = deployment.get('name', '')
             if project_slug:
                 self._disable_sso_protection(project_slug)
+                
+                # Step 2.6: Add faibric.com subdomain to the project
+                faibric_subdomain = f"{project_slug}.{url_generator.domain}"
+                self._add_custom_domain(project_slug, faibric_subdomain)
             
             # Step 3: Wait for deployment to be ready
             vercel_url = self._wait_for_ready(deployment['id'])
@@ -648,6 +652,35 @@ function App() {
                     logger.info(f"[VERCEL] Disabled SSO protection for {project_name}")
         except Exception as e:
             logger.warning(f"[VERCEL] Could not disable SSO protection: {e}")
+    
+    def _add_custom_domain(self, project_name: str, domain: str):
+        """
+        Add a custom domain (e.g., app123.faibric.com) to a Vercel project.
+        
+        This enables the app to be accessed via faibric.com subdomain.
+        """
+        try:
+            params = {"teamId": self.team_id} if self.team_id else {}
+            
+            # Add domain to project
+            resp = requests.post(
+                f"{VERCEL_API_URL}/v10/projects/{project_name}/domains",
+                headers=self.headers,
+                params=params,
+                json={"name": domain},
+                timeout=15
+            )
+            
+            if resp.status_code in (200, 201):
+                logger.info(f"[VERCEL] Added custom domain: {domain}")
+            elif resp.status_code == 409:
+                # Domain already exists, that's fine
+                logger.info(f"[VERCEL] Domain already configured: {domain}")
+            else:
+                error = resp.json().get('error', {}).get('message', resp.text)
+                logger.warning(f"[VERCEL] Could not add domain {domain}: {error}")
+        except Exception as e:
+            logger.warning(f"[VERCEL] Error adding custom domain: {e}")
     
     def _wait_for_ready(self, deployment_id: str, timeout: int = 180) -> Optional[str]:
         """Wait for deployment to be ready and return the URL."""
