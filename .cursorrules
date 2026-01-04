@@ -1,5 +1,18 @@
 # FAIBRIC PROJECT RULES
 
+## MANDATORY FIRST READ
+
+**Before starting ANY work on Faibric, READ: `AI_ASSISTANT_RULES.md`**
+
+This file contains critical rules for:
+- How to test Faibric (as a human customer only)
+- When to fix Faibric's code vs. manual intervention (always fix code)
+- SSL, DNS, and deployment handling (all automatic, never manual)
+
+Link: `/Users/abram/Code/Faibric/AI_ASSISTANT_RULES.md`
+
+---
+
 ## PERMANENT OWNER RULES
 
 These rules are ENFORCED BY CODE, not just documented.
@@ -75,3 +88,22 @@ NO rule exists as just text/instructions.
 | `problem_registry.py` | Tracks problems + requires fixes |
 | `build_service.py` | Orchestrates build + deployment |
 | `owner_instructions.py` | Runtime instruction enforcement |
+
+---
+
+## TESTING RULE (CRITICAL)
+
+When testing Faibric's features:
+
+**DO:**
+- Act as a human customer using normal language
+- Use Faibric's API endpoints as a real user would
+- Check that deployed URLs work
+
+**DO NOT:**
+- Manually issue SSL certificates
+- Manually configure DNS
+- Manually deploy to Vercel/Render
+- Bypass any Faibric functionality
+
+**If Faibric fails to do something automatically, FIX FAIBRIC'S CODE. Never do its job manually.**
