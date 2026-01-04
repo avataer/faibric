@@ -16,11 +16,14 @@ Requirements:
 Format: app{random_id}
 Example: app7x3km9p2w
 
+Final URL: app7x3km9p2w.faibric.com (configurable via APP_DOMAIN env var)
+
 References:
 - https://github.com/ai/nanoid - Nanoid (secure, URL-friendly IDs)
 - https://yourls.org/docs/guide/essentials/charset - Base36 charset
 """
 
+import os
 import secrets
 import hashlib
 import time
@@ -28,6 +31,10 @@ import logging
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+# App domain - configurable via environment variable
+# Default: faibric.com
+APP_DOMAIN = os.environ.get('APP_DOMAIN', 'faibric.com')
 
 # ALPHABET: Only lowercase letters and numbers (36 characters)
 # This is Base36 - proven reliable for URL-safe IDs
@@ -130,6 +137,37 @@ def generate_service_name(project_id: int) -> str:
     return generate_app_slug(project_id)
 
 
+def generate_app_url(project_id: Optional[int] = None, slug: Optional[str] = None) -> str:
+    """
+    Generate the full app URL using faibric.com domain.
+    
+    This is the CANONICAL way to get the final deployed URL.
+    
+    Args:
+        project_id: Project ID (will generate new slug if no slug provided)
+        slug: Existing slug to use (optional)
+    
+    Returns:
+        Full URL like "https://app7x3km9p2wq.faibric.com"
+    """
+    if not slug:
+        slug = generate_app_slug(project_id)
+    
+    url = f"https://{slug}.{APP_DOMAIN}"
+    logger.info(f"[URL_GENERATOR] Generated URL: {url}")
+    return url
+
+
+def get_domain() -> str:
+    """
+    Get the configured app domain.
+    
+    Returns:
+        The app domain (e.g., "faibric.com")
+    """
+    return APP_DOMAIN
+
+
 def is_valid_slug(slug: str) -> bool:
     """
     Validate that a slug matches our format.
@@ -159,7 +197,8 @@ class URLGenerator:
         from apps.deployment.url_generator import url_generator
         
         slug = url_generator.generate_slug(project_id=123)
-        branch = url_generator.generate_branch(project_id=123)
+        url = url_generator.generate_url(project_id=123)
+        # url = "https://app7x3km9p2wq.faibric.com"
     """
     
     _instance = None
@@ -169,9 +208,22 @@ class URLGenerator:
             cls._instance = super().__new__(cls)
         return cls._instance
     
+    @property
+    def domain(self) -> str:
+        """Get the app domain (e.g., faibric.com)."""
+        return APP_DOMAIN
+    
     def generate_slug(self, project_id: Optional[int] = None) -> str:
         """Generate a unique app slug."""
         return generate_app_slug(project_id)
+    
+    def generate_url(self, project_id: Optional[int] = None, slug: Optional[str] = None) -> str:
+        """
+        Generate the full app URL.
+        
+        Returns URL like: https://app7x3km9p2wq.faibric.com
+        """
+        return generate_app_url(project_id, slug)
     
     def generate_branch(self, project_id: int) -> str:
         """Generate a unique branch name."""

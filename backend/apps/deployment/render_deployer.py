@@ -64,11 +64,15 @@ class RenderDeployer:
             self._push_to_github(branch_name, frontend_code, project)
             
             # Create or update Render static site
-            site_url = self._create_render_site(branch_name, project)
+            render_url = self._create_render_site(branch_name, project)
+            
+            # Generate the canonical faibric.com URL
+            canonical_url = url_generator.generate_url(slug=branch_name)
             
             return {
                 'success': True,
-                'url': site_url,
+                'url': canonical_url,  # Return faibric.com URL
+                'render_url': render_url,  # Keep Render URL for reference
                 'branch': branch_name
             }
             

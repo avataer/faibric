@@ -137,28 +137,37 @@ class VercelDeployer:
                 self._disable_sso_protection(project_slug)
             
             # Step 3: Wait for deployment to be ready
-            deployment_url = self._wait_for_ready(deployment['id'])
+            vercel_url = self._wait_for_ready(deployment['id'])
             
             deploy_time = time.time() - start_time
             
-            if deployment_url:
+            if vercel_url:
                 # CRITICAL: Verify the deployment actually works before reporting success
-                verification = self._verify_deployment(deployment_url)
+                verification = self._verify_deployment(vercel_url)
                 
                 if not verification['valid']:
                     logger.error(f"[VERCEL] Deployment verification FAILED: {verification['error']}")
                     return {
                         'success': False,
                         'error': f"Deployment verification failed: {verification['error']}",
-                        'url': deployment_url,
+                        'url': vercel_url,
                         'deployment_id': deployment['id'],
                         'provider': 'vercel'
                     }
                 
-                logger.info(f"[VERCEL] Deployed and VERIFIED {project_name} in {deploy_time:.1f}s: {deployment_url}")
+                # Generate the canonical faibric.com URL
+                # The slug is the Vercel project name (e.g., "app7x3km9p2wq")
+                slug = deployment.get('name', '')
+                canonical_url = url_generator.generate_url(slug=slug) if slug else vercel_url
+                
+                logger.info(f"[VERCEL] Deployed and VERIFIED {project_name} in {deploy_time:.1f}s")
+                logger.info(f"[VERCEL]   Vercel URL: {vercel_url}")
+                logger.info(f"[VERCEL]   Canonical URL: {canonical_url}")
+                
                 return {
                     'success': True,
-                    'url': deployment_url,
+                    'url': canonical_url,  # Return faibric.com URL
+                    'vercel_url': vercel_url,  # Keep Vercel URL for reference
                     'deployment_id': deployment['id'],
                     'deploy_time_seconds': deploy_time,
                     'provider': 'vercel',
