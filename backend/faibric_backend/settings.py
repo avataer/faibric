@@ -234,15 +234,25 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
 }
 
-# CORS Settings - Allow all origins for development
-# Deployed apps run on subdomains like batman1-myapp-123.localhost
-# They need to call http://localhost:8000/api/v1/db/...
-CORS_ALLOW_ALL_ORIGINS = True  # Allow all for development
+# CORS Settings - Allow all origins
+# Required for: localhost dev, deployed apps on *.faibric.com, etc.
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_ALLOW_ALL = True  # Older django-cors-headers compatibility
+CORS_ALLOW_CREDENTIALS = True
+
+# Explicit whitelist (used if CORS_ALLOW_ALL_ORIGINS is False)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
+    "http://localhost:8000",
+    "https://faibric-frontend.onrender.com",
+    "https://faibric.com",
 ]
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.faibric\.com$",
+    r"^https://.*\.onrender\.com$",
+    r"^https://.*\.vercel\.app$",
+]
 CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",
