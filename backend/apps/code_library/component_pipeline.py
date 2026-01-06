@@ -662,23 +662,23 @@ COMPONENT TYPES NEEDED: {components_desc}
 {spa_instruction}
 
 CRITICAL JSX RULES - MUST FOLLOW (VIOLATING THESE WILL CAUSE BUILD FAILURE):
-1. Every JSX element MUST have COMPLETE opening tags: <ComponentName prop={value}>, NOT just prop={value}
+1. Every JSX element MUST have COMPLETE opening tags: <ComponentName prop={{value}}>, NOT just prop={{value}}
 2. Every <div> MUST have a matching </div>
 3. Every component MUST start with <ComponentName and end with /> or </ComponentName>
 4. The App return statement MUST have this EXACT structure:
    return (
      <div className="...">
-       <Navigation currentView={currentView} onNavigate={handleNavigate} />
-       {/* content */}
+       <Navigation currentView={{currentView}} onNavigate={{handleNavigate}} />
+       {{/* content */}}
      </div>
    );
 5. NEVER write orphaned props like:
    WRONG: return (
-            currentView={currentView}  <- THIS IS BROKEN
+            currentView={{currentView}}  <- THIS IS BROKEN
           />
    CORRECT: return (
             <Navigation
-              currentView={currentView}
+              currentView={{currentView}}
             />
           );
 
@@ -688,7 +688,7 @@ Just use a simple span with className="animate-pulse text-gray-400" showing "---
 
 Example:
 const Placeholder = () => <span className="animate-pulse text-gray-400">$---</span>;
-Use: loading ? <Placeholder /> : <span>${{data.price}}</span>
+Use: loading ? <Placeholder /> : <span>${{{{data.price}}}}</span>
 
 REQUIREMENTS:
 1. Create a SINGLE complete App.tsx file
