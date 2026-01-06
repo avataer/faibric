@@ -268,7 +268,7 @@ REQUIREMENTS:
 1. Make it a REUSABLE building block, not tied to one specific use case
 2. Use Tailwind CSS for styling
 3. If it needs external data, use the Gateway:
-   fetch('https://faibric-api.onrender.com/api/gateway/', {{
+   fetch('https://api.faibric.com/api/gateway/', {{
      method: 'POST',
      headers: {{ 'Content-Type': 'application/json' }},
      body: JSON.stringify({{ service: 'SERVICE', endpoint: '/endpoint' }})
@@ -511,7 +511,7 @@ const [loading, setLoading] = React.useState(true);
 React.useEffect(() => {
   const fetchPrices = async () => {
     try {
-      const response = await fetch("https://faibric-api.onrender.com/api/gateway/", {
+      const response = await fetch("https://api.faibric.com/api/gateway/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -1256,7 +1256,7 @@ function App() {{
   const loadData = async () => {{
     setLoading(true);
     try {{
-      const response = await fetch("https://faibric-api.onrender.com/api/gateway/", {{
+      const response = await fetch("https://api.faibric.com/api/gateway/", {{
         method: "POST",
         headers: {{ "Content-Type": "application/json" }},
         body: JSON.stringify({{ service: "coingecko", endpoint: "/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true" }})

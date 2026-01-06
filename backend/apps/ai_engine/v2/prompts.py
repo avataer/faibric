@@ -177,7 +177,7 @@ If the user asks for stock/trading data, you MUST fetch real data:
 ```javascript
 useEffect(() => {{
   const fetchData = async () => {{
-    const res = await fetch('https://faibric-api.onrender.com/api/gateway/', {{
+    const res = await fetch('https://api.faibric.com/api/gateway/', {{
       method: 'POST',
       headers: {{ 'Content-Type': 'application/json' }},
       body: JSON.stringify({{ service: 'yahoo_finance', endpoint: '/chart/NBIS?range=1y&interval=1d' }})

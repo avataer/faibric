@@ -481,7 +481,7 @@ Return the complete App.tsx code. Start with import, end with export default App
 {chr(10).join(['- ' + k for k in keywords if k])}
 
 **Gateway Usage:**
-Uses Faibric Gateway at https://faibric-api.onrender.com/api/gateway/
+Uses Faibric Gateway at https://api.faibric.com/api/gateway/
 
 **How to Reuse:**
 This component can be adapted for similar requests. The AI will modify

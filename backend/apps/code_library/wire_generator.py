@@ -320,7 +320,7 @@ const [error, setError] = useState<Error | null>(null);
 
 // Gateway fetch function - reuse for all API calls
 const fetchFromGateway = async (service: string, endpoint: string) => {
-  const response = await fetch("https://faibric-api.onrender.com/api/gateway/", {
+  const response = await fetch("https://api.faibric.com/api/gateway/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ service, endpoint })
@@ -664,7 +664,7 @@ const [loading, setLoading] = useState(true);
 const [error, setError] = useState<Error | null>(null);
 
 const fetchFromGateway = async (service: string, endpoint: string) => {
-  const response = await fetch("https://faibric-api.onrender.com/api/gateway/", {
+  const response = await fetch("https://api.faibric.com/api/gateway/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ service, endpoint })

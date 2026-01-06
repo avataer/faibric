@@ -12,11 +12,11 @@ ALWAYS use the Faibric Gateway at /api/gateway/
 
 ### How to use the Gateway:
 
-IMPORTANT: Always use the FULL URL: https://faibric-api.onrender.com/api/gateway/
+IMPORTANT: Always use the FULL URL: https://api.faibric.com/api/gateway/
 
 ```javascript
 // For pre-configured services (weather, stocks, news, etc.)
-const response = await fetch('https://faibric-api.onrender.com/api/gateway/', {
+const response = await fetch('https://api.faibric.com/api/gateway/', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -49,7 +49,7 @@ function App() {
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const res = await fetch('https://faibric-api.onrender.com/api/gateway/', {
+        const res = await fetch('https://api.faibric.com/api/gateway/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -618,7 +618,7 @@ import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
     if needs_api:
         context_parts.append("""
 EXTERNAL DATA: Use Faibric Gateway
-await fetch('https://faibric-api.onrender.com/api/gateway/', { method: 'POST', body: JSON.stringify({ service: 'coingecko', endpoint: '/simple/price', params: { ids: 'bitcoin' } }) })
+await fetch('https://api.faibric.com/api/gateway/', { method: 'POST', body: JSON.stringify({ service: 'coingecko', endpoint: '/simple/price', params: { ids: 'bitcoin' } }) })
 Services: coingecko (crypto), yahoo_finance (stocks), restcountries (countries)
 """)
     
@@ -643,7 +643,7 @@ await window.FaibricAuth?.logout();
         context_parts.append("""
 TRADING/FINANCIAL DATA - USE REAL DATA:
 - FETCH REAL stock data using the Gateway: 
-  fetch('https://faibric-api.onrender.com/api/gateway/', {
+  fetch('https://api.faibric.com/api/gateway/', {
     method: 'POST',
     body: JSON.stringify({ service: 'yahoo_finance', endpoint: '/chart/NBIS?range=1y&interval=1d' })
   })
@@ -690,8 +690,8 @@ CRITICAL REQUIREMENTS:
 
 STOCK/FINANCIAL DATA REQUIREMENT:
 If the user asks for stock data, trading analysis, or financial data:
-- You MUST use useEffect to fetch REAL data from: https://faibric-api.onrender.com/api/gateway/
-- Example: fetch('https://faibric-api.onrender.com/api/gateway/', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{service:'yahoo_finance', endpoint:'/chart/NBIS?range=1y&interval=1d'}})}})
+- You MUST use useEffect to fetch REAL data from: https://api.faibric.com/api/gateway/
+- Example: fetch('https://api.faibric.com/api/gateway/', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{service:'yahoo_finance', endpoint:'/chart/NBIS?range=1y&interval=1d'}})}})
 - Parse result.data for actual prices
 - NEVER hardcode stock prices - they will be WRONG
 - Show loading state while fetching
@@ -787,7 +787,7 @@ This service automatically calculates investment returns with REAL data!
 
 ### Single Stock Investment:
 ```javascript
-const res = await fetch('https://faibric-api.onrender.com/api/gateway/', {
+const res = await fetch('https://api.faibric.com/api/gateway/', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -814,7 +814,7 @@ const { data } = await res.json();
 
 ### Portfolio (Multiple Stocks):
 ```javascript
-const res = await fetch('https://faibric-api.onrender.com/api/gateway/', {
+const res = await fetch('https://api.faibric.com/api/gateway/', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({

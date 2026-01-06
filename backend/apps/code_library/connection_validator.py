@@ -629,14 +629,14 @@ def validate_code_quality(code: str) -> ValidationResult:
     
     # 3. Check for Gateway API when data components are present
     has_data_components = any(kw in code.lower() for kw in ['chart', 'table', 'stats', 'price'])
-    has_gateway = 'faibric-api.onrender.com' in code or 'fetchFromGateway' in code
+    has_gateway = 'api.faibric.com' in code or 'fetchFromGateway' in code
     
     if has_data_components and not has_gateway:
         issues.append(ValidationIssue(
             level=ValidationLevel.WARNING,
             code="MISSING_GATEWAY",
             message="Data components present but no Gateway API integration",
-            suggestion="Add fetch calls to https://faibric-api.onrender.com/api/gateway/",
+            suggestion="Add fetch calls to https://api.faibric.com/api/gateway/",
         ))
     
     # 4. Check for hardcoded data (forbidden)

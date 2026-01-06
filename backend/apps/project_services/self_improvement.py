@@ -377,7 +377,7 @@ class SelfImprovementSystem:
             import requests
             
             response = requests.get(
-                'https://faibric-api.onrender.com/api/gateway/health/',
+                'https://api.faibric.com/api/gateway/health/',
                 timeout=10
             )
             

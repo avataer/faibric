@@ -77,7 +77,7 @@ class CodeValidator:
     ]
     
     # Gateway URL that MUST be used for external data
-    GATEWAY_URL = "faibric-api.onrender.com"
+    GATEWAY_URL = "api.faibric.com"
     
     # Patterns that indicate app needs external data
     DATA_INDICATORS = [

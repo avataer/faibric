@@ -326,7 +326,7 @@ class AIGeneratorV2(CodeLibraryMixin):
    useEffect(() => {
      const fetchStock = async () => {
        setLoading(true);
-       const res = await fetch('https://faibric-api.onrender.com/api/gateway/', {
+       const res = await fetch('https://api.faibric.com/api/gateway/', {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({ service: 'yahoo_finance', endpoint: '/chart/NBIS?range=1y&interval=1d' })
@@ -421,7 +421,7 @@ CRITICAL RULES:
 7. STOCK DATA - THIS IS MANDATORY:
    - You MUST fetch REAL data using the Gateway API
    - Use this EXACT code pattern in useEffect:
-     fetch('https://faibric-api.onrender.com/api/gateway/', {
+     fetch('https://api.faibric.com/api/gateway/', {
        method: 'POST',
        headers: { 'Content-Type': 'application/json' },
        body: JSON.stringify({ service: 'yahoo_finance', endpoint: '/chart/TICKER' })

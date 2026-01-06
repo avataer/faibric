@@ -248,7 +248,7 @@ class HybridDeployer:
         ]
         
         # Don't trigger on Gateway API (that's our shared backend)
-        if 'faibric-api.onrender.com' in code_lower:
+        if 'api.faibric.com' in code_lower:
             return False
         
         return False  # Default: assume static
