@@ -38,6 +38,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
   const [buildStatus, setBuildStatus] = useState<string>('initializing')
   const [buildProgress, setBuildProgress] = useState(0)
   const [targetProgress, setTargetProgress] = useState(0) // Smooth animation target
+  const lastProgressUpdate = useRef<number>(Date.now())
   const [buildPhase, setBuildPhase] = useState<string>('Starting...')
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null)
   const [generatedCode, setGeneratedCode] = useState<string | null>(null)
@@ -62,6 +63,11 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
         timestamp: new Date(),
       },
     ])
+    
+    // Start with slow initial progress
+    setTargetProgress(3)
+    setBuildProgress(0)
+    lastProgressUpdate.current = Date.now()
   }, [initialRequest])
 
   // Poll for build status - only while building
@@ -115,33 +121,47 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
             const latestMsg = progressEvents[progressEvents.length - 1].event_data.message
             setBuildPhase(latestMsg)
             
-            // Calculate progress based on events - set target for smooth animation
-            if (data.status === 'deployed') {
-              setTargetProgress(100)
-            } else if (latestMsg.includes('VERIFIED') || latestMsg.includes('live')) {
-              setTargetProgress(95)
-            } else if (latestMsg.includes('Deploying') || latestMsg.includes('deploying')) {
-              setTargetProgress(85)
-            } else if (latestMsg.includes('Assembling') || latestMsg.includes('Finalizing')) {
-              setTargetProgress(75)
-            } else if (latestMsg.includes('footer') || latestMsg.includes('modal')) {
-              setTargetProgress(65)
-            } else if (latestMsg.includes('form') || latestMsg.includes('feature')) {
-              setTargetProgress(55)
-            } else if (latestMsg.includes('chart') || latestMsg.includes('stats')) {
-              setTargetProgress(45)
-            } else if (latestMsg.includes('table') || latestMsg.includes('list')) {
-              setTargetProgress(35)
-            } else if (latestMsg.includes('navigation') || latestMsg.includes('header')) {
-              setTargetProgress(25)
-            } else if (latestMsg.includes('layout') || latestMsg.includes('Building')) {
-              setTargetProgress(15)
-            } else if (latestMsg.includes('Planning') || latestMsg.includes('Analyzing')) {
-              setTargetProgress(10)
-            } else {
-              // Gradual increase based on number of events
-              setTargetProgress(Math.min(70, 5 + progressEvents.length * 8))
-            }
+            // Calculate progress based on events - NEVER jump more than 15% at a time
+            setTargetProgress(prev => {
+              let newTarget = prev
+              
+              if (data.status === 'deployed') {
+                newTarget = 100
+              } else if (latestMsg.includes('VERIFIED') || latestMsg.includes('live')) {
+                newTarget = Math.max(prev, 95)
+              } else if (latestMsg.includes('Deploying') || latestMsg.includes('deploying')) {
+                newTarget = Math.max(prev, 85)
+              } else if (latestMsg.includes('Assembling') || latestMsg.includes('Finalizing')) {
+                newTarget = Math.max(prev, 75)
+              } else if (latestMsg.includes('footer') || latestMsg.includes('modal')) {
+                newTarget = Math.max(prev, 65)
+              } else if (latestMsg.includes('form') || latestMsg.includes('feature')) {
+                newTarget = Math.max(prev, 55)
+              } else if (latestMsg.includes('chart') || latestMsg.includes('stats')) {
+                newTarget = Math.max(prev, 45)
+              } else if (latestMsg.includes('table') || latestMsg.includes('list')) {
+                newTarget = Math.max(prev, 35)
+              } else if (latestMsg.includes('navigation') || latestMsg.includes('header')) {
+                newTarget = Math.max(prev, 25)
+              } else if (latestMsg.includes('layout')) {
+                newTarget = Math.max(prev, 18)
+              } else if (latestMsg.includes('Building')) {
+                newTarget = Math.max(prev, 12)
+              } else if (latestMsg.includes('Planning')) {
+                newTarget = Math.max(prev, 8)
+              } else if (latestMsg.includes('Analyzing')) {
+                newTarget = Math.max(prev, 5)
+              } else {
+                // Small gradual increase
+                newTarget = Math.min(70, prev + 3)
+              }
+              
+              // LIMIT: Never jump more than 15% at once (except for 100%)
+              if (newTarget < 100) {
+                return Math.min(newTarget, prev + 15)
+              }
+              return newTarget
+            })
           }
           
           setMessages(prev => {
@@ -193,18 +213,35 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     return () => clearInterval(interval)
   }, [sessionToken, deploymentUrl, onDeployed, isBuilding]) // Stop polling when deployed
 
-  // Smooth progress animation - gradually approach target
+  // Smooth progress animation - VERY gradually approach target
+  // This creates realistic, slow progress that never jumps
   useEffect(() => {
-    if (buildProgress < targetProgress) {
-      const timer = setTimeout(() => {
-        // Smooth increment towards target
-        const diff = targetProgress - buildProgress
-        const increment = Math.max(1, Math.floor(diff / 10))
-        setBuildProgress(prev => Math.min(targetProgress, prev + increment))
-      }, 100)
-      return () => clearTimeout(timer)
+    const animateProgress = () => {
+      const now = Date.now()
+      const timeSinceLastUpdate = now - lastProgressUpdate.current
+      
+      // Only update every 200ms for smoother animation
+      if (timeSinceLastUpdate < 200) return
+      
+      setBuildProgress(prev => {
+        if (prev >= targetProgress) return prev
+        
+        // SLOW increment: max 2% per update, slower as we get closer to target
+        const diff = targetProgress - prev
+        const increment = Math.min(2, Math.max(0.5, diff * 0.1))
+        const newProgress = Math.min(targetProgress, prev + increment)
+        
+        lastProgressUpdate.current = now
+        return Math.round(newProgress * 10) / 10 // Round to 1 decimal
+      })
     }
-  }, [buildProgress, targetProgress])
+    
+    // Animate continuously while building
+    if (isBuilding && buildProgress < targetProgress) {
+      const timer = setInterval(animateProgress, 200)
+      return () => clearInterval(timer)
+    }
+  }, [buildProgress, targetProgress, isBuilding])
 
   // Scroll to bottom on new messages
   useEffect(() => {
