@@ -227,7 +227,7 @@ class VercelDeployer:
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{project_name}</title>
+    <title>{self._generate_title(project_name)}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -274,6 +274,49 @@ root.render(React.createElement(App));
         files.append(self._file("vercel.json", vercel_config))
         
         return files
+    
+    def _generate_title(self, project_name: str) -> str:
+        """
+        Generate a professional page title from the project name/prompt.
+        
+        Rules:
+        - Max 50 characters
+        - Capitalize first letter of each word
+        - Remove "I need", "Build me", "Create a" etc.
+        - If still too long, use first meaningful phrase
+        """
+        import re
+        
+        # Remove common prompt prefixes
+        clean = project_name
+        prefixes_to_remove = [
+            r'^I am a\s+',
+            r'^I need a?\s+',
+            r'^Build me a?\s+',
+            r'^Create a?\s+',
+            r'^Make me a?\s+',
+            r'^I want a?\s+',
+            r'^A?\s*need a?\s+',
+        ]
+        for prefix in prefixes_to_remove:
+            clean = re.sub(prefix, '', clean, flags=re.IGNORECASE)
+        
+        # Take first 50 chars and find a natural break point
+        if len(clean) > 50:
+            # Try to break at a space
+            clean = clean[:50]
+            last_space = clean.rfind(' ')
+            if last_space > 20:
+                clean = clean[:last_space]
+        
+        # Title case
+        clean = clean.strip().title()
+        
+        # If empty or too short, use generic
+        if len(clean) < 3:
+            clean = "My App"
+        
+        return clean
     
     def _convert_to_browser_react(self, code: str) -> str:
         """

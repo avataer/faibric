@@ -180,6 +180,11 @@ class CodeValidator:
         # We can detect props by: word followed by = followed by {
         code = self._fix_missing_opening_tags(code, errors)
         
+        # CHECK 3: Fix empty conditionals and orphaned props
+        # Pattern 1: `{condition && ()}` - empty conditional block
+        # Pattern 2: `isOpen={value}` appearing after `)}` without a component tag
+        code = self._fix_empty_conditionals_and_orphan_props(code, errors)
+        
         # FIRST: Remove orphaned JSX after the App function closes or after export
         # This is a common AI generation bug - AI leaves orphaned </div> tags
         # The pattern looks like: `};` then `</div>` then `export default`
@@ -877,6 +882,78 @@ class CodeValidator:
                         ))
                         
                         i = j + 1
+                        continue
+            
+            result_lines.append(line)
+            i += 1
+        
+        return '\n'.join(result_lines)
+    
+    def _fix_empty_conditionals_and_orphan_props(self, code: str, errors: List[ValidationError]) -> str:
+        """
+        Fix common AI generation bugs:
+        1. Empty conditionals: {condition && ()} or {condition && (\n        )}
+        2. Orphaned props: props appearing after a component without an opening tag
+        
+        Example of broken code:
+            {currentView === "contact" && (
+            )}                              <- Empty conditional
+            isOpen={isModalOpen}           <- Orphaned prop (missing <Modal)
+        """
+        lines = code.split('\n')
+        result_lines = []
+        i = 0
+        
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+            
+            # Pattern 1: Empty conditional - `&& (` followed by just `)}` or whitespace then `)}`
+            if '&& (' in stripped or stripped.endswith('&& ('):
+                # Look ahead for empty body
+                j = i + 1
+                while j < len(lines) and not lines[j].strip():
+                    j += 1
+                
+                if j < len(lines) and lines[j].strip() in [')', ')}', ');']:
+                    # This is an empty conditional - skip both lines
+                    errors.append(ValidationError(
+                        error_type="jsx_empty_conditional",
+                        message=f"Auto-fixed: Removed empty conditional: {stripped[:40]}",
+                        severity="warning",
+                        auto_fix="Removed empty && () block"
+                    ))
+                    i = j + 1
+                    continue
+            
+            # Pattern 2: Orphaned props after `)}` - line starts with lowercase prop=
+            if re.match(r'^\s+[a-z]\w*\s*=\s*[\{"]', line):
+                # Check if previous non-empty line ends with )} or />
+                prev_idx = len(result_lines) - 1
+                while prev_idx >= 0 and not result_lines[prev_idx].strip():
+                    prev_idx -= 1
+                
+                if prev_idx >= 0:
+                    prev_stripped = result_lines[prev_idx].strip()
+                    if prev_stripped.endswith(')}') or prev_stripped.endswith('/>'):
+                        # This is an orphaned prop - find all orphaned props and wrap them
+                        orphan_start = i
+                        while i < len(lines):
+                            current = lines[i].strip()
+                            if re.match(r'^[a-z]\w*\s*=\s*[\{"]', current):
+                                i += 1
+                            elif current == '/>' or current.startswith('/>'):
+                                # End of orphaned props - skip all including />
+                                errors.append(ValidationError(
+                                    error_type="jsx_orphaned_props",
+                                    message=f"Auto-fixed: Removed orphaned props without component tag",
+                                    severity="error",
+                                    auto_fix="Removed orphaned props (component tag was missing)"
+                                ))
+                                i += 1
+                                break
+                            else:
+                                break
                         continue
             
             result_lines.append(line)

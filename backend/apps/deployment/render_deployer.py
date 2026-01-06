@@ -379,7 +379,7 @@ export default {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{project.name}</title>
+    <title>{self._generate_title(project.name)}</title>
     <style>* {{ margin: 0; padding: 0; box-sizing: border-box; }}</style>
     <script>
       // Handle SPA redirect from 404.html
@@ -472,6 +472,38 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 </html>"""
         
         return files
+    
+    def _generate_title(self, project_name: str) -> str:
+        """
+        Generate a professional page title from the project name/prompt.
+        """
+        import re
+        
+        clean = project_name
+        prefixes_to_remove = [
+            r'^I am a\s+',
+            r'^I need a?\s+',
+            r'^Build me a?\s+',
+            r'^Create a?\s+',
+            r'^Make me a?\s+',
+            r'^I want a?\s+',
+            r'^A?\s*need a?\s+',
+        ]
+        for prefix in prefixes_to_remove:
+            clean = re.sub(prefix, '', clean, flags=re.IGNORECASE)
+        
+        if len(clean) > 50:
+            clean = clean[:50]
+            last_space = clean.rfind(' ')
+            if last_space > 20:
+                clean = clean[:last_space]
+        
+        clean = clean.strip().title()
+        
+        if len(clean) < 3:
+            clean = "My App"
+        
+        return clean
     
     def _inject_admin_panel(self, code: str, project) -> str:
         """
