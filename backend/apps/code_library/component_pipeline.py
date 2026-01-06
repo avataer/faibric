@@ -661,16 +661,26 @@ COMPONENT TYPES NEEDED: {components_desc}
 
 {spa_instruction}
 
-CRITICAL JSX RULES - MUST FOLLOW:
-1. Every <div> MUST have a matching </div>
-2. Every <main> MUST have a matching </main>
-3. Check your work: count opening and closing tags before finishing
-4. The App return statement should have this EXACT structure:
+CRITICAL JSX RULES - MUST FOLLOW (VIOLATING THESE WILL CAUSE BUILD FAILURE):
+1. Every JSX element MUST have COMPLETE opening tags: <ComponentName prop={value}>, NOT just prop={value}
+2. Every <div> MUST have a matching </div>
+3. Every component MUST start with <ComponentName and end with /> or </ComponentName>
+4. The App return statement MUST have this EXACT structure:
    return (
-     <div>
-       ... content ...
+     <div className="...">
+       <Navigation currentView={currentView} onNavigate={handleNavigate} />
+       {/* content */}
      </div>
    );
+5. NEVER write orphaned props like:
+   WRONG: return (
+            currentView={currentView}  <- THIS IS BROKEN
+          />
+   CORRECT: return (
+            <Navigation
+              currentView={currentView}
+            />
+          );
 
 PLACEHOLDER PATTERN (use when data fails to load):
 When fetch fails or data is unavailable, show a placeholder with animated pulse.
