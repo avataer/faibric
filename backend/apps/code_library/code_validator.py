@@ -175,19 +175,10 @@ class CodeValidator:
         code = self._fix_unwrapped_return_statements(code, errors)
         
         # CHECK 2: Fix incomplete component tags - missing component name
-        # Pattern: `&& (\n    apiData={...}` should be `&& <AnalyticsView\n    apiData={...}`
-        # This happens when AI generates broken JSX
-        incomplete_component_pattern = re.compile(
-            r'(\&\&\s*\(\s*\n\s*)(\w+\s*=\s*\{)',
-            re.MULTILINE
-        )
-        if incomplete_component_pattern.search(code):
-            errors.append(ValidationError(
-                error_type="jsx_incomplete_component",
-                message="Detected incomplete component tag (missing component name after &&)",
-                severity="error",
-                auto_fix=None  # Can't auto-fix - don't know which component
-            ))
+        # Pattern 1: `return (\n    propName={...}` - missing opening tag after return
+        # Pattern 2: `&& (\n    propName={...}` - missing opening tag after &&
+        # We can detect props by: word followed by = followed by {
+        code = self._fix_missing_opening_tags(code, errors)
         
         # FIRST: Remove orphaned JSX after the App function closes or after export
         # This is a common AI generation bug - AI leaves orphaned </div> tags
@@ -726,6 +717,77 @@ class CodeValidator:
                 ))
         
         return warnings
+    
+    def _fix_missing_opening_tags(self, code: str, errors: List[ValidationError]) -> str:
+        """
+        Fix JSX where the opening tag component name is missing.
+        
+        Pattern detected:
+            return (
+                propName={value}   <- Missing <ComponentName before this
+                anotherProp={...}
+            />
+        
+        We detect this by finding `return (\n` or `&& (\n` followed by `word={`.
+        Unfortunately we can't auto-fix because we don't know the component name.
+        But we can log a warning and try to wrap in Fragment to prevent crash.
+        """
+        lines = code.split('\n')
+        result_lines = []
+        i = 0
+        
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+            
+            # Check for return ( or && (
+            if stripped == 'return (' or stripped.endswith('&& ('):
+                # Look at next non-empty line
+                j = i + 1
+                while j < len(lines) and not lines[j].strip():
+                    j += 1
+                
+                if j < len(lines):
+                    next_stripped = lines[j].strip()
+                    # Check if next line is a prop assignment without opening tag
+                    # Pattern: word={  or word= where word is lowercase (prop name)
+                    if re.match(r'^[a-z]\w*\s*=\s*[\{"]', next_stripped):
+                        # This is a prop without opening tag!
+                        errors.append(ValidationError(
+                            error_type="jsx_missing_opening_tag",
+                            message=f"Detected props without opening tag: '{next_stripped[:30]}...'",
+                            severity="error",
+                            auto_fix="Wrapped in Fragment (component name unknown)"
+                        ))
+                        
+                        # Find the closing /> and wrap everything in a Fragment
+                        # This won't make it work perfectly but will prevent crash
+                        result_lines.append(line)
+                        indent = len(lines[j]) - len(lines[j].lstrip())
+                        result_lines.append(' ' * indent + '<>')  # Add Fragment opener
+                        
+                        # Find the matching /> closing tag
+                        k = j
+                        while k < len(lines):
+                            if '/>' in lines[k].strip():
+                                # Add all lines up to and including />
+                                for m in range(j, k + 1):
+                                    result_lines.append(lines[m])
+                                # Add Fragment closer
+                                result_lines.append(' ' * indent + '</>')
+                                i = k + 1
+                                break
+                            k += 1
+                        else:
+                            # No /> found, just continue normally
+                            result_lines.append(line)
+                            i += 1
+                        continue
+            
+            result_lines.append(line)
+            i += 1
+        
+        return '\n'.join(result_lines)
     
     def _fix_unwrapped_return_statements(self, code: str, errors: List[ValidationError]) -> str:
         """
