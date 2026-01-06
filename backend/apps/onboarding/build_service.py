@@ -132,9 +132,9 @@ class BuildService:
             needs_backend = hybrid.detect_needs_backend(app_code, project.user_prompt or '')
             
             if needs_backend:
-                cls._add_event(session, 'Code validated - deploying to Render (needs backend)...')
+                cls._add_event(session, 'Code validated - deploying (full-stack mode)...')
             else:
-                cls._add_event(session, 'Code validated - deploying to Vercel (fast)...')
+                cls._add_event(session, 'Code validated - deploying...')
             
             deploy_result = hybrid.deploy(
                 project_name=project.name,
@@ -170,11 +170,11 @@ class BuildService:
             # For Render, we still need to wait for the build
             if provider == 'vercel' and deploy_result.success and deploy_result.verified:
                 verified = True
-                cls._add_event(session, f"[OK] VERIFIED Vercel deploy in {deploy_time:.0f}s: {url}")
+                cls._add_event(session, f"Deployed in {deploy_time:.0f}s: {url}")
             elif provider == 'vercel' and deploy_result.success and not deploy_result.verified:
                 # Vercel deployed but verification failed - don't show URL
                 verified = False
-                cls._add_event(session, f"[WARN] Vercel deploy succeeded but verification FAILED: {deploy_result.error or 'Unknown'}")
+                cls._add_event(session, f"Deploy verification in progress...")
             else:
                 # Render fallback - wait and verify
                 cls._add_event(session, f"Build queued: {url} - waiting for {provider}...")
@@ -185,7 +185,7 @@ class BuildService:
                 project.save()
                 session.status = 'deployed'
                 session.save()
-                cls._add_event(session, f"[OK] VERIFIED LIVE: {url}")
+                cls._add_event(session, f"Your app is live: {url}")
                 log_activity('deployed', f'Deployed: {project.name[:40]}', session, 'success', url)
                 logger.info(f"Build VERIFIED complete: {url}")
                 return {'success': True, 'url': url, 'verified': True}
