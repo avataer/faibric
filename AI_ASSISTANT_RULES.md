@@ -214,3 +214,30 @@ The AI assistant should only:
 
 **If you find yourself writing curl commands to Vercel/Render APIs during testing, STOP. Fix Faibric instead.**
 
+---
+
+## RULE 11: Always Deploy Changes Yourself
+
+**NEVER ask the user to manually trigger deploys.**
+
+When you push code changes:
+1. Commit and push to GitHub
+2. Trigger the deploy yourself (use Render API, dashboard automation, or MCP tools)
+3. Wait for deploy to complete
+4. Verify the changes are live
+5. THEN test the functionality
+
+If auto-deploy webhooks fail, find another way to trigger deploys programmatically.
+
+---
+
+## RULE 12: Complete Tasks End-to-End
+
+Never leave a task half-done. A task is NOT complete until:
+1. Code is committed and pushed
+2. Backend/frontend are deployed
+3. Functionality is tested and verified
+4. URLs are confirmed working
+
+If something blocks you, find a workaround. Don't ask the user to do it.
+
