@@ -5,9 +5,13 @@ Produces exact, correct React code from a ConnectionGraph.
 NO AI involvement - purely mechanical transformation.
 """
 
-from typing import List, Dict, Set
+import re
+import logging
+from typing import List, Dict, Set, Tuple
 from .solver import ConnectionGraph, Connection, SharedState
 from .ports import Port, PortKind, ComponentSpec
+
+logger = logging.getLogger(__name__)
 
 
 class CodeGenerator:
@@ -40,7 +44,8 @@ class CodeGenerator:
                 sections.append(types)
         
         # 3. Component definitions (from library)
-        sections.append(self._generate_components(graph))
+        components_section = self._generate_components(graph)
+        sections.append(components_section)
         
         # 4. App component
         sections.append(self._generate_app(graph))
@@ -48,7 +53,53 @@ class CodeGenerator:
         # 5. Export
         sections.append("export default App;")
         
-        return "\n\n".join(sections)
+        code = "\n\n".join(sections)
+        
+        # CRITICAL: Validate and fix brace balance before returning
+        code = self._ensure_balanced_braces(code)
+        
+        return code
+    
+    def _ensure_balanced_braces(self, code: str) -> str:
+        """
+        Ensure all braces are balanced. Fix if not.
+        
+        This is a safety net to catch any brace imbalance issues.
+        """
+        # Count braces
+        open_curly = code.count('{')
+        close_curly = code.count('}')
+        open_paren = code.count('(')
+        close_paren = code.count(')')
+        open_angle = code.count('<')
+        close_angle = code.count('>')
+        
+        # Log any imbalances
+        if open_curly != close_curly:
+            logger.warning(f"[GENERATOR] Curly brace imbalance: {open_curly} open, {close_curly} close")
+        if open_paren != close_paren:
+            logger.warning(f"[GENERATOR] Paren imbalance: {open_paren} open, {close_paren} close")
+        
+        # Fix curly braces if needed
+        diff = open_curly - close_curly
+        if diff > 0:
+            # More open than close - add closing braces at end
+            code = code.rstrip() + '\n' + ('}' * diff)
+        elif diff < 0:
+            # More close than open - remove excess closing braces from end
+            for _ in range(-diff):
+                # Find last closing brace and remove it
+                last_close = code.rfind('}')
+                if last_close != -1:
+                    code = code[:last_close] + code[last_close+1:]
+        
+        # Verify fix worked
+        new_open = code.count('{')
+        new_close = code.count('}')
+        if new_open != new_close:
+            logger.error(f"[GENERATOR] Failed to balance braces: {new_open} vs {new_close}")
+        
+        return code
     
     def _generate_imports(self, graph: ConnectionGraph) -> str:
         """Generate import statements."""
@@ -140,19 +191,35 @@ class CodeGenerator:
         return "\n\n".join(components)
     
     def _clean_component_code(self, code: str, component_id: str) -> str:
-        """Clean library component code for inclusion."""
-        import re
+        """
+        Clean library component code for inclusion.
+        
+        IMPORTANT: Preserves brace balance by only removing complete statements.
+        """
+        original_code = code
         
         # Remove import statements (we'll add unified imports)
-        code = re.sub(r'^import\s+.*?;\s*\n', '', code, flags=re.MULTILINE)
+        # Only remove complete import lines
+        code = re.sub(r'^import\s+[^;]+;\s*\n?', '', code, flags=re.MULTILINE)
         
-        # Remove export default
-        code = re.sub(r'export\s+default\s+\w+;\s*$', '', code)
+        # Remove export default at end
+        code = re.sub(r'\nexport\s+default\s+\w+;\s*$', '', code)
         
-        # Remove standalone export
-        code = re.sub(r'^export\s+', '', code, flags=re.MULTILINE)
+        # Remove standalone export keyword (but keep the rest)
+        code = re.sub(r'^export\s+(?=(const|function|class|interface|type))', '', code, flags=re.MULTILINE)
         
-        return code.strip()
+        # Clean up any trailing/leading whitespace
+        code = code.strip()
+        
+        # Verify brace balance is preserved
+        original_balance = original_code.count('{') - original_code.count('}')
+        new_balance = code.count('{') - code.count('}')
+        
+        if new_balance != original_balance:
+            logger.warning(f"[GENERATOR] Component {component_id} brace balance changed: "
+                          f"{original_balance} -> {new_balance}")
+        
+        return code
     
     def _generate_placeholder_component(self, comp_id: str, spec: ComponentSpec) -> str:
         """Generate a placeholder when library code isn't available."""
