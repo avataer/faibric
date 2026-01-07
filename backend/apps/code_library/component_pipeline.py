@@ -1158,7 +1158,28 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
     # Admin panel is injected by deployers (vercel_deployer, render_deployer)
     # Unused legacy code removed - see vercel_deployer._inject_admin_panel
 
-    # Admin panel code removed - handled by deployers
+    # Settings view - REQUIRED for all apps
+    settings_view = """
+        {currentView === "settings" && (
+          <div className="max-w-md">
+            <h2 className="text-2xl font-bold mb-4">Settings</h2>
+            <div className="bg-white p-4 rounded shadow space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Refresh Interval</label>
+                <select className="w-full p-2 border rounded">
+                  <option value="10000">10 seconds</option>
+                  <option value="30000">30 seconds</option>
+                  <option value="60000">1 minute</option>
+                </select>
+              </div>
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium">Data Source Status</p>
+                <p className="text-xs text-green-500">Connected</p>
+              </div>
+            </div>
+          </div>
+        )}
+    """
 
     compact_prompt = f"""
 Create a compact React app for this request: {prompt}
