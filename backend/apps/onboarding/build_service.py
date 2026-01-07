@@ -121,6 +121,11 @@ class BuildService:
             logger.info(f"[Build] Component stats: required={stats['components_required']}, "
                        f"reused={stats['components_reused']}, generated={stats['components_generated']}")
             
+            # Check if Connector V2 was used for wiring
+            is_connector_v2 = stats.get('wiring_method') == 'connector_v2'
+            if is_connector_v2:
+                logger.info(f"[Build] Using Connector V2 code (deterministic, trusted)")
+            
             # Step 3: Deploy using HYBRID strategy (Vercel first, Render fallback)
             # Vercel: 30-60 seconds deploy time
             # Render: 5-10 minutes deploy time (fallback)
@@ -141,7 +146,8 @@ class BuildService:
                 app_code=app_code,
                 project_id=str(project.id),
                 needs_backend=needs_backend,
-                user_prompt=project.user_prompt or session.initial_request or ''
+                user_prompt=project.user_prompt or session.initial_request or '',
+                is_connector_v2=is_connector_v2
             )
             
             # Update project with URL
