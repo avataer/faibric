@@ -6,6 +6,20 @@
 
 ---
 
+## ⚠️ URL Branding Policy
+
+**CRITICAL:** All customer-facing URLs MUST use `*.faibric.com` subdomains.
+
+Customers must NEVER see:
+- `*.vercel.app`
+- `*.onrender.com`
+- `*.netlify.app`
+- Any other provider domains
+
+All deployments are proxied through Faibric's domain for brand consistency.
+
+---
+
 ## Test Session Chat Log
 
 ### Customer 1: Registration
@@ -44,7 +58,7 @@
 [20:13:23] FAIBRIC: [████████████████████] 100%
 
 [20:13:23] FAIBRIC: ✓ DEPLOYED!
-[20:13:23] FAIBRIC: URL: https://bitcoin-tracker-abc123.vercel.app
+[20:13:23] FAIBRIC: URL: https://bitcoin-tracker-abc123.faibric.com
 ```
 
 ### Customer 1: Request Modification
@@ -58,7 +72,7 @@
 [20:13:23] FAIBRIC: Redeploying...
 
 [20:13:23] FAIBRIC: ✓ UPDATE COMPLETE!
-[20:13:23] FAIBRIC: URL: https://bitcoin-tracker-abc123.vercel.app
+[20:13:23] FAIBRIC: URL: https://bitcoin-tracker-abc123.faibric.com
 ```
 
 ### Customer 2: Create Weather Dashboard
@@ -75,7 +89,7 @@
 
 [20:13:23] FAIBRIC: Deploying...
 [20:13:23] FAIBRIC: ✓ DEPLOYED!
-[20:13:23] FAIBRIC: URL: https://weather-dashboard-xyz789.vercel.app
+[20:13:23] FAIBRIC: URL: https://weather-dashboard-xyz789.faibric.com
 ```
 
 ---
@@ -84,10 +98,12 @@
 
 | App | Customer Prompt | Type | URL |
 |-----|----------------|------|-----|
-| Bitcoin Tracker | "Build me a Bitcoin price tracker with live charts" | website | https://bitcoin-tracker-abc123.vercel.app |
-| Weather Dashboard | "Create a weather dashboard for NYC and LA" | dashboard | https://weather-dashboard-xyz789.vercel.app |
+| Bitcoin Tracker | "Build me a Bitcoin price tracker with live charts" | website | https://bitcoin-tracker-abc123.faibric.com |
+| Weather Dashboard | "Create a weather dashboard for NYC and LA" | dashboard | https://weather-dashboard-xyz789.faibric.com |
 
 **Note:** URLs are simulated for testing. Real deployments require `VERCEL_TOKEN` and `ANTHROPIC_API_KEY`.
+
+**URL Format:** `https://{app-slug}-{hash}.faibric.com` - Provider infrastructure is never exposed to customers.
 
 ---
 
