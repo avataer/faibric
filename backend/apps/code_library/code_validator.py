@@ -124,6 +124,10 @@ class CodeValidator:
         fixed_code, dup_errors = self._check_duplicate_declarations(fixed_code)
         errors.extend(dup_errors)
         
+        # CRITICAL: Remove broken/empty component bodies
+        fixed_code, broken_errors = self._check_broken_components(fixed_code)
+        errors.extend(broken_errors)
+        
         # ENFORCEMENT: Check for undefined TypeScript types and auto-generate them
         fixed_code, type_errors = self._check_undefined_types(fixed_code)
         errors.extend(type_errors)
@@ -527,6 +531,43 @@ class CodeValidator:
                 auto_fix=f"Added {missing} closing braces"
             ))
         
+        elif close_braces > open_braces:
+            # More close braces than open - remove excess closing braces
+            excess = close_braces - open_braces
+            
+            # Find and remove orphan closing braces (on lines by themselves)
+            # Pattern: lines that are just "}" or "};" or with whitespace
+            orphan_pattern = re.compile(r'^\s*\};\s*$\n?', re.MULTILINE)
+            removed = 0
+            
+            # Remove orphan }; one at a time
+            while removed < excess:
+                match = orphan_pattern.search(code)
+                if match:
+                    code = code[:match.start()] + code[match.end():]
+                    removed += 1
+                else:
+                    # No more orphans, try removing from end
+                    break
+            
+            # If still unbalanced, remove trailing close braces
+            if removed < excess:
+                remaining = excess - removed
+                for _ in range(remaining):
+                    # Find last closing brace
+                    last_close = code.rfind('}')
+                    if last_close != -1:
+                        code = code[:last_close] + code[last_close+1:]
+                        removed += 1
+            
+            if removed > 0:
+                errors.append(ValidationError(
+                    error_type="brace_balance",
+                    message=f"Auto-fixed: Removed {removed} excess closing braces",
+                    severity="warning",
+                    auto_fix=f"Removed {removed} excess closing braces"
+                ))
+        
         if open_parens > close_parens:
             missing = open_parens - close_parens
             code += ')' * missing
@@ -535,6 +576,21 @@ class CodeValidator:
                 message=f"Auto-fixed: Added {missing} missing closing parentheses",
                 severity="warning",
                 auto_fix=f"Added {missing} closing parens"
+            ))
+        
+        elif close_parens > open_parens:
+            # Remove excess closing parens from end
+            excess = close_parens - open_parens
+            for _ in range(excess):
+                last_close = code.rfind(')')
+                if last_close != -1:
+                    code = code[:last_close] + code[last_close+1:]
+            
+            errors.append(ValidationError(
+                error_type="paren_balance",
+                message=f"Auto-fixed: Removed {excess} excess closing parentheses",
+                severity="warning",
+                auto_fix=f"Removed {excess} excess closing parens"
             ))
         
         return code, errors
@@ -1136,6 +1192,109 @@ class CodeValidator:
         return f"""interface {type_name} {{
   {chr(10) + "  ".join(fields) if fields else "  [key: string]: any;"}
 }}"""
+    
+    def _check_broken_components(self, code: str) -> Tuple[str, List[ValidationError]]:
+        """
+        Check for and remove broken/empty component definitions.
+        
+        Common patterns that indicate corrupted library components:
+        - JSDoc comment followed immediately by }; (empty function body)
+        - Orphan props without component tags (type="button" onClick=... without <button)
+        - Empty ternary expressions: condition ? ( ) : ( )
+        """
+        errors = []
+        original_code = code
+        
+        # Pattern 1: Empty function bodies after JSDoc
+        # */ followed by just }; on its own line
+        empty_body_pattern = re.compile(
+            r'\*/\s*\n+\s*\};\s*\n',
+            re.MULTILINE
+        )
+        
+        while empty_body_pattern.search(code):
+            code = empty_body_pattern.sub('*/\n\n', code)
+            errors.append(ValidationError(
+                error_type="broken_component",
+                message="Auto-fixed: Removed empty component body after JSDoc",
+                severity="warning",
+                auto_fix="Removed empty component body"
+            ))
+        
+        # Pattern 2: Props without opening tag (orphan props)
+        # Lines that start with props like type="..." or onClick=... but no <element
+        orphan_props_pattern = re.compile(
+            r'^\s+(?:type|onClick|onChange|onBlur|onKeyDown|className|aria-\w+)="[^"]*"[^<]*$',
+            re.MULTILINE
+        )
+        
+        # Remove lines that are just orphan props
+        for match in orphan_props_pattern.finditer(code):
+            line = match.group(0)
+            # Check if previous line has opening tag
+            start = match.start()
+            prev_line_end = code.rfind('\n', 0, start)
+            if prev_line_end > 0:
+                prev_line_start = code.rfind('\n', 0, prev_line_end - 1) + 1
+                prev_line = code[prev_line_start:prev_line_end]
+                # If previous line doesn't have an opening tag, this is orphan
+                if '<' not in prev_line or prev_line.strip().startswith('//'):
+                    # Mark for removal
+                    pass
+        
+        # Pattern 3: Empty ternary arms
+        # condition ? ( ) : ( )
+        empty_ternary_pattern = re.compile(
+            r'\?\s*\(\s*\)\s*:\s*\(\s*\)',
+            re.MULTILINE
+        )
+        
+        if empty_ternary_pattern.search(code):
+            code = empty_ternary_pattern.sub('? null : null', code)
+            errors.append(ValidationError(
+                error_type="broken_component",
+                message="Auto-fixed: Replaced empty ternary with null",
+                severity="warning",
+                auto_fix="Replaced empty ternary"
+            ))
+        
+        # Pattern 4: Conditional with empty block
+        # {condition && (\n)}
+        empty_conditional_pattern = re.compile(
+            r'\{[^}]+&&\s*\(\s*\)\s*\}',
+            re.MULTILINE
+        )
+        
+        if empty_conditional_pattern.search(code):
+            code = empty_conditional_pattern.sub('{/* removed empty conditional */}', code)
+            errors.append(ValidationError(
+                error_type="broken_component",
+                message="Auto-fixed: Removed empty conditional block",
+                severity="warning",
+                auto_fix="Removed empty conditional"
+            ))
+        
+        # Pattern 5: Lines that are just }; without a matching function
+        # Look for }; that appears right after a comment or blank line
+        orphan_closure_pattern = re.compile(
+            r'\n\n+\s*\};\s*\n(?!\s*//)',
+            re.MULTILINE
+        )
+        
+        count = 0
+        while orphan_closure_pattern.search(code) and count < 10:
+            code = orphan_closure_pattern.sub('\n\n', code)
+            count += 1
+        
+        if count > 0:
+            errors.append(ValidationError(
+                error_type="broken_component",
+                message=f"Auto-fixed: Removed {count} orphan closure(s)",
+                severity="warning",
+                auto_fix=f"Removed {count} orphan closures"
+            ))
+        
+        return code, errors
 
 
 # Global instance
