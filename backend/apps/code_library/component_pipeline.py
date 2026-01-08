@@ -33,8 +33,8 @@ from apps.ai_engine.models_config import CODE_MODEL
 from .connector_v2.health_check import is_connector_v2_healthy, run_health_check
 from .connector_v2.pipeline_integration import compose_app_v2
 
-# Import deterministic composer (no AI, no truncation risk)
-from .deterministic_composer import compose_deterministic
+# Import modular composer (components as separate files)
+from .modular_composer import compose_modular
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +73,10 @@ class ComponentGenerationPipeline:
             'validation_issues': [],  # Connection validation issues
             'wiring_used': False,  # Whether auto-wiring was applied
         }
+        
+        # Component files for modular composition
+        # Dict mapping filepath to code, e.g., {"src/components/Hero.tsx": "<code>"}
+        self.component_files = {}
     
     def _update_progress(self, progress: int, message: str):
         """Update build progress for the customer to see."""
@@ -498,36 +502,36 @@ Return ONLY the component code, nothing else.
         global _connector_v2_status
         
         # STRATEGY:
-        # 1. Try DETERMINISTIC composition first (instant, no truncation)
-        # 2. If that fails, fall back to AI composition
+        # 1. Try MODULAR composition (components as separate files)
+        # 2. This produces a small App.tsx + component files
+        # 3. Store component files in self.component_files for deployer
         
-        # Try deterministic composition - embeds component code directly
         try:
-            logger.info("[COMPOSE] Using DETERMINISTIC composition (no AI)")
-            app_code = compose_deterministic(
+            logger.info("[COMPOSE] Using MODULAR composition (separate component files)")
+            files_dict, app_code = compose_modular(
                 components=components,
                 prompt=prompt,
                 needs_real_data=needs_real_data
             )
             
-            # Validate the generated code
+            # Store component files for the deployer to use
+            self.component_files = files_dict
+            
+            # Validate the generated App.tsx
             if app_code and 'function App' in app_code and 'export default' in app_code:
-                # Check for empty _OriginalApp or App
-                if 'return (\n  );' not in app_code and 'return (\n    );' not in app_code:
-                    logger.info(f"[COMPOSE] Deterministic SUCCESS: {len(app_code)} bytes")
-                    self.stats['wiring_method'] = 'deterministic'
-                    
-                    # Apply sanitization
-                    app_code = self._sanitize_code(app_code)
-                    app_code = self._fix_jsx_balance(app_code)
-                    
-                    return app_code
-                else:
-                    logger.warning("[COMPOSE] Deterministic produced empty App, falling back to AI")
+                logger.info(f"[COMPOSE] Modular SUCCESS: {len(app_code)} bytes App.tsx, {len(files_dict)} total files")
+                self.stats['wiring_method'] = 'modular'
+                self.stats['component_files'] = list(files_dict.keys())
+                
+                # Apply sanitization
+                app_code = self._sanitize_code(app_code)
+                app_code = self._fix_jsx_balance(app_code)
+                
+                return app_code
             else:
-                logger.warning("[COMPOSE] Deterministic output incomplete, falling back to AI")
+                logger.warning("[COMPOSE] Modular output incomplete, falling back to AI")
         except Exception as e:
-            logger.error(f"[COMPOSE] Deterministic failed: {e}, falling back to AI")
+            logger.error(f"[COMPOSE] Modular failed: {e}, falling back to AI")
         
         # Connector V2 is disabled (library components corrupted)
         _connector_v2_status = False
