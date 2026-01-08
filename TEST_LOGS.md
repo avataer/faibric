@@ -75,21 +75,17 @@ GET https://faibric-api.onrender.com/api/health/
 
 ### Root Cause Analysis
 
-The generation is stuck at the AI API call phase. Claude Opus 4.5 with 16K max_tokens is being called but:
+The generation is stuck at the AI API call phase. Investigation revealed infrastructure was incorrectly configured with starter plans instead of production-grade Standard plans.
 
-1. **Render free tier constraints:**
-   - Workers have limited RAM (~512MB)
-   - Workers can be suspended after inactivity
-   - Cold starts take 30-60 seconds
+**Issue:** `render.yaml` used `plan: starter` which has:
+- Limited RAM (~512MB)
+- Workers can be suspended after inactivity
+- Cold starts of 30-60 seconds
 
-2. **Claude API timeout:**
-   - The API call uses 16K max_tokens
-   - Large completions can take 60-120 seconds
-   - No timeout configured in the Anthropic client
-
-3. **Celery task may be dying silently:**
-   - No heartbeat logging visible
-   - No error status set when task times out
+**Fix Applied:** Updated all services to `plan: standard`:
+- 2GB RAM for API and Worker
+- Always-on instances (no suspension)
+- Proper resources for AI generation
 
 ---
 
@@ -155,42 +151,29 @@ dist/assets/index-DN5eojBM.js   680.88 kB (gzip: 206.58 kB)
 
 ---
 
-## Recommendations for Production
+## Infrastructure Policy
 
-### 1. Upgrade Render Plan
-The free tier has significant limitations:
-- Workers suspend after inactivity
-- Limited memory (~512MB)
-- Limited CPU
+**CRITICAL:** We prioritize product quality over cost savings.
 
-**Recommendation:** Upgrade to Starter ($7/month) or Standard ($25/month)
+### Required Plan Levels
 
-### 2. Add API Timeout
-The Anthropic client should have a timeout to prevent hanging:
+| Service | Required Plan | Resources |
+|---------|---------------|-----------|
+| API (Django) | Standard | 2GB RAM, always-on |
+| Worker (Celery) | Standard | 2GB RAM, always-on |
+| Redis | Standard | 256MB, persistent |
+| PostgreSQL | Standard | 1GB, daily backups |
 
-```python
-# In ai_client.py
-response = self.client.messages.create(
-    **kwargs,
-    timeout=90  # 90 second max
-)
-```
+### Never Use
 
-### 3. Add Generation Heartbeat
-Log progress during generation to detect stuck tasks:
+- Free tier plans
+- Starter plans
+- Any plan that suspends after inactivity
+- Any plan with insufficient RAM for AI workloads
 
-```python
-# In v2/generator.py
-def generate_app(self, user_prompt, project_id):
-    logger.info(f"[{project_id}] Starting AI generation...")
-    # ... API call ...
-    logger.info(f"[{project_id}] AI response received, processing...")
-```
+### Config Applied
 
-### 4. Consider Faster Model
-Claude Opus 4.5 is the most capable but also slowest. For simple apps:
-- Claude Sonnet 4 is 2-3x faster
-- Still very capable for code generation
+All services in `render.yaml` now use `plan: standard` with explicit comments warning against downgrades
 
 ---
 
@@ -240,6 +223,7 @@ cd frontend && npm run dev
 9. Fixed useCallback stale closure
 10. Replaced print statements with logging
 11. Fixed type annotations
+12. **Upgraded all Render services from starter to standard plans** - CRITICAL infrastructure fix
 
 ---
 
