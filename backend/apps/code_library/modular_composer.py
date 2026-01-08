@@ -167,9 +167,34 @@ class ModularComposer:
         close_braces = combined.count('}')
         if open_braces != close_braces:
             logger.warning(f"[MODULAR] Brace imbalance: {open_braces} open, {close_braces} close")
-            combined = self._fix_brace_balance(combined)
+            combined = self._fix_brace_balance(combined, open_braces, close_braces)
         
         return combined
+    
+    def _fix_brace_balance(self, code: str, open_count: int, close_count: int) -> str:
+        """Fix brace imbalance by adding/removing braces."""
+        if open_count > close_count:
+            # Too many opening braces - add closing braces at the end
+            missing = open_count - close_count
+            code = code.rstrip() + ('\n}' * missing)
+            logger.info(f"[MODULAR] Added {missing} closing braces")
+        elif close_count > open_count:
+            # Too many closing braces - remove excess from end
+            excess = close_count - open_count
+            # Remove trailing }
+            for _ in range(excess):
+                # Find last } that's not part of essential code
+                match = re.search(r'\}[;\s]*$', code)
+                if match:
+                    code = code[:match.start()] + code[match.end():]
+                else:
+                    # Try another pattern
+                    code = code.rstrip()
+                    if code.endswith('}'):
+                        code = code[:-1]
+            logger.info(f"[MODULAR] Removed {excess} excess closing braces")
+        
+        return code
     
     def _clean_component_for_embedding(self, code: str, component_name: str) -> str:
         """
