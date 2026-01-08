@@ -2,7 +2,7 @@
 
 **Test Date:** 2026-01-08
 **Branch:** `claude/code-review-pBBJT`
-**Status:** ⚠️ SIMULATED - Real deployment requires API keys
+**Production URL:** https://faibric-frontend.onrender.com
 
 ---
 
@@ -20,122 +20,80 @@ All deployments are proxied through Faibric's domain for brand consistency.
 
 ---
 
-## Test Session Chat Log (SIMULATED)
+## Production API Health Check
 
-> ⚠️ **These are simulated interactions.** Real deployment was not performed because API keys are not configured.
-
-### Customer 1: Registration
 ```
-[20:13:22] >>> CUSTOMER: I want to sign up for Faibric
+GET https://faibric-api.onrender.com/api/health/
 
-[20:13:22] SYSTEM: Registration endpoint ready
-[20:13:22] SYSTEM: Rate limit active: 5/minute
-[20:13:22] SYSTEM: Would create account with JWT tokens
-```
-
-### Customer 1: Create Bitcoin Tracker (SIMULATED)
-```
-[20:13:22] >>> CUSTOMER: "Build me a Bitcoin price tracker with live charts"
-
-[20:13:23] FAIBRIC: Analyzing your request...
-[20:13:23] FAIBRIC: Detected app type: website
-[20:13:23] FAIBRIC: Generated title: "Build Me A Bitcoin Price"
-
-[20:13:23] FAIBRIC: Decomposing into components...
-[20:13:23] FAIBRIC: - Navigation bar
-[20:13:23] FAIBRIC: - Hero section with Bitcoin logo
-[20:13:23] FAIBRIC: - PriceCard component (live price)
-[20:13:23] FAIBRIC: - ChartSection component (price history)
-[20:13:23] FAIBRIC: - Footer
-
-[20:13:23] FAIBRIC: Checking component library...
-[20:13:23] FAIBRIC: - Navigation: REUSED from library
-[20:13:23] FAIBRIC: - PriceCard: GENERATING new...
-[20:13:23] FAIBRIC: - ChartSection: REUSED from library
-[20:13:23] FAIBRIC: - Footer: REUSED from library
-
-[20:13:23] FAIBRIC: Required APIs detected: ['coingecko']
-
-[SIMULATION STOPPED - ANTHROPIC_API_KEY not set]
+{
+  "status": "healthy",
+  "service": "faibric-api",
+  "deployment": {
+    "vercel": {"configured": true, "message": "VERCEL_TOKEN configured (24 chars)"},
+    "render": {"configured": true},
+    "github": {"configured": true, "repo": "avataer/faibric-apps"},
+    "ai": {"configured": true}
+  }
+}
 ```
 
-### Customer 1: Request Modification (SIMULATED)
-```
-[20:13:23] >>> CUSTOMER: "Make the background darker and add a refresh button"
-
-[SIMULATION STOPPED - No deployed app to modify]
-```
-
-### Customer 2: Create Weather Dashboard (SIMULATED)
-```
-[20:13:23] >>> CUSTOMER 2: "Create a weather dashboard for NYC and LA"
-
-[20:13:23] FAIBRIC: Detected app type: dashboard
-[20:13:23] FAIBRIC: Title: "Create A Weather Dashboard For"
-
-[SIMULATION STOPPED - ANTHROPIC_API_KEY not set]
-```
+✅ All tokens configured in production
 
 ---
 
-## Apps Created
+## Real Test Session (Production API)
 
-| App | Customer Prompt | Type | URL | Status |
-|-----|----------------|------|-----|--------|
-| Bitcoin Tracker | "Build me a Bitcoin price tracker with live charts" | website | - | ❌ NOT DEPLOYED |
-| Weather Dashboard | "Create a weather dashboard for NYC and LA" | dashboard | - | ❌ NOT DEPLOYED |
+### Customer 1: Registration ✅
+```
+[20:28:58] >>> CUSTOMER: I want to sign up for Faibric
 
-### Why No Real URLs?
-
-Real deployment requires these environment variables to be set:
-
-```bash
-# Required for AI code generation
-ANTHROPIC_API_KEY=sk-ant-...
-
-# Required for deployment
-VERCEL_TOKEN=...
-
-# Required for code storage
-GITHUB_TOKEN=ghp_...
+[20:28:58] SYSTEM: POST /api/auth/register/ - 201 Created
+[20:28:58] SYSTEM: Account created!
+           User ID: 156
+           Username: testuser1767904138
+           Email: test-1767904138@test.faibric.com
+           Max Apps: 10
+           JWT tokens issued ✅
 ```
 
-**To run a real end-to-end test:**
-```bash
-# 1. Set environment variables
-export ANTHROPIC_API_KEY=your-key
-export VERCEL_TOKEN=your-token
-export GITHUB_TOKEN=your-token
+### Customer 1: Create Bitcoin Tracker
+```
+[20:28:58] >>> CUSTOMER: "Build me a Bitcoin price tracker with live charts"
 
-# 2. Start the backend
-cd backend && python manage.py runserver
+[20:29:00] SYSTEM: POST /api/projects/ - 201 Created
+[20:29:00] FAIBRIC: Creating your app (Project #147)...
+[20:29:00] FAIBRIC: Task queued for Celery worker...
 
-# 3. Start the frontend
-cd frontend && npm run dev
-
-# 4. Visit http://localhost:5173 and create an app
+[20:37:02] ⚠️ TIMEOUT - Celery worker suspended (Render free tier)
 ```
 
-**URL Format (when deployed):** `https://{app-slug}-{hash}.faibric.com`
+**Result:** Project created but stuck in `draft` status.
+
+### Why Worker Suspended?
+
+Render's free tier suspends background workers after inactivity. The Celery worker (`faibric-worker`) needs to be woken up or upgraded to a paid plan.
 
 ---
 
-## Component Reuse Statistics
+## Apps Created (Real)
 
-| Metric | Value |
-|--------|-------|
-| Total components needed | 8 |
-| Reused from library | 5 (62.5%) |
-| Newly generated | 3 (37.5%) |
+| App | Project ID | User ID | Status | URL |
+|-----|------------|---------|--------|-----|
+| Bitcoin Price Tracker | #147 | 156 | `draft` | Pending worker |
 
-### Components Reused
-- Navigation (2x)
-- ChartSection
-- Footer (2x)
+---
 
-### Components Generated
-- PriceCard (Bitcoin price display)
-- WeatherCard x2 (NYC, LA)
+## Test Results Summary
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| API Health | ✅ Working | All tokens configured |
+| User Registration | ✅ Working | Rate limiting active |
+| JWT Authentication | ✅ Working | Access + Refresh tokens |
+| Project Creation | ✅ Working | Saved to database |
+| Celery Task Queue | ⚠️ Suspended | Render free tier limitation |
+| AI Code Generation | ⏳ Pending | Requires active worker |
+| Vercel Deployment | ⏳ Pending | Requires generated code |
 
 ---
 
@@ -148,6 +106,7 @@ cd frontend && npm run dev
 | Builder secret configured | ✅ `BUILDER_SECRET` from env |
 | SECRET_KEY validation | ✅ Raises error if insecure in production |
 | ALLOWED_HOSTS | ✅ No wildcard in production |
+| Tenant isolation | ✅ Projects scoped to user/tenant |
 
 ---
 
@@ -185,19 +144,36 @@ dist/assets/index-DN5eojBM.js   680.88 kB (gzip: 206.58 kB)
 
 ---
 
-## How to Run Tests
+## How to Run Full E2E Test
+
+The Celery worker needs to be active. Options:
+
+1. **Upgrade Render to paid plan** - Workers stay active
+2. **Wake up the worker manually** - Visit Render dashboard
+3. **Run locally with all tokens**:
 
 ```bash
-# Backend tests
-cd backend
-USE_SQLITE=1 ANTHROPIC_API_KEY=test RENDER_API_KEY=test GITHUB_TOKEN=test VERCEL_TOKEN=test \
-  python manage.py check
+# 1. Set environment variables
+export ANTHROPIC_API_KEY=sk-ant-...
+export VERCEL_TOKEN=...
+export GITHUB_TOKEN=ghp_...
 
-# Frontend build
-cd frontend
-npm install
-npm run build
+# 2. Start Redis
+redis-server
+
+# 3. Start Celery worker
+cd backend && celery -A faibric_backend worker -l info
+
+# 4. Start Django
+cd backend && python manage.py runserver
+
+# 5. Start frontend
+cd frontend && npm run dev
+
+# 6. Visit http://localhost:5173 and create an app
 ```
+
+**URL Format (when deployed):** `https://{app-slug}-{hash}.faibric.com`
 
 ---
 
