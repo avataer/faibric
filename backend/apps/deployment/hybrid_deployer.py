@@ -139,7 +139,17 @@ class HybridDeployer:
             code_size = len(app_code)
             has_complex_ts = 'interface ' in app_code or '<T>' in app_code
             
-            if code_size > 8000 or has_complex_ts:
+            # LIBRARY COMPONENTS comment indicates modular composer was used
+            # Trust modular composer output - it uses library components AS-IS
+            is_modular = 'LIBRARY COMPONENTS' in app_code or 'APP WIRING' in app_code
+            
+            # Raised limit from 8KB to 25KB - modular composer output is clean
+            # Only regenerate if truly too large or has complex TypeScript
+            MAX_CODE_SIZE = 25000
+            
+            if is_modular:
+                logger.info(f"[HYBRID] Using modular composer output directly ({code_size} bytes)")
+            elif code_size > MAX_CODE_SIZE or has_complex_ts:
                 logger.info(f"[HYBRID] Code too complex for Vercel ({code_size} bytes, TS: {has_complex_ts})")
                 logger.info(f"[HYBRID] Regenerating as compact app...")
                 
