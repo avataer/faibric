@@ -637,8 +637,27 @@ def regenerate_library(request):
         existing_count = LibraryItem.objects.count()
         LibraryItem.objects.all().delete()
         
-        # Define components
+        # Define components - include ALL types to prevent AI generation
         COMPONENTS = {
+            # Layout component - CRITICAL
+            "layout_app": {
+                "name": "LayoutApp",
+                "description": "Main app layout wrapper with navigation slots",
+                "code": '''
+const LayoutApp = ({ children, currentView, onNavigate, brandName = "Brand" }) => {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <NavigationHeader currentView={currentView} onNavigate={onNavigate} brandName={brandName} />
+      <main className="container mx-auto px-4 py-8">
+        {children}
+      </main>
+    </div>
+  );
+};
+''',
+                "keywords": ["layout", "app", "wrapper"],
+                "tags": ["layout", "app"],
+            },
             "navigation_header": {
                 "name": "NavigationHeader",
                 "description": "A responsive navigation header with logo and menu items",
@@ -980,6 +999,306 @@ const TestimonialsCarousel = () => {
 ''',
                 "keywords": ["testimonials", "reviews", "clients"],
                 "tags": ["testimonials", "carousel"],
+            },
+            # Additional essential types to prevent AI generation
+            "feature_grid": {
+                "name": "FeatureGrid",
+                "description": "Feature showcase grid",
+                "code": '''
+const FeatureGrid = ({ features }) => {
+  const defaultFeatures = [
+    { title: "Fast", description: "Lightning quick performance" },
+    { title: "Secure", description: "Enterprise-grade security" },
+    { title: "Reliable", description: "99.9% uptime guarantee" },
+    { title: "Scalable", description: "Grows with your needs" }
+  ];
+  const items = features || defaultFeatures;
+  return (
+    <section className="py-16">
+      <div className="max-w-6xl mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">Features</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {items.map((f, i) => (
+            <div key={i} className="text-center p-6">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <span className="text-blue-600 font-bold">{i + 1}</span>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
+              <p className="text-gray-600">{f.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["feature", "grid", "showcase"],
+                "tags": ["feature", "grid"],
+            },
+            "cta_centered": {
+                "name": "CallToAction",
+                "description": "Call to action section",
+                "code": '''
+const CallToAction = ({ headline = "Ready to Get Started?", buttonText = "Contact Us", onCtaClick }) => {
+  return (
+    <section className="py-16 bg-blue-600 text-white">
+      <div className="max-w-4xl mx-auto px-4 text-center">
+        <h2 className="text-3xl font-bold mb-6">{headline}</h2>
+        <p className="text-blue-100 mb-8">Join thousands of satisfied customers today.</p>
+        <button onClick={onCtaClick} className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50">
+          {buttonText}
+        </button>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["cta", "call", "action", "centered"],
+                "tags": ["cta", "centered"],
+            },
+            "chart_simple": {
+                "name": "ChartSection",
+                "description": "Simple chart display",
+                "code": '''
+const ChartSection = ({ data, title = "Statistics" }) => {
+  const defaultData = [
+    { label: "Jan", value: 40 },
+    { label: "Feb", value: 60 },
+    { label: "Mar", value: 45 },
+    { label: "Apr", value: 80 },
+    { label: "May", value: 65 }
+  ];
+  const items = data || defaultData;
+  const maxValue = Math.max(...items.map(d => d.value));
+  return (
+    <section className="py-8">
+      <h3 className="text-xl font-bold mb-6">{title}</h3>
+      <div className="bg-white rounded-xl shadow p-6">
+        <div className="flex items-end justify-between h-48 gap-4">
+          {items.map((d, i) => (
+            <div key={i} className="flex-1 flex flex-col items-center">
+              <div className="w-full bg-blue-500 rounded-t" style={{ height: `${(d.value / maxValue) * 100}%` }} />
+              <span className="text-sm text-gray-500 mt-2">{d.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["chart", "simple", "bar", "stats"],
+                "tags": ["chart", "simple"],
+            },
+            "table_data": {
+                "name": "DataTable",
+                "description": "Data table with sorting",
+                "code": '''
+const DataTable = ({ data, columns }) => {
+  const defaultColumns = [{ key: "name", label: "Name" }, { key: "value", label: "Value" }, { key: "status", label: "Status" }];
+  const defaultData = [
+    { name: "Item A", value: "$100", status: "Active" },
+    { name: "Item B", value: "$250", status: "Pending" },
+    { name: "Item C", value: "$75", status: "Active" }
+  ];
+  const cols = columns || defaultColumns;
+  const rows = data || defaultData;
+  return (
+    <section className="py-8">
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              {cols.map(c => <th key={c.key} className="px-6 py-3 text-left text-sm font-medium text-gray-500">{c.label}</th>)}
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {rows.map((row, i) => (
+              <tr key={i}>
+                {cols.map(c => <td key={c.key} className="px-6 py-4 text-sm">{row[c.key]}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["table", "data", "list"],
+                "tags": ["table", "data"],
+            },
+            "list_items": {
+                "name": "ListView",
+                "description": "List view with items",
+                "code": '''
+const ListView = ({ items, title = "Items" }) => {
+  const defaultItems = [
+    { title: "Item 1", description: "Description for item 1" },
+    { title: "Item 2", description: "Description for item 2" },
+    { title: "Item 3", description: "Description for item 3" }
+  ];
+  const data = items || defaultItems;
+  return (
+    <section className="py-8">
+      <h3 className="text-xl font-bold mb-6">{title}</h3>
+      <div className="space-y-4">
+        {data.map((item, i) => (
+          <div key={i} className="bg-white rounded-lg shadow p-4 flex items-center">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+              <span className="text-blue-600 font-bold">{i + 1}</span>
+            </div>
+            <div>
+              <h4 className="font-medium">{item.title}</h4>
+              <p className="text-sm text-gray-500">{item.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["list", "items", "view"],
+                "tags": ["list", "items"],
+            },
+            "gallery_grid": {
+                "name": "Gallery",
+                "description": "Image gallery grid",
+                "code": '''
+const Gallery = ({ images, title = "Gallery" }) => {
+  const defaultImages = [
+    { src: "https://picsum.photos/400/300?1", alt: "Image 1" },
+    { src: "https://picsum.photos/400/300?2", alt: "Image 2" },
+    { src: "https://picsum.photos/400/300?3", alt: "Image 3" },
+    { src: "https://picsum.photos/400/300?4", alt: "Image 4" }
+  ];
+  const items = images || defaultImages;
+  return (
+    <section className="py-8">
+      <h3 className="text-xl font-bold mb-6">{title}</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {items.map((img, i) => (
+          <div key={i} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+            <img src={img.src} alt={img.alt} className="w-full h-full object-cover" />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["gallery", "grid", "images"],
+                "tags": ["gallery", "grid"],
+            },
+            "stats_cards": {
+                "name": "StatsCards",
+                "description": "Statistics cards display",
+                "code": '''
+const StatsCards = ({ stats }) => {
+  const defaultStats = [
+    { label: "Users", value: "10K+" },
+    { label: "Projects", value: "500+" },
+    { label: "Countries", value: "50+" },
+    { label: "Rating", value: "4.9" }
+  ];
+  const items = stats || defaultStats;
+  return (
+    <section className="py-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {items.map((stat, i) => (
+          <div key={i} className="bg-white rounded-xl shadow p-6 text-center">
+            <p className="text-3xl font-bold text-blue-600">{stat.value}</p>
+            <p className="text-gray-500 mt-1">{stat.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["stats", "cards", "numbers"],
+                "tags": ["stats", "cards"],
+            },
+            # Variant duplicates to match decomposer requests
+            "hero_full": {
+                "name": "HeroFull",
+                "description": "Full-width hero section",
+                "code": '''
+const HeroFull = ({ title = "Welcome", subtitle = "Your trusted partner", onCtaClick }) => (
+  <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-24">
+    <div className="max-w-4xl mx-auto px-4 text-center">
+      <h1 className="text-5xl font-bold mb-6">{title}</h1>
+      <p className="text-xl text-blue-100 mb-10">{subtitle}</p>
+      <button onClick={onCtaClick} className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50">
+        Get Started
+      </button>
+    </div>
+  </section>
+);
+''',
+                "keywords": ["hero", "full", "landing", "banner"],
+                "tags": ["hero", "full"],
+            },
+            "footer_full": {
+                "name": "FooterFull",
+                "description": "Full footer with links",
+                "code": '''
+const FooterFull = ({ brandName = "Brand" }) => (
+  <footer className="bg-gray-900 text-white py-12">
+    <div className="max-w-6xl mx-auto px-4">
+      <div className="grid md:grid-cols-3 gap-8">
+        <div>
+          <span className="text-xl font-bold text-blue-400">{brandName}</span>
+          <p className="mt-4 text-gray-400">Providing quality services.</p>
+        </div>
+        <div>
+          <h4 className="font-semibold mb-4">Links</h4>
+          <ul className="space-y-2 text-gray-400">
+            <li><a href="#" className="hover:text-white">Home</a></li>
+            <li><a href="#" className="hover:text-white">About</a></li>
+            <li><a href="#" className="hover:text-white">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="font-semibold mb-4">Contact</h4>
+          <p className="text-gray-400">contact@example.com</p>
+        </div>
+      </div>
+      <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
+        Built with Faibric
+      </div>
+    </div>
+  </footer>
+);
+''',
+                "keywords": ["footer", "full", "links"],
+                "tags": ["footer", "full"],
+            },
+            "form_default": {
+                "name": "FormSection",
+                "description": "Generic form section",
+                "code": '''
+const FormSection = ({ title = "Form", onSubmit }) => {
+  const [data, setData] = React.useState({ name: "", email: "" });
+  const handleSubmit = (e) => { e.preventDefault(); onSubmit && onSubmit(data); };
+  return (
+    <section className="py-8">
+      <div className="max-w-md mx-auto bg-white rounded-xl shadow p-6">
+        <h3 className="text-xl font-bold mb-4">{title}</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="text" placeholder="Name" value={data.name} onChange={(e) => setData({...data, name: e.target.value})} className="w-full px-4 py-2 border rounded" />
+          <input type="email" placeholder="Email" value={data.email} onChange={(e) => setData({...data, email: e.target.value})} className="w-full px-4 py-2 border rounded" />
+          <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Submit</button>
+        </form>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["form", "default", "input"],
+                "tags": ["form", "default"],
             },
         }
         
