@@ -48,9 +48,15 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-change-this')
 _debug_val = os.getenv('DEBUG', '1').lower()
 DEBUG = _debug_val in ('1', 'true', 'yes', 'on') and _debug_val != ''
 
-# ALLOWED_HOSTS must be set BEFORE any potential early exit
-# This prevents "You must set ALLOWED_HOSTS" errors
-ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', '.onrender.com', '.faibric.com']
+# Production security check: Require proper SECRET_KEY
+if not DEBUG and SECRET_KEY.startswith('django-insecure'):
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured("SECRET_KEY must be set to a secure value in production")
+
+# ALLOWED_HOSTS - no wildcard in production for security
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com', '.faibric.com']
+if DEBUG:
+    ALLOWED_HOSTS.append('*')  # Only allow wildcard in development
 
 # Frontend URL (for emails and CORS)
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
@@ -234,13 +240,13 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
 }
 
-# CORS Settings - Allow all origins
-# Required for: localhost dev, deployed apps on *.faibric.com, etc.
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ORIGIN_ALLOW_ALL = True  # Older django-cors-headers compatibility
+# CORS Settings - Secure configuration
+# Development: Allow all origins for easier testing
+# Production: Restrict to known domains only
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
 CORS_ALLOW_CREDENTIALS = True
 
-# Explicit whitelist (used if CORS_ALLOW_ALL_ORIGINS is False)
+# Explicit whitelist (used in production when CORS_ALLOW_ALL_ORIGINS is False)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
@@ -315,4 +321,7 @@ DOCKER_HOST = os.getenv('DOCKER_HOST', 'unix://var/run/docker.sock')
 # App Generation Settings
 MAX_APPS_PER_USER = 10
 APP_SUBDOMAIN_BASE = os.getenv('APP_SUBDOMAIN_BASE', 'localhost')
+
+# Builder API Secret (for embedded builder authentication)
+BUILDER_SECRET = os.getenv('BUILDER_SECRET', 'dev-builder-secret-change-in-production')
 

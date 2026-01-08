@@ -5,11 +5,15 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .models import Project, ProjectVersion, CustomerAPIKey
 from .serializers import (
-    ProjectSerializer, ProjectListSerializer, 
+    ProjectSerializer, ProjectListSerializer,
     ProjectCreateSerializer, ProjectVersionSerializer
 )
 from apps.ai_engine.v3.tasks import generate_app_v3_task, quick_modify_v3_task
 from apps.tenants.permissions import TenantPermission
+
+# Progress calculation constants
+PROGRESS_PER_MESSAGE = 5
+MAX_PROGRESS_GENERATING = 95
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -41,43 +45,39 @@ class ProjectViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError(
                 f"You have reached the maximum number of apps ({user.max_apps})"
             )
-        
+
         # Get current tenant from request
         tenant = getattr(self.request, 'tenant', None)
-        
+
         project = serializer.save(user=user, tenant=tenant)
-        
-        # Use V2 generation by default (faster, single-shot)
-        from apps.ai_engine.v3.tasks import generate_app_v3_task
+
+        # Start V3 generation (component-based, fast)
         generate_app_v3_task.delay(project.id)
     
     @action(detail=True, methods=['post'])
     def quick_update(self, request, pk=None):
-        """Quick update - modify and redeploy using V2 generator"""
-        from apps.ai_engine.v2.tasks import quick_modify_task
-        
+        """Quick update - modify and redeploy using V3 generator"""
         project = self.get_object()
         user_request = request.data.get('user_prompt')
-        
+
         if not user_request:
             return Response({'error': 'user_prompt is required'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Set status to deploying immediately
         project.status = 'deploying'
         project.save()
-        
+
         # Use async V3 modification task
         quick_modify_v3_task.delay(project.id, user_request)
-        
+
         return Response({'status': 'success', 'message': 'Update in progress...'})
     
     @action(detail=True, methods=['post'])
     def regenerate(self, request, pk=None):
-        """Regenerate project with updated prompt using V2 generator"""
+        """Regenerate project with updated prompt using V3 generator"""
         from django.core.cache import cache
         from django.utils import timezone
         from apps.projects.models import GeneratedModel, GeneratedAPI
-        from apps.ai_engine.v3.tasks import generate_app_v3_task
         
         project = self.get_object()
         
@@ -104,15 +104,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 from apps.deployment.tasks import undeploy_app_task
                 undeploy_app_task.delay(project.id)
             
-            # Update prompt and regenerate with V2
+            # Update prompt and regenerate with V3
             project.user_prompt = f"{project.user_prompt}\n\nADDITIONAL REQUEST: {new_prompt}"
             project.status = 'generating'
             project.save()
-            
-            # Use V2 generation
+
+            # Use V3 generation
             generate_app_v3_task.delay(project.id)
-            
-            return Response({'message': 'Regeneration started with V2'})
+
+            return Response({'message': 'Regeneration started'})
         
         return Response(
             {'error': 'user_prompt is required'},
@@ -166,9 +166,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = self.get_object()
         progress_percent = 0
         if project.status == 'generating':
-            progress_percent = min(len(messages) * 5, 95)  # 5% per message, max 95%
+            progress_percent = min(len(messages) * PROGRESS_PER_MESSAGE, MAX_PROGRESS_GENERATING)
         elif project.status == 'ready':
-            progress_percent = 95
+            progress_percent = MAX_PROGRESS_GENERATING
         elif project.status == 'deployed':
             progress_percent = 100
         
@@ -281,7 +281,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 }
             )
             
-            # TODO: Verify the key works by making a test call
+            # Mark as active - validation happens on first use via gateway
             key_obj.status = 'active'
             key_obj.save()
             
@@ -409,9 +409,10 @@ class PublicBuilderView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Validate project token
-        # Token = sha256(project_id + "faibric_builder_secret")
+        # Token = sha256(project_id + BUILDER_SECRET)
+        from django.conf import settings
         expected_token = hashlib.sha256(
-            f"{project_id}faibric_builder_secret".encode()
+            f"{project_id}{settings.BUILDER_SECRET}".encode()
         ).hexdigest()[:16]
         
         if project_token != expected_token:

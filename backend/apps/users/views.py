@@ -1,7 +1,8 @@
 from rest_framework import generics, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from .serializers import (
@@ -11,10 +12,16 @@ from .serializers import (
 User = get_user_model()
 
 
+class AuthRateThrottle(AnonRateThrottle):
+    """Rate limit for authentication endpoints - 5 requests per minute"""
+    rate = '5/minute'
+
+
 class RegisterView(generics.CreateAPIView):
     """User registration endpoint"""
     queryset = User.objects.all()
     permission_classes = [AllowAny]
+    throttle_classes = [AuthRateThrottle]
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):
@@ -41,10 +48,16 @@ class UserDetailView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
+class PasswordChangeThrottle(UserRateThrottle):
+    """Rate limit for password changes - 3 requests per hour"""
+    rate = '3/hour'
+
+
 class ChangePasswordView(generics.UpdateAPIView):
     """Change password endpoint"""
     serializer_class = ChangePasswordSerializer
     permission_classes = [IsAuthenticated]
+    throttle_classes = [PasswordChangeThrottle]
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

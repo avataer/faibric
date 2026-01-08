@@ -42,6 +42,9 @@ const LiveCreation = () => {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const pollCountRef = useRef(0)
 
+  // Track previous status for detecting transitions
+  const prevStatusRef = useRef<string>('')
+
   // Polling function - separated to avoid dependency issues
   const pollProject = useCallback(async () => {
     if (!id || isNaN(Number(id))) return
@@ -62,37 +65,37 @@ const LiveCreation = () => {
         if (progress.progress !== undefined) {
           setBuildProgress(progress.progress)
         }
-        
+
         const backendMessages = progress.messages.map((msg: any) => ({
           id: msg.id,
           type: msg.type,
           content: msg.content,
           timestamp: new Date(msg.timestamp).getTime()
         }))
-        
+
         if (backendMessages.length > 0) {
           setCurrentPhase(backendMessages[backendMessages.length - 1].content)
         }
-        
+
         // Smart merge: keep local messages, add new backend messages
         setMessages(prev => {
           // Keep all local messages (user_, processing_, error_)
-          const localMessages = prev.filter(m => 
-            m.id.startsWith('user_') || 
-            m.id.startsWith('processing_') || 
+          const localMessages = prev.filter(m =>
+            m.id.startsWith('user_') ||
+            m.id.startsWith('processing_') ||
             m.id.startsWith('error_')
           )
-          
+
           // If we got new backend messages, remove "processing_" messages (they're done)
           const hasNewBackendMessages = backendMessages.length > prev.filter(m => !m.id.startsWith('user_') && !m.id.startsWith('processing_') && !m.id.startsWith('error_')).length
-          const filteredLocalMessages = hasNewBackendMessages 
+          const filteredLocalMessages = hasNewBackendMessages
             ? localMessages.filter(m => !m.id.startsWith('processing_'))
             : localMessages
-          
+
           // Combine: local messages + backend messages (no duplicates)
           const existingIds = new Set(filteredLocalMessages.map(m => m.id))
           const newBackendMessages = backendMessages.filter((m: AIMessage) => !existingIds.has(m.id))
-          
+
           const all = [...filteredLocalMessages, ...newBackendMessages]
           return all.sort((a, b) => a.timestamp - b.timestamp)
         })
@@ -104,18 +107,17 @@ const LiveCreation = () => {
       }
 
       // Check if status changed from deploying to deployed (trigger refresh)
-      const wasDeploying = projectStatus === 'deploying' || projectStatus === 'building'
-      const nowDeployed = project.status === 'deployed'
-      
+      const wasDeploying = prevStatusRef.current === 'deploying' || prevStatusRef.current === 'building'
+
       // Update project status
       setProjectStatus(project.status)
+      prevStatusRef.current = project.status
 
       // Update building status based on project status
       if (project.status === 'deployed') {
         setIsBuilding(false)
         // Auto-refresh iframe if just finished deploying
         if (wasDeploying && iframeRef.current && project.deployment_url) {
-          console.log('Auto-refreshing iframe after deployment')
           const cacheBuster = `?t=${Date.now()}`
           iframeRef.current.src = project.deployment_url + cacheBuster
         }
@@ -127,8 +129,6 @@ const LiveCreation = () => {
         setIsBuilding(false)
         setError('Project generation failed. Please try again.')
       }
-
-      console.log(`[Poll ${pollCountRef.current}] Status: ${project.status}, URL: ${project.deployment_url || 'none'}`)
 
     } catch (error: any) {
       console.error('Failed to get progress:', error)
@@ -149,8 +149,8 @@ const LiveCreation = () => {
     // Initial poll
     pollProject()
 
-    // Set up interval
-    const interval = setInterval(pollProject, 1000) // Poll every second
+    // Set up interval - poll every 2 seconds (less aggressive than 1s)
+    const interval = setInterval(pollProject, 2000)
 
     return () => clearInterval(interval)
   }, [id, pollProject])
@@ -431,7 +431,7 @@ const LiveCreation = () => {
                   value={userMessage}
                   onChange={(e) => setUserMessage(e.target.value)}
                   disabled={isSending}
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault()
                       handleSendMessage()
