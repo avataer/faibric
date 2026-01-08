@@ -1490,34 +1490,243 @@ function App() {{
 }}
 '''
     else:
+        # Extract business type from prompt for better content
+        prompt_lower = prompt.lower()
+        
+        # Detect profession/business type
+        if 'psycholog' in prompt_lower or 'therap' in prompt_lower or 'counsel' in prompt_lower:
+            profession = "Psychology Practice"
+            tagline = "Professional Mental Health Services"
+            services = ["Individual Therapy", "Couples Counseling", "Anxiety Treatment", "Depression Support"]
+            cta = "Book a Consultation"
+        elif 'lawyer' in prompt_lower or 'attorney' in prompt_lower or 'legal' in prompt_lower:
+            profession = "Law Firm"
+            tagline = "Expert Legal Representation"
+            services = ["Personal Injury", "Family Law", "Business Law", "Estate Planning"]
+            cta = "Schedule a Consultation"
+        elif 'doctor' in prompt_lower or 'medical' in prompt_lower or 'clinic' in prompt_lower or 'health' in prompt_lower:
+            profession = "Medical Practice"
+            tagline = "Quality Healthcare Services"
+            services = ["General Checkups", "Preventive Care", "Specialist Referrals", "Lab Services"]
+            cta = "Book an Appointment"
+        elif 'restaurant' in prompt_lower or 'food' in prompt_lower or 'cafe' in prompt_lower:
+            profession = "Restaurant"
+            tagline = "Delicious Food, Great Experience"
+            services = ["Dine-In", "Takeout", "Catering", "Private Events"]
+            cta = "View Menu"
+        elif 'portfolio' in prompt_lower or 'designer' in prompt_lower or 'creative' in prompt_lower:
+            profession = "Creative Portfolio"
+            tagline = "Bringing Ideas to Life"
+            services = ["Web Design", "Branding", "UI/UX", "Graphic Design"]
+            cta = "View Work"
+        elif 'coach' in prompt_lower or 'fitness' in prompt_lower or 'trainer' in prompt_lower:
+            profession = "Fitness Coaching"
+            tagline = "Transform Your Body and Mind"
+            services = ["Personal Training", "Nutrition Plans", "Group Classes", "Online Coaching"]
+            cta = "Start Your Journey"
+        elif 'real estate' in prompt_lower or 'realtor' in prompt_lower or 'property' in prompt_lower:
+            profession = "Real Estate"
+            tagline = "Find Your Dream Home"
+            services = ["Home Buying", "Home Selling", "Property Management", "Market Analysis"]
+            cta = "Browse Listings"
+        else:
+            # Generic business
+            profession = "Professional Services"
+            tagline = "Quality Service You Can Trust"
+            services = ["Consultation", "Custom Solutions", "Ongoing Support", "Expert Advice"]
+            cta = "Get Started"
+        
+        services_jsx = ", ".join([f'"{s}"' for s in services])
+        
         return f'''
 function App() {{
   const [currentView, setCurrentView] = React.useState("home");
+  const [formData, setFormData] = React.useState({{ name: "", email: "", message: "" }});
+  const [submitted, setSubmitted] = React.useState(false);
+  
+  const handleSubmit = (e) => {{
+    e.preventDefault();
+    console.log("Form submitted:", formData);
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 3000);
+    setFormData({{ name: "", email: "", message: "" }});
+  }};
   
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow p-4 flex gap-4">
-        {{["home", "about"].map(view => (
-          <button key={{view}} onClick={{() => setCurrentView(view)}}
-            className={{currentView === view ? "text-blue-600 font-medium" : "text-gray-600"}}>
-            {{view.charAt(0).toUpperCase() + view.slice(1)}}
-          </button>
-        ))}}
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {{/* Navigation */}}
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+          <span className="text-xl font-bold text-gray-800">{profession}</span>
+          <div className="flex gap-6">
+            {{["home", "services", "about", "contact", "settings"].map(view => (
+              <button key={{view}} onClick={{() => setCurrentView(view)}}
+                className={{currentView === view 
+                  ? "text-blue-600 font-medium" 
+                  : "text-gray-600 hover:text-blue-600 transition"}}>
+                {{view.charAt(0).toUpperCase() + view.slice(1)}}
+              </button>
+            ))}}
+          </div>
+        </div>
       </nav>
-      <main className="p-6">
+      
+      <main>
+        {{/* Hero Section */}}
         {{currentView === "home" && (
           <div>
-            <h1 className="text-3xl font-bold mb-4">{title}</h1>
-            <p className="text-gray-600">Welcome to your app.</p>
+            <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+              <div className="max-w-4xl mx-auto text-center">
+                <h1 className="text-5xl font-bold mb-6">{profession}</h1>
+                <p className="text-xl mb-8 opacity-90">{tagline}</p>
+                <button 
+                  onClick={{() => setCurrentView("contact")}}
+                  className="px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg"
+                >
+                  {cta}
+                </button>
+              </div>
+            </section>
+            
+            {{/* Services Preview */}}
+            <section className="py-16 px-4">
+              <div className="max-w-6xl mx-auto">
+                <h2 className="text-3xl font-bold text-center mb-12">Our Services</h2>
+                <div className="grid md:grid-cols-4 gap-6">
+                  {{[{services_jsx}].map((service, i) => (
+                    <div key={{i}} className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition text-center">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-blue-600 text-xl">{{i + 1}}</span>
+                      </div>
+                      <h3 className="font-semibold text-lg">{{service}}</h3>
+                    </div>
+                  ))}}
+                </div>
+              </div>
+            </section>
           </div>
         )}}
+        
+        {{/* Services Page */}}
+        {{currentView === "services" && (
+          <section className="py-16 px-4">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold mb-8">Our Services</h2>
+              <div className="space-y-6">
+                {{[{services_jsx}].map((service, i) => (
+                  <div key={{i}} className="bg-white p-6 rounded-xl shadow-md">
+                    <h3 className="font-semibold text-xl mb-2">{{service}}</h3>
+                    <p className="text-gray-600">Professional {{service.toLowerCase()}} tailored to your needs. Contact us to learn more about how we can help you.</p>
+                  </div>
+                ))}}
+              </div>
+            </div>
+          </section>
+        )}}
+        
+        {{/* About Page */}}
         {{currentView === "about" && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">About</h2>
-            <p className="text-gray-600">Built with Faibric.</p>
-          </div>
+          <section className="py-16 px-4">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold mb-8">About Us</h2>
+              <div className="bg-white p-8 rounded-xl shadow-md">
+                <p className="text-gray-600 text-lg leading-relaxed mb-6">
+                  We are dedicated professionals committed to providing exceptional service. 
+                  With years of experience and a passion for what we do, we strive to exceed 
+                  your expectations every time.
+                </p>
+                <p className="text-gray-600 text-lg leading-relaxed">
+                  Our mission is to deliver quality results while building lasting relationships 
+                  with our clients. We believe in transparency, integrity, and excellence in 
+                  everything we do.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}}
+        
+        {{/* Contact Page */}}
+        {{currentView === "contact" && (
+          <section className="py-16 px-4">
+            <div className="max-w-xl mx-auto">
+              <h2 className="text-3xl font-bold mb-8">Contact Us</h2>
+              {{submitted ? (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                  Thank you! We will get back to you soon.
+                </div>
+              ) : null}}
+              <form onSubmit={{handleSubmit}} className="bg-white p-8 rounded-xl shadow-md space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                  <input 
+                    type="text" 
+                    value={{formData.name}}
+                    onChange={{(e) => setFormData({{...formData, name: e.target.value}})}}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <input 
+                    type="email"
+                    value={{formData.email}}
+                    onChange={{(e) => setFormData({{...formData, email: e.target.value}})}}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                  <textarea 
+                    value={{formData.message}}
+                    onChange={{(e) => setFormData({{...formData, message: e.target.value}})}}
+                    rows="4"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  ></textarea>
+                </div>
+                <button 
+                  type="submit"
+                  className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+                >
+                  Send Message
+                </button>
+              </form>
+            </div>
+          </section>
+        )}}
+        
+        {{/* Settings Page */}}
+        {{currentView === "settings" && (
+          <section className="py-16 px-4">
+            <div className="max-w-md mx-auto">
+              <h2 className="text-3xl font-bold mb-8">Settings</h2>
+              <div className="bg-white p-6 rounded-xl shadow-md space-y-4">
+                <div className="border-b pb-4">
+                  <p className="font-medium">Theme</p>
+                  <p className="text-sm text-gray-500">Light mode</p>
+                </div>
+                <div className="border-b pb-4">
+                  <p className="font-medium">Notifications</p>
+                  <p className="text-sm text-gray-500">Enabled</p>
+                </div>
+                <div>
+                  <p className="font-medium">Version</p>
+                  <p className="text-sm text-gray-500">1.0.0</p>
+                </div>
+              </div>
+            </div>
+          </section>
         )}}
       </main>
+      
+      {{/* Footer */}}
+      <footer className="bg-gray-800 text-white py-8 mt-16">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <p className="text-gray-400">Built with Faibric</p>
+        </div>
+      </footer>
     </div>
   );
 }}
