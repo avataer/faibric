@@ -487,15 +487,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
             <Typography variant="subtitle1" fontWeight={500}>
               Live Preview
             </Typography>
-            {deploymentUrl && (
-              <Chip
-                label={showLivePreview ? "View deployed site" : "View code preview"}
-                size="small"
-                variant="outlined"
-                onClick={() => setShowLivePreview(!showLivePreview)}
-                sx={{ cursor: 'pointer' }}
-              />
-            )}
+            {/* REMOVED: Sandpack toggle - Solution 2 only shows deployed site */}
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <IconButton size="small" onClick={refreshPreview} title="Refresh preview">
