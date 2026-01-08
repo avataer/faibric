@@ -1057,16 +1057,8 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
     """
     Build a COMPACT app for Vercel/browser deployment.
     
-    This generates simpler code that:
-    - Uses plain JavaScript (no TypeScript interfaces)
-    - Includes FUNCTIONAL Faibric features (not fake UI)
-    - Works reliably with browser Babel
-    
-    REAL FEATURES:
-    - Settings that actually save to localStorage
-    - Refresh interval that actually changes timing
-    - Connection status that actually tests the API
-    - No fake "Custom API" inputs for free APIs
+    Uses DETERMINISTIC TEMPLATES - NO AI CALL.
+    This eliminates truncation and JSX breakage risks.
     
     Args:
         prompt: User's request
@@ -1074,6 +1066,48 @@ def build_compact_app(prompt: str, needs_data: bool = False) -> str:
     
     Returns:
         Complete app code (plain JavaScript)
+    """
+    # Use deterministic template instead of AI
+    return _build_deterministic_compact_app(prompt, needs_data)
+
+
+def _build_deterministic_compact_app(prompt: str, needs_data: bool = False) -> str:
+    """
+    Build a compact app using TEMPLATES - no AI call.
+    
+    This is 100% reliable - no truncation, no malformed JSX.
+    """
+    print(f"[COMPACT] Using DETERMINISTIC template (no AI)")
+    
+    # Determine app type from prompt
+    prompt_lower = prompt.lower()
+    
+    # Determine if needs data
+    data_keywords = ['stock', 'crypto', 'bitcoin', 'price', 'weather', 'api', 
+                     'tracker', 'live', 'real-time', 'monitor', 'dashboard', 'analytics']
+    needs_data = needs_data or any(kw in prompt_lower for kw in data_keywords)
+    
+    # Use the fallback template which is already tested and working
+    return _fallback_compact_app(prompt, needs_data)
+
+
+def _legacy_build_compact_app(prompt: str, needs_data: bool = False) -> str:
+    """
+    LEGACY: AI-based compact app generation.
+    
+    Kept for reference but no longer used.
+    Use _build_deterministic_compact_app instead.
+    """
+    # This function is no longer called - deterministic templates are used instead
+    print("[COMPACT] WARNING: Legacy AI function called - redirecting to deterministic")
+    return _build_deterministic_compact_app(prompt, needs_data)
+
+
+def _unused_ai_compact_app(prompt: str, needs_data: bool = False) -> str:
+    """
+    UNUSED: Original AI-based generation.
+    
+    Left here as reference only. NOT CALLED.
     """
     import anthropic
     from django.conf import settings
