@@ -13,7 +13,8 @@ import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import StopIcon from '@mui/icons-material/Stop'
-import { SandpackProvider, SandpackPreview } from '@codesandbox/sandpack-react'
+// REMOVED: Sandpack causes "readonly property" errors due to strict mode
+// Solution 2: Preview = Production - use only deployed iframe
 import { api } from '../services/api'
 import ProgressivePreview from './ProgressivePreview'
 
@@ -41,10 +42,9 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
   const lastProgressUpdate = useRef<number>(Date.now())
   const [buildPhase, setBuildPhase] = useState<string>('Starting...')
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null)
-  const [generatedCode, setGeneratedCode] = useState<string | null>(null)
-  const [previewKey, setPreviewKey] = useState(0)
+  // REMOVED: generatedCode and Sandpack - Solution 2: Preview = Production
+  // No more Sandpack "readonly property" errors - we only show the deployed site
   const [isStopping, setIsStopping] = useState(false)
-  const [showLivePreview, setShowLivePreview] = useState(false) // Default to deployed site when ready
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Initialize with the user's request
@@ -88,11 +88,8 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
         }
         setBuildStatus(data.status)
 
-        // Update generated code for live preview
-        if (data.generated_code && data.generated_code !== generatedCode) {
-          setGeneratedCode(data.generated_code)
-          setPreviewKey(prev => prev + 1)
-        }
+        // REMOVED: generatedCode handling - Solution 2: Preview = Production
+        // We only show the deployed site, no Sandpack preview
 
         if (data.deployment_url && data.deployment_url !== deploymentUrl) {
           setDeploymentUrl(data.deployment_url)
@@ -287,8 +284,6 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
       setTargetProgress(mode === 'modify' ? 50 : 5)  // Modifications start at 50%, new builds at 5%
       setBuildPhase(mode === 'modify' ? 'Modifying code...' : 'Starting new build...')
       setDeploymentUrl(null)
-      setGeneratedCode(null)
-      setShowLivePreview(false)
       
     } catch (err) {
       console.error('Failed to modify build:', err)
@@ -301,8 +296,10 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     }
   }
 
+  // Refresh the deployed site by forcing iframe reload
+  const [iframeKey, setIframeKey] = useState(0)
   const refreshPreview = () => {
-    setPreviewKey(prev => prev + 1)
+    setIframeKey(prev => prev + 1)
   }
 
   const handleStop = async () => {
@@ -330,22 +327,8 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     setIsStopping(false)
   }
 
-  // Clean up generated code for Sandpack
-  const getSandpackCode = () => {
-    if (!generatedCode) return null
-    
-    let code = generatedCode
-    
-    // Remove escaped characters
-    code = code.replace(/\\n/g, '\n')
-    code = code.replace(/\\t/g, '\t')
-    code = code.replace(/\\"/g, '"')
-    code = code.replace(/\\'/g, "'")
-    
-    return code
-  }
-
-  const sandpackCode = getSandpackCode()
+  // REMOVED: getSandpackCode and Sandpack - Solution 2: Preview = Production
+  // No more "readonly property" errors - we only show the deployed site
 
   return (
     <Box sx={{ 
@@ -530,41 +513,14 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
           </Box>
         </Box>
 
-        {/* Preview Content */}
+        {/* Preview Content - Solution 2: Preview = Production */}
+        {/* No Sandpack = No "readonly property" errors */}
+        {/* Only two states: Building (ProgressivePreview) or Deployed (iframe) */}
         <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: '#fff' }}>
-          {/* Priority 1: During build, show live code preview when we have code */}
-          {isBuilding && sandpackCode ? (
-            <Box sx={{ height: '100%', width: '100%', overflow: 'hidden' }}>
-              <SandpackProvider
-                key={previewKey}
-                template="react-ts"
-                theme="light"
-                files={{
-                  '/App.tsx': {
-                    code: sandpackCode,
-                    active: true,
-                  },
-                  '/styles.css': {
-                    code: `* { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; box-sizing: border-box; } body { margin: 0; padding: 0; }`,
-                  },
-                }}
-                customSetup={{
-                  dependencies: {
-                    "lucide-react": "latest",
-                  },
-                }}
-              >
-                <SandpackPreview 
-                  style={{ height: '100%', width: '100%' }}
-                  showNavigator={false}
-                  showRefreshButton={false}
-                />
-              </SandpackProvider>
-            </Box>
-          ) : deploymentUrl && !showLivePreview ? (
-            /* Priority 2: Show deployed site when available */
+          {deploymentUrl ? (
+            /* Show deployed site when available - SAME environment as production */
             <iframe
-              key={`iframe-${deploymentUrl}`}
+              key={`iframe-${deploymentUrl}-${iframeKey}`}
               src={deploymentUrl}
               style={{
                 width: '100%',
@@ -575,37 +531,8 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
               title="Your Deployed Website"
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
             />
-          ) : sandpackCode ? (
-            /* Priority 3: Show Sandpack if user wants code preview */
-            <Box sx={{ height: '100%', width: '100%', overflow: 'hidden' }}>
-              <SandpackProvider
-                key={previewKey}
-                template="react-ts"
-                theme="light"
-                files={{
-                  '/App.tsx': {
-                    code: sandpackCode,
-                    active: true,
-                  },
-                  '/styles.css': {
-                    code: `* { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; box-sizing: border-box; } body { margin: 0; padding: 0; }`,
-                  },
-                }}
-                customSetup={{
-                  dependencies: {
-                    "lucide-react": "latest",
-                  },
-                }}
-              >
-                <SandpackPreview 
-                  style={{ height: '100%', width: '100%' }}
-                  showNavigator={false}
-                  showRefreshButton={false}
-                />
-              </SandpackProvider>
-            </Box>
           ) : (
-            /* Priority 4: Show animated progressive preview when no code yet */
+            /* Show animated progressive preview while building */
             <ProgressivePreview 
               progress={buildProgress}
               phase={buildPhase}
