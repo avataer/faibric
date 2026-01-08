@@ -189,29 +189,28 @@ class CodeValidator:
         # Pattern 2: `isOpen={value}` appearing after `)}` without a component tag
         code = self._fix_empty_conditionals_and_orphan_props(code, errors)
         
-        # FIRST: Remove orphaned JSX after the App function closes or after export
-        # This is a common AI generation bug - AI leaves orphaned </div> tags
-        # The pattern looks like: `};` then `</div>` then `export default`
+        # FIRST: Remove orphaned JSX ONLY after the final export default
+        # Don't remove JSX between components - that's valid code!
+        # 
+        # OLD BUG: We were detecting ANY `};` as "App function closes" which 
+        # incorrectly stripped JSX from subsequent library components in combined code.
+        #
+        # NEW LOGIC: Only remove JSX that appears AFTER `export default App;`
         lines = code.split('\n')
         cleaned_lines = []
-        export_seen = False
-        after_app_function = False  # Track when we're past the App function body
+        export_default_app_seen = False  # Only true after "export default App;" or similar
         
         for i, line in enumerate(lines):
             stripped = line.strip()
             
-            # Detect when App function closes (pattern: `};` on its own line)
-            # This happens after the return statement closes
-            if stripped == '};' and not export_seen:
-                after_app_function = True
+            # Only set flag when we see the FINAL export default (for App)
+            # This is always at the very end of combined/modular code
+            if 'export default' in line and ('App' in line or stripped == 'export default App;'):
+                export_default_app_seen = True
             
-            if 'export default' in line:
-                export_seen = True
-                after_app_function = False  # Reset after export is processed
-            
-            # Between function close and export, or after export - remove orphaned JSX
+            # Only remove JSX AFTER the final export default
             skip_line = False
-            if after_app_function or export_seen:
+            if export_default_app_seen:
                 # Skip orphaned JSX closing tags like </div>
                 if stripped.startswith('</') and stripped.endswith('>'):
                     errors.append(ValidationError(
