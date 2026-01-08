@@ -494,10 +494,10 @@ Return ONLY the component code, nothing else.
         """
         global _connector_v2_status
         
-        # Check if Connector V2 is available and healthy
-        if _connector_v2_status is None:
-            _connector_v2_status = is_connector_v2_healthy()
-            logger.info(f"[CONNECTOR V2] Health status: {'HEALTHY' if _connector_v2_status else 'UNHEALTHY'}")
+        # DISABLED: Library components on production are corrupted (empty bodies)
+        # Until the library is regenerated, use AI composition
+        _connector_v2_status = False
+        logger.info("[CONNECTOR V2] DISABLED - library components corrupted. Using AI composition.")
         
         if _connector_v2_status:
             try:
