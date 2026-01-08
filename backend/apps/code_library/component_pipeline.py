@@ -523,9 +523,16 @@ Return ONLY the component code, nothing else.
                 self.stats['wiring_method'] = 'modular'
                 self.stats['component_files'] = list(files_dict.keys())
                 
-                # Apply sanitization
-                app_code = self._sanitize_code(app_code)
-                app_code = self._fix_jsx_balance(app_code)
+                # VALIDATE with esbuild - if invalid, AI will fix in build_service
+                # We don't fix here - just return the code and let the build pipeline handle it
+                from apps.code_library.jsx_validator import validate_jsx
+                is_valid, error = validate_jsx(app_code)
+                
+                if is_valid:
+                    logger.info("[COMPOSE] Modular code validated by esbuild")
+                else:
+                    # Log warning but still return - build_service will handle AI retry
+                    logger.warning(f"[COMPOSE] esbuild found issues: {error} - will be fixed by AI retry")
                 
                 return app_code
             else:

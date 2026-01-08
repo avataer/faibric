@@ -168,20 +168,65 @@ class HybridDeployer:
                     logger.warning(f"[HYBRID] Compact generation failed: {e}")
                     # Continue with original code
         
-        result = self.vercel.deploy_static_app(
-            project_name=project_name,
-            app_code=app_code,
-            project_id=project_id
-        )
+        # Deploy with AI retry on build failure
+        max_retries = 3
+        current_code = app_code
+        last_error = None
+        total_deploy_time = 0
         
+        for attempt in range(max_retries):
+            result = self.vercel.deploy_static_app(
+                project_name=project_name,
+                app_code=current_code,
+                project_id=project_id
+            )
+            
+            total_deploy_time += result.get('deploy_time_seconds', 0)
+            
+            if result.get('success'):
+                if attempt > 0:
+                    logger.info(f"[HYBRID] Build succeeded after {attempt} AI fix(es)")
+                return DeploymentResult(
+                    success=True,
+                    url=result.get('url'),
+                    provider='vercel',
+                    deploy_time_seconds=total_deploy_time,
+                    deployment_id=result.get('deployment_id'),
+                    error=None,
+                    verified=result.get('verified', False)
+                )
+            
+            # Build failed - check if we have a specific error to fix
+            build_error = result.get('build_error') or result.get('error', 'Unknown build error')
+            last_error = build_error
+            
+            if attempt < max_retries - 1:
+                logger.warning(f"[HYBRID] Build failed (attempt {attempt + 1}): {build_error[:100]}")
+                logger.info(f"[HYBRID] Asking AI to fix the code...")
+                
+                # Use AI to fix the code
+                try:
+                    from apps.code_library.code_fixer import fix_code_with_ai
+                    success, fixed_code = fix_code_with_ai(current_code, build_error, attempt + 1)
+                    
+                    if success and fixed_code != current_code:
+                        current_code = fixed_code
+                        logger.info(f"[HYBRID] AI provided fixed code ({len(fixed_code)} bytes)")
+                    else:
+                        logger.warning("[HYBRID] AI couldn't fix the code, retrying anyway")
+                except Exception as e:
+                    logger.error(f"[HYBRID] AI fix failed: {e}")
+        
+        # All retries exhausted
+        logger.error(f"[HYBRID] Build failed after {max_retries} attempts: {last_error}")
         return DeploymentResult(
-            success=result.get('success', False),
-            url=result.get('url'),
+            success=False,
+            url=None,
             provider='vercel',
-            deploy_time_seconds=result.get('deploy_time_seconds', 0),
+            deploy_time_seconds=total_deploy_time,
             deployment_id=result.get('deployment_id'),
-            error=result.get('error'),
-            verified=result.get('verified', False)
+            error=f"Build failed after {max_retries} attempts: {last_error}",
+            verified=False
         )
     
     def _deploy_render(

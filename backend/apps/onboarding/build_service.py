@@ -72,45 +72,21 @@ class BuildService:
                 project=project
             )
             
-            # CRITICAL: Validate code BEFORE deployment
-            # This catches ALL syntax errors and blocks deployment if invalid
-            from apps.code_library.code_validator import validate_and_fix
+            # OPTION 4 ARCHITECTURE: Validate at Vercel deploy time
+            # 
+            # 1. Deploy to Vercel
+            # 2. If build fails → Vercel returns error
+            # 3. AI fixes code based on error
+            # 4. Retry deploy (up to 3 times)
+            #
+            # Validation happens IN the hybrid deployer, not here.
+            #
             from apps.code_library.owner_instructions import enforce_instructions
             
             # Step 2.1: Enforce owner instructions (removes emojis, etc.)
             app_code, instruction_fixes = enforce_instructions(app_code)
             if instruction_fixes:
                 logger.info(f"[Build] Owner instruction fixes: {instruction_fixes}")
-            
-            # Step 2.2: Validate code syntax
-            is_valid, fixed_code, validation_messages = validate_and_fix(app_code)
-            
-            # Log validation results
-            for msg in validation_messages:
-                logger.info(f"[Build] Validation: {msg}")
-                if 'ERROR' in msg:
-                    cls._add_event(session, f"Validation: {msg[:100]}")
-            
-            if not is_valid:
-                # BLOCK DEPLOYMENT - code has unfixable errors
-                error_msg = "Code validation failed: " + "; ".join([m for m in validation_messages if 'ERROR' in m])
-                
-                # Report to problem registry - this tracks if we have systemic fixes
-                from apps.code_library.problem_registry import report_problem
-                problem_class, has_fix, action = report_problem(error_msg, app_code)
-                
-                if action:
-                    # Problem needs a systemic fix that doesn't exist or isn't working
-                    logger.error(f"[Build] SYSTEMIC FIX REQUIRED: {action}")
-                    cls._add_event(session, f"[SYSTEMIC] {action[:100]}")
-                
-                cls._add_event(session, f"Build blocked: {error_msg[:150]}")
-                raise Exception(error_msg)
-            
-            # Use fixed code if available
-            if fixed_code and fixed_code != app_code:
-                app_code = fixed_code
-                logger.info("[Build] Using auto-fixed code")
             
             # Store the generated code
             result = {'components': {'App.tsx': app_code}}

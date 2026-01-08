@@ -141,10 +141,22 @@ class VercelDeployer:
                 self._add_custom_domain(project_slug, faibric_subdomain)
             
             # Step 3: Wait for deployment to be ready
-            vercel_url = self._wait_for_ready(deployment['id'])
+            wait_result = self._wait_for_ready(deployment['id'])
             
             deploy_time = time.time() - start_time
             
+            if not wait_result.get('success'):
+                # Build failed - return the error for AI retry
+                return {
+                    'success': False,
+                    'error': wait_result.get('error', 'Build failed'),
+                    'build_error': wait_result.get('build_error'),  # Specific error for AI
+                    'deployment_id': deployment['id'],
+                    'provider': 'vercel',
+                    'deploy_time_seconds': deploy_time
+                }
+            
+            vercel_url = wait_result.get('url')
             if vercel_url:
                 # CRITICAL: Verify the deployment actually works before reporting success
                 verification = self._verify_deployment(vercel_url)
@@ -753,9 +765,17 @@ function App() {
         except Exception as e:
             logger.warning(f"[VERCEL] Error issuing SSL certificate: {e}")
     
-    def _wait_for_ready(self, deployment_id: str, timeout: int = 180) -> Optional[str]:
-        """Wait for deployment to be ready and return the URL."""
+    def _wait_for_ready(self, deployment_id: str, timeout: int = 180) -> dict:
+        """
+        Wait for deployment to be ready.
         
+        Returns:
+            dict with keys:
+            - success: bool
+            - url: str (if success)
+            - error: str (if failed)
+            - build_error: str (specific build error message if available)
+        """
         params = {}
         if self.team_id:
             params["teamId"] = self.team_id
@@ -778,10 +798,19 @@ function App() {
                     url = data.get("url")
                     if url and not url.startswith("http"):
                         url = f"https://{url}"
-                    return url
+                    return {"success": True, "url": url}
+                    
                 elif state in ("ERROR", "CANCELED"):
+                    # Try to get the build error details
+                    build_error = self._get_build_error(deployment_id)
                     logger.error(f"[VERCEL] Deployment failed: {state}")
-                    return None
+                    if build_error:
+                        logger.error(f"[VERCEL] Build error: {build_error}")
+                    return {
+                        "success": False,
+                        "error": f"Build {state.lower()}",
+                        "build_error": build_error
+                    }
                 else:
                     # Still building
                     logger.debug(f"[VERCEL] State: {state}")
@@ -789,7 +818,38 @@ function App() {
             time.sleep(3)
         
         logger.error(f"[VERCEL] Deployment timed out after {timeout}s")
-        return None
+        return {"success": False, "error": "Deployment timed out"}
+    
+    def _get_build_error(self, deployment_id: str) -> Optional[str]:
+        """Fetch build logs to extract error message."""
+        try:
+            params = {}
+            if self.team_id:
+                params["teamId"] = self.team_id
+            
+            # Get deployment events/logs
+            response = requests.get(
+                f"{VERCEL_API_URL}/v2/deployments/{deployment_id}/events",
+                headers=self.headers,
+                params=params,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                events = response.json()
+                # Look for error events
+                for event in reversed(events):  # Most recent first
+                    if event.get("type") == "error":
+                        return event.get("text", event.get("payload", {}).get("text", ""))
+                    # Also check for build output with errors
+                    text = event.get("text", "")
+                    if "error" in text.lower() or "Error:" in text:
+                        return text
+            
+            return None
+        except Exception as e:
+            logger.warning(f"[VERCEL] Could not fetch build error: {e}")
+            return None
     
     def delete_deployment(self, deployment_id: str) -> bool:
         """Delete a deployment."""

@@ -146,6 +146,10 @@ class ModularComposer:
         
         for comp_file in component_files:
             clean_code = self._clean_component_for_embedding(comp_file.code, comp_file.component_name)
+            
+            # CRITICAL: Validate each component is complete (ends with }; or })
+            clean_code = self._ensure_component_complete(clean_code, comp_file.component_name)
+            
             sections.append(f"\n// ── {comp_file.component_name} ──")
             sections.append(clean_code)
         
@@ -196,6 +200,44 @@ class ModularComposer:
         
         return code
     
+    def _ensure_component_complete(self, code: str, component_name: str) -> str:
+        """
+        CRITICAL: Ensure a component is complete with proper closing.
+        
+        Arrow function components must end with };
+        Regular function components must end with }
+        
+        This catches truncation/corruption issues.
+        """
+        if not code or not code.strip():
+            return code
+        
+        code = code.rstrip()
+        
+        # Check brace balance for this specific component
+        open_braces = code.count('{')
+        close_braces = code.count('}')
+        
+        if open_braces != close_braces:
+            missing = open_braces - close_braces
+            if missing > 0:
+                # Add missing closing braces
+                logger.warning(f"[MODULAR] Component {component_name} missing {missing} closing braces, adding them")
+                code += '\n' + ('}' * missing)
+            elif missing < 0:
+                # Too many closing braces - this is a problem but don't remove
+                logger.warning(f"[MODULAR] Component {component_name} has {abs(missing)} extra closing braces")
+        
+        # Ensure arrow function components end with };
+        # Pattern: const Name = () => { ... }; 
+        if f'const {component_name}' in code or 'const ' in code.split('\n')[0]:
+            # This is an arrow function - should end with };
+            if code.endswith('}') and not code.endswith('};'):
+                code += ';'
+                logger.info(f"[MODULAR] Added trailing ; to component {component_name}")
+        
+        return code
+    
     def _clean_component_for_embedding(self, code: str, component_name: str) -> str:
         """
         Clean a library component for embedding.
@@ -214,9 +256,13 @@ class ModularComposer:
   </div>
 );'''
         
-        # Remove import statements
-        code = re.sub(r'^import\s+.*?[\'"][^"\']+[\'"];\s*\n?', '', code, flags=re.MULTILINE)
-        code = re.sub(r'^import\s+.*?from\s+[\'"][^"\']+[\'"];\s*\n?', '', code, flags=re.MULTILINE)
+        # Remove import statements LINE BY LINE (not DOTALL - that causes corruption!)
+        # Pattern 1: import { x, y } from 'module'; (standard ES6 import)
+        # Pattern 2: import x from 'module'; (default import)
+        # Pattern 3: import 'module'; (side-effect import)
+        # CRITICAL: Use MULTILINE, not DOTALL - DOTALL causes catastrophic regex matching
+        code = re.sub(r'^import\s+.*?from\s+[\'"][^"\']+[\'"];?\s*$', '', code, flags=re.MULTILINE)
+        code = re.sub(r'^import\s+[\'"][^"\']+[\'"];?\s*$', '', code, flags=re.MULTILINE)
         
         # Remove export default at end
         code = re.sub(r'\n?export\s+default\s+\w+;\s*$', '', code)
