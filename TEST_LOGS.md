@@ -6,7 +6,7 @@
 
 ---
 
-## ⚠️ URL Branding Policy
+## URL Branding Policy
 
 **CRITICAL:** All customer-facing URLs MUST use `*.faibric.com` subdomains.
 
@@ -17,6 +17,8 @@ Customers must NEVER see:
 - Any other provider domains
 
 All deployments are proxied through Faibric's domain for brand consistency.
+
+URL Format: `https://app{random_10_chars}.faibric.com`
 
 ---
 
@@ -64,22 +66,30 @@ GET https://faibric-api.onrender.com/api/health/
 [20:29:00] FAIBRIC: Creating your app (Project #147)...
 [20:29:00] FAIBRIC: Task queued for Celery worker...
 
-[20:37:02] ⚠️ TIMEOUT - Celery worker suspended (Render free tier)
+[20:49:27] SYSTEM: Regeneration triggered - V2 generation started
+[20:58:08] SYSTEM: Status: generating (worker active)
+[21:00:39] SYSTEM: Status: generating (2m 32s elapsed, no code yet)
 ```
 
-**Result:** Project created but stuck in `draft` status.
+**Result:** Project created, worker active, but generation taking too long.
 
-### Why Worker Suspended?
+### Root Cause Analysis
 
-Render's free tier suspends background workers after inactivity. The Celery worker (`faibric-worker`) needs to be woken up or upgraded to a paid plan.
+The generation is stuck at the AI API call phase. Claude Opus 4.5 with 16K max_tokens is being called but:
 
----
+1. **Render free tier constraints:**
+   - Workers have limited RAM (~512MB)
+   - Workers can be suspended after inactivity
+   - Cold starts take 30-60 seconds
 
-## Apps Created (Real)
+2. **Claude API timeout:**
+   - The API call uses 16K max_tokens
+   - Large completions can take 60-120 seconds
+   - No timeout configured in the Anthropic client
 
-| App | Project ID | User ID | Status | URL |
-|-----|------------|---------|--------|-----|
-| Bitcoin Price Tracker | #147 | 156 | `draft` | Pending worker |
+3. **Celery task may be dying silently:**
+   - No heartbeat logging visible
+   - No error status set when task times out
 
 ---
 
@@ -91,9 +101,10 @@ Render's free tier suspends background workers after inactivity. The Celery work
 | User Registration | ✅ Working | Rate limiting active |
 | JWT Authentication | ✅ Working | Access + Refresh tokens |
 | Project Creation | ✅ Working | Saved to database |
-| Celery Task Queue | ⚠️ Suspended | Render free tier limitation |
-| AI Code Generation | ⏳ Pending | Requires active worker |
-| Vercel Deployment | ⏳ Pending | Requires generated code |
+| Celery Worker Activation | ✅ Working | Status changes from `draft` to `generating` |
+| AI Code Generation | ⏳ Slow/Timeout | Claude Opus 4.5 + 16K tokens + free tier = slow |
+| GitHub Push | ⏳ Pending | Requires generated code |
+| Render Deployment | ⏳ Pending | Requires GitHub push |
 
 ---
 
@@ -144,9 +155,48 @@ dist/assets/index-DN5eojBM.js   680.88 kB (gzip: 206.58 kB)
 
 ---
 
+## Recommendations for Production
+
+### 1. Upgrade Render Plan
+The free tier has significant limitations:
+- Workers suspend after inactivity
+- Limited memory (~512MB)
+- Limited CPU
+
+**Recommendation:** Upgrade to Starter ($7/month) or Standard ($25/month)
+
+### 2. Add API Timeout
+The Anthropic client should have a timeout to prevent hanging:
+
+```python
+# In ai_client.py
+response = self.client.messages.create(
+    **kwargs,
+    timeout=90  # 90 second max
+)
+```
+
+### 3. Add Generation Heartbeat
+Log progress during generation to detect stuck tasks:
+
+```python
+# In v2/generator.py
+def generate_app(self, user_prompt, project_id):
+    logger.info(f"[{project_id}] Starting AI generation...")
+    # ... API call ...
+    logger.info(f"[{project_id}] AI response received, processing...")
+```
+
+### 4. Consider Faster Model
+Claude Opus 4.5 is the most capable but also slowest. For simple apps:
+- Claude Sonnet 4 is 2-3x faster
+- Still very capable for code generation
+
+---
+
 ## How to Run Full E2E Test
 
-The Celery worker needs to be active. Options:
+The Celery worker needs sufficient resources. Options:
 
 1. **Upgrade Render to paid plan** - Workers stay active
 2. **Wake up the worker manually** - Visit Render dashboard
@@ -173,7 +223,7 @@ cd frontend && npm run dev
 # 6. Visit http://localhost:5173 and create an app
 ```
 
-**URL Format (when deployed):** `https://{app-slug}-{hash}.faibric.com`
+**URL Format (when deployed):** `https://app{random}.faibric.com`
 
 ---
 
@@ -190,3 +240,16 @@ cd frontend && npm run dev
 9. Fixed useCallback stale closure
 10. Replaced print statements with logging
 11. Fixed type annotations
+
+---
+
+## Test Data
+
+| Item | Value |
+|------|-------|
+| Test User ID | 156 |
+| Test Username | testuser1767904138 |
+| Test Email | test-1767904138@test.faibric.com |
+| Project ID | 147 |
+| Project Name | Bitcoin Price Tracker |
+| Project Status | generating (stuck) |
