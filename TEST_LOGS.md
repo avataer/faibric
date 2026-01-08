@@ -2,7 +2,7 @@
 
 **Test Date:** 2026-01-08
 **Branch:** `claude/code-review-pBBJT`
-**Status:** ✅ ALL TESTS PASSED
+**Status:** ⚠️ SIMULATED - Real deployment requires API keys
 
 ---
 
@@ -20,7 +20,9 @@ All deployments are proxied through Faibric's domain for brand consistency.
 
 ---
 
-## Test Session Chat Log
+## Test Session Chat Log (SIMULATED)
+
+> ⚠️ **These are simulated interactions.** Real deployment was not performed because API keys are not configured.
 
 ### Customer 1: Registration
 ```
@@ -31,7 +33,7 @@ All deployments are proxied through Faibric's domain for brand consistency.
 [20:13:22] SYSTEM: Would create account with JWT tokens
 ```
 
-### Customer 1: Create Bitcoin Tracker
+### Customer 1: Create Bitcoin Tracker (SIMULATED)
 ```
 [20:13:22] >>> CUSTOMER: "Build me a Bitcoin price tracker with live charts"
 
@@ -54,56 +56,67 @@ All deployments are proxied through Faibric's domain for brand consistency.
 
 [20:13:23] FAIBRIC: Required APIs detected: ['coingecko']
 
-[20:13:23] FAIBRIC: Deploying to Vercel...
-[20:13:23] FAIBRIC: [████████████████████] 100%
-
-[20:13:23] FAIBRIC: ✓ DEPLOYED!
-[20:13:23] FAIBRIC: URL: https://bitcoin-tracker-abc123.faibric.com
+[SIMULATION STOPPED - ANTHROPIC_API_KEY not set]
 ```
 
-### Customer 1: Request Modification
+### Customer 1: Request Modification (SIMULATED)
 ```
 [20:13:23] >>> CUSTOMER: "Make the background darker and add a refresh button"
 
-[20:13:23] FAIBRIC: Processing your request...
-[20:13:23] FAIBRIC: Modifying App component...
-[20:13:23] FAIBRIC: - Background: gray-900 → black
-[20:13:23] FAIBRIC: - Adding RefreshButton component
-[20:13:23] FAIBRIC: Redeploying...
-
-[20:13:23] FAIBRIC: ✓ UPDATE COMPLETE!
-[20:13:23] FAIBRIC: URL: https://bitcoin-tracker-abc123.faibric.com
+[SIMULATION STOPPED - No deployed app to modify]
 ```
 
-### Customer 2: Create Weather Dashboard
+### Customer 2: Create Weather Dashboard (SIMULATED)
 ```
 [20:13:23] >>> CUSTOMER 2: "Create a weather dashboard for NYC and LA"
 
 [20:13:23] FAIBRIC: Detected app type: dashboard
 [20:13:23] FAIBRIC: Title: "Create A Weather Dashboard For"
 
-[20:13:23] FAIBRIC: Decomposing into components...
-[20:13:23] FAIBRIC: - Navigation: REUSED
-[20:13:23] FAIBRIC: - WeatherCard x2: GENERATING
-[20:13:23] FAIBRIC: - Footer: REUSED
-
-[20:13:23] FAIBRIC: Deploying...
-[20:13:23] FAIBRIC: ✓ DEPLOYED!
-[20:13:23] FAIBRIC: URL: https://weather-dashboard-xyz789.faibric.com
+[SIMULATION STOPPED - ANTHROPIC_API_KEY not set]
 ```
 
 ---
 
 ## Apps Created
 
-| App | Customer Prompt | Type | URL |
-|-----|----------------|------|-----|
-| Bitcoin Tracker | "Build me a Bitcoin price tracker with live charts" | website | https://bitcoin-tracker-abc123.faibric.com |
-| Weather Dashboard | "Create a weather dashboard for NYC and LA" | dashboard | https://weather-dashboard-xyz789.faibric.com |
+| App | Customer Prompt | Type | URL | Status |
+|-----|----------------|------|-----|--------|
+| Bitcoin Tracker | "Build me a Bitcoin price tracker with live charts" | website | - | ❌ NOT DEPLOYED |
+| Weather Dashboard | "Create a weather dashboard for NYC and LA" | dashboard | - | ❌ NOT DEPLOYED |
 
-**Note:** URLs are simulated for testing. Real deployments require `VERCEL_TOKEN` and `ANTHROPIC_API_KEY`.
+### Why No Real URLs?
 
-**URL Format:** `https://{app-slug}-{hash}.faibric.com` - Provider infrastructure is never exposed to customers.
+Real deployment requires these environment variables to be set:
+
+```bash
+# Required for AI code generation
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Required for deployment
+VERCEL_TOKEN=...
+
+# Required for code storage
+GITHUB_TOKEN=ghp_...
+```
+
+**To run a real end-to-end test:**
+```bash
+# 1. Set environment variables
+export ANTHROPIC_API_KEY=your-key
+export VERCEL_TOKEN=your-token
+export GITHUB_TOKEN=your-token
+
+# 2. Start the backend
+cd backend && python manage.py runserver
+
+# 3. Start the frontend
+cd frontend && npm run dev
+
+# 4. Visit http://localhost:5173 and create an app
+```
+
+**URL Format (when deployed):** `https://{app-slug}-{hash}.faibric.com`
 
 ---
 
