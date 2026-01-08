@@ -17,6 +17,7 @@ from .views import (
     mark_instruction_fixed,
     alerts_view,
     mark_alert_read,
+    regenerate_library,
 )
 from .admin_feedback import AdminFeedbackService, generate_admin_dashboard_html
 
@@ -133,6 +134,8 @@ urlpatterns = [
     path('alerts/<int:alert_id>/read/', mark_alert_read, name='mark-alert-read'),
     # Schema fix endpoint
     path('fix-schema/', fix_schema, name='fix-schema'),
+    # Library regeneration
+    path('regenerate/', regenerate_library, name='regenerate-library'),
 ]
 
 

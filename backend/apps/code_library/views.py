@@ -617,6 +617,407 @@ def mark_alert_read(request, alert_id):
         return Response({'success': False, 'message': 'Alert not found'}, status=404)
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def regenerate_library(request):
+    """
+    Regenerate the component library with high-quality components.
+    
+    This clears all existing components and creates new, production-ready ones.
+    """
+    from .models import LibraryItem
+    
+    # Secret key check for security
+    secret = request.data.get('secret') or request.query_params.get('secret')
+    if secret != 'faibric_regenerate_2026':
+        return Response({'error': 'Invalid secret'}, status=403)
+    
+    try:
+        # Clear existing
+        existing_count = LibraryItem.objects.count()
+        LibraryItem.objects.all().delete()
+        
+        # Define components
+        COMPONENTS = {
+            "navigation_header": {
+                "name": "NavigationHeader",
+                "description": "A responsive navigation header with logo and menu items",
+                "code": '''
+const NavigationHeader = ({ currentView, onNavigate, brandName = "Brand" }) => {
+  const navItems = [
+    { id: "home", label: "Home" },
+    { id: "services", label: "Services" },
+    { id: "about", label: "About" },
+    { id: "contact", label: "Contact" },
+    { id: "settings", label: "Settings" },
+  ];
+
+  return (
+    <nav className="bg-white shadow-lg sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <span className="text-2xl font-bold text-blue-600">{brandName}</span>
+          </div>
+          <div className="flex items-center space-x-4">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  currentView === item.id
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+''',
+                "keywords": ["navigation", "header", "navbar", "menu"],
+                "tags": ["navigation", "header"],
+            },
+            "hero_gradient": {
+                "name": "HeroGradient",
+                "description": "A hero section with gradient background and call-to-action",
+                "code": '''
+const HeroGradient = ({ 
+  title = "Welcome to Our Service",
+  subtitle = "We provide professional solutions tailored to your needs",
+  ctaText = "Get Started",
+  onCtaClick
+}) => {
+  return (
+    <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
+      <div className="absolute inset-0 bg-black opacity-10"></div>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+        <div className="text-center">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6">
+            {title}
+          </h1>
+          <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-10">
+            {subtitle}
+          </p>
+          <button
+            onClick={onCtaClick}
+            className="inline-flex items-center px-8 py-4 text-lg font-semibold rounded-lg bg-white text-blue-600 hover:bg-blue-50 transition-all transform hover:scale-105 shadow-xl"
+          >
+            {ctaText}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["hero", "gradient", "landing", "cta", "banner"],
+                "tags": ["hero", "gradient"],
+            },
+            "services_grid": {
+                "name": "ServicesGrid",
+                "description": "A grid of service cards with icons and descriptions",
+                "code": '''
+const ServicesGrid = ({ services }) => {
+  const defaultServices = [
+    { title: "Consultation", description: "Expert advice tailored to your needs" },
+    { title: "Custom Solutions", description: "Personalized strategies for your situation" },
+    { title: "Ongoing Support", description: "Continuous assistance for your success" },
+    { title: "Expert Advice", description: "Professional guidance from specialists" }
+  ];
+  const items = services || defaultServices;
+
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">Our Services</h2>
+        <div className="grid md:grid-cols-4 gap-8">
+          {items.map((service, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-md hover:shadow-xl p-6 text-center">
+              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-blue-600 text-xl font-bold">{i + 1}</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
+              <p className="text-gray-600">{service.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["services", "grid", "cards", "features"],
+                "tags": ["services", "grid"],
+            },
+            "about_section": {
+                "name": "AboutSection",
+                "description": "An about section with company info",
+                "code": '''
+const AboutSection = ({ title = "About Us", description }) => {
+  const defaultDesc = "We are dedicated professionals with years of experience. Our commitment to excellence drives everything we do.";
+  return (
+    <section className="py-16 bg-white">
+      <div className="max-w-4xl mx-auto px-4 text-center">
+        <h2 className="text-3xl font-bold mb-6">{title}</h2>
+        <p className="text-lg text-gray-600">{description || defaultDesc}</p>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["about", "company", "mission"],
+                "tags": ["about", "section"],
+            },
+            "contact_form": {
+                "name": "ContactForm",
+                "description": "A contact form with validation",
+                "code": '''
+const ContactForm = ({ onSubmit, title = "Contact Us" }) => {
+  const [formData, setFormData] = React.useState({ name: "", email: "", message: "" });
+  const [submitted, setSubmitted] = React.useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (onSubmit) onSubmit(formData);
+    setSubmitted(true);
+    setTimeout(() => { setSubmitted(false); setFormData({ name: "", email: "", message: "" }); }, 3000);
+  };
+
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="max-w-xl mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-8">{title}</h2>
+        {submitted && <div className="mb-4 p-4 bg-green-100 text-green-700 rounded">Thank you! We will contact you soon.</div>}
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 space-y-6">
+          <div>
+            <label className="block text-sm font-medium mb-2">Name</label>
+            <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="w-full px-4 py-3 border rounded-lg" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Email</label>
+            <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
+              className="w-full px-4 py-3 border rounded-lg" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Message</label>
+            <textarea value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})}
+              rows={4} className="w-full px-4 py-3 border rounded-lg" required />
+          </div>
+          <button type="submit" className="w-full py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">
+            Send Message
+          </button>
+        </form>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["contact", "form", "email"],
+                "tags": ["contact", "form"],
+            },
+            "footer_simple": {
+                "name": "FooterSimple",
+                "description": "A simple footer with links",
+                "code": '''
+const FooterSimple = ({ brandName = "Brand" }) => {
+  return (
+    <footer className="bg-gray-900 text-white py-12">
+      <div className="max-w-7xl mx-auto px-4 text-center">
+        <span className="text-2xl font-bold text-blue-400">{brandName}</span>
+        <p className="mt-4 text-gray-400">Providing quality services. Built with Faibric.</p>
+        <p className="mt-4 text-gray-500 text-sm">&copy; {new Date().getFullYear()} {brandName}. All rights reserved.</p>
+      </div>
+    </footer>
+  );
+};
+''',
+                "keywords": ["footer", "copyright", "links"],
+                "tags": ["footer", "simple"],
+            },
+            "settings_view": {
+                "name": "SettingsView",
+                "description": "A settings page with configuration options",
+                "code": '''
+const SettingsView = () => {
+  const [settings, setSettings] = React.useState({ notifications: true, darkMode: false, language: "en" });
+  return (
+    <section className="py-8">
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-2xl font-bold mb-6">Settings</h2>
+        <div className="bg-white rounded-xl shadow-md">
+          <div className="p-6 border-b flex justify-between items-center">
+            <div><h3 className="font-medium">Notifications</h3><p className="text-sm text-gray-500">Receive updates</p></div>
+            <button onClick={() => setSettings({...settings, notifications: !settings.notifications})}
+              className={`w-12 h-6 rounded-full ${settings.notifications ? "bg-blue-600" : "bg-gray-300"}`}>
+              <span className={`block w-5 h-5 bg-white rounded-full transform transition ${settings.notifications ? "translate-x-6" : "translate-x-0.5"}`} />
+            </button>
+          </div>
+          <div className="p-6 flex justify-between items-center">
+            <div><h3 className="font-medium">Language</h3><p className="text-sm text-gray-500">Select language</p></div>
+            <select value={settings.language} onChange={(e) => setSettings({...settings, language: e.target.value})}
+              className="px-4 py-2 border rounded-lg">
+              <option value="en">English</option><option value="es">Spanish</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["settings", "preferences", "config"],
+                "tags": ["settings", "view"],
+            },
+            "dashboard_stats": {
+                "name": "DashboardStats",
+                "description": "Dashboard with stats cards",
+                "code": '''
+const DashboardStats = ({ stats }) => {
+  const defaultStats = [
+    { label: "Users", value: "1,234", change: "+12%" },
+    { label: "Revenue", value: "$45K", change: "+8%" },
+    { label: "Orders", value: "567", change: "-3%" },
+    { label: "Rate", value: "3.2%", change: "+0.5%" }
+  ];
+  const items = stats || defaultStats;
+
+  return (
+    <section className="py-8">
+      <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
+      <div className="grid md:grid-cols-4 gap-6">
+        {items.map((stat, i) => (
+          <div key={i} className="bg-white rounded-xl shadow-md p-6">
+            <p className="text-sm text-gray-500">{stat.label}</p>
+            <p className="text-3xl font-bold">{stat.value}</p>
+            <span className={`text-sm ${stat.change.startsWith("+") ? "text-green-600" : "text-red-600"}`}>{stat.change}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["dashboard", "stats", "analytics"],
+                "tags": ["dashboard", "stats"],
+            },
+            "pricing_table": {
+                "name": "PricingTable",
+                "description": "Pricing table with tiers",
+                "code": '''
+const PricingTable = ({ onSelectPlan }) => {
+  const plans = [
+    { name: "Starter", price: "29", features: ["5 Projects", "Basic Support", "1GB Storage"], popular: false },
+    { name: "Pro", price: "79", features: ["Unlimited", "Priority Support", "10GB Storage", "Analytics"], popular: true },
+    { name: "Enterprise", price: "199", features: ["Everything", "Dedicated Support", "Unlimited Storage", "SSO"], popular: false }
+  ];
+
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">Pricing</h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          {plans.map((plan, i) => (
+            <div key={i} className={`bg-white rounded-2xl shadow-lg p-8 ${plan.popular ? "ring-2 ring-blue-600" : ""}`}>
+              {plan.popular && <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">Popular</span>}
+              <h3 className="text-xl font-bold mt-2">{plan.name}</h3>
+              <div className="my-4"><span className="text-4xl font-bold">${plan.price}</span>/mo</div>
+              <ul className="space-y-2 mb-6">
+                {plan.features.map((f, j) => <li key={j} className="text-gray-600">* {f}</li>)}
+              </ul>
+              <button onClick={() => onSelectPlan && onSelectPlan(plan)}
+                className={`w-full py-3 rounded-lg font-semibold ${plan.popular ? "bg-blue-600 text-white" : "bg-gray-100"}`}>
+                Get Started
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["pricing", "plans", "subscription"],
+                "tags": ["pricing", "table"],
+            },
+            "testimonials_carousel": {
+                "name": "TestimonialsCarousel",
+                "description": "Testimonials with reviews",
+                "code": '''
+const TestimonialsCarousel = () => {
+  const [active, setActive] = React.useState(0);
+  const items = [
+    { name: "Sarah J.", role: "CEO", content: "Amazing service! Highly recommend." },
+    { name: "Mike C.", role: "Founder", content: "Professional and delivered beyond expectations." },
+    { name: "Emily D.", role: "Director", content: "Transformed our vision into reality." }
+  ];
+
+  return (
+    <section className="py-16 bg-blue-50">
+      <div className="max-w-3xl mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">What Clients Say</h2>
+        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+          <p className="text-xl italic mb-6">"{items[active].content}"</p>
+          <p className="font-semibold">{items[active].name}</p>
+          <p className="text-gray-500">{items[active].role}</p>
+          <div className="flex justify-center mt-6 space-x-2">
+            {items.map((_, i) => (
+              <button key={i} onClick={() => setActive(i)}
+                className={`w-3 h-3 rounded-full ${i === active ? "bg-blue-600" : "bg-gray-300"}`} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["testimonials", "reviews", "clients"],
+                "tags": ["testimonials", "carousel"],
+            },
+        }
+        
+        # Create components
+        created = []
+        for key, comp in COMPONENTS.items():
+            parts = key.split("_", 1)
+            comp_type = parts[0]
+            variant = parts[1] if len(parts) > 1 else "default"
+            
+            item = LibraryItem.objects.create(
+                name=comp["name"],
+                slug=key,
+                description=comp["description"],
+                item_type="component",
+                language="tsx",
+                code=comp["code"].strip(),
+                keywords=comp["keywords"],
+                tags=comp["tags"],
+                quality_score=0.9,
+                is_active=True,
+                is_public=True,
+                needs_review=False,
+                created_by="admin"
+            )
+            created.append({"id": str(item.id), "name": comp["name"]})
+        
+        return Response({
+            'success': True,
+            'cleared': existing_count,
+            'created': len(created),
+            'components': created
+        })
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
 
 
 
