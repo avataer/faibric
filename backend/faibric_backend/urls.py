@@ -15,10 +15,11 @@ def health_check(request):
         deploy_status = get_deployment_status()
     except Exception:
         deploy_status = {'error': 'Could not check deployment status'}
-    
+
     return JsonResponse({
         'status': 'healthy',
         'service': 'faibric-api',
+        'version': 'v2-no-template-literals',  # PHASE 1: Version marker
         'deployment': deploy_status,
     })
 
