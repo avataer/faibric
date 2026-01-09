@@ -612,12 +612,28 @@ class ComponentLibrary:
     ) -> str:
         """
         Save a new component to the library.
-        
+
         CRITICAL: Check for duplicates first!
+        PHASE 1: Validate component is browser-ready before saving.
         Returns the component ID.
         """
         import re
-        
+        from .jsx_validator import validate_jsx
+
+        # PHASE 1: Validate component before saving
+        is_valid, error = validate_jsx(code)
+        if not is_valid:
+            print(f"[LIBRARY] [WARN] Component validation failed: {error}")
+            # Still save but mark for review
+            version_notes = f"[NEEDS FIX] {error}\n\n{version_notes}"
+
+        # Check for TypeScript that would require transformation
+        has_complex_ts = bool(re.search(r'<\w+\s*extends\s+\w+>', code)) or \
+                         bool(re.search(r':\s*\w+\[\]', code)) or \
+                         bool(re.search(r'as\s+\w+', code))
+        if has_complex_ts:
+            print(f"[LIBRARY] [WARN] Component has TypeScript that may need transformation")
+
         name = f"{component_type.value.title()} - {variant.title()}"
         slug = f"{component_type.value}-{variant}-{version}".lower()
         slug = re.sub(r'[^a-z0-9]+', '-', slug)
@@ -665,7 +681,7 @@ This component can be customized by passing props or modifying styles.
             'usage_example': f'<{component_type.value.title()}{variant.title()} />',
             'documentation': doc,
             'item_type': 'component',  # COMPONENT, not template
-            'language': 'tsx',
+            'language': 'jsx',  # PHASE 1: Browser-ready, no transformation needed
             'code': code,
             'keywords': [component_type.value, variant, 'building-block'],
             'tags': [component_type.value, variant],

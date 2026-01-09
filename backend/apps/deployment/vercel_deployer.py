@@ -333,12 +333,34 @@ root.render(React.createElement(App));
     def _convert_to_browser_react(self, code: str) -> str:
         """
         Convert TypeScript/module React code to browser-compatible JavaScript.
-        
-        CAREFUL: Only remove TypeScript-specific syntax, not valid JS!
-        Object literals like { name: "value" } must be preserved.
+
+        PHASE 1 ZERO-TRANSFORM: If code is already browser-ready (from library),
+        skip transformation entirely to prevent regex corruption.
+
+        Detection: Library-composed code has these markers:
+        - "LIBRARY COMPONENTS" comment header
+        - No TypeScript syntax (interface, type annotations, generics)
+        - Already uses React.useState (not useState)
         """
         import re
-        
+
+        # ZERO-TRANSFORM CHECK: Is this library-composed code?
+        is_library_composed = "LIBRARY COMPONENTS" in code
+        has_typescript = bool(re.search(r'^interface\s+\w+\s*\{', code, re.MULTILINE)) or \
+                         bool(re.search(r'^type\s+\w+\s*=', code, re.MULTILINE)) or \
+                         bool(re.search(r':\s*React\.FC<', code))
+
+        if is_library_composed and not has_typescript:
+            logger.info("[VERCEL] ZERO-TRANSFORM: Library code detected, skipping regex transformation")
+            # Only do minimal cleanup - remove imports and exports
+            code = re.sub(r'^import\s+.*$', '', code, flags=re.MULTILINE)
+            code = re.sub(r'export\s+default\s+\w+;?\s*$', '', code, flags=re.MULTILINE)
+            code = re.sub(r'^export\s+(?=const|let|var|function|class)', '', code, flags=re.MULTILINE)
+            code = re.sub(r'\n\s*\n\s*\n+', '\n\n', code)
+            return code.strip()
+
+        logger.info("[VERCEL] Applying TypeScript transformation (non-library code)")
+
         # Remove import lines
         code = re.sub(r'^import\s+.*$', '', code, flags=re.MULTILINE)
         

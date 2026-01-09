@@ -1314,7 +1314,7 @@ const FormSection = ({ title = "Form", onSubmit }) => {
                 slug=key,
                 description=comp["description"],
                 item_type="component",
-                language="tsx",
+                language="jsx",  # PHASE 1: Browser-ready, no transformation needed
                 code=comp["code"].strip(),
                 keywords=comp["keywords"],
                 tags=comp["tags"],
