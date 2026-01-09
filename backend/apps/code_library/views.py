@@ -683,11 +683,7 @@ const NavigationHeader = ({ currentView, onNavigate, brandName = "Brand" }) => {
               <button
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  currentView === item.id
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
-                }`}
+                className={"px-3 py-2 rounded-md text-sm font-medium transition-colors " + (currentView === item.id ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:text-blue-600 hover:bg-gray-50")}
               >
                 {item.label}
               </button>
@@ -874,8 +870,8 @@ const SettingsView = () => {
           <div className="p-6 border-b flex justify-between items-center">
             <div><h3 className="font-medium">Notifications</h3><p className="text-sm text-gray-500">Receive updates</p></div>
             <button onClick={() => setSettings({...settings, notifications: !settings.notifications})}
-              className={`w-12 h-6 rounded-full ${settings.notifications ? "bg-blue-600" : "bg-gray-300"}`}>
-              <span className={`block w-5 h-5 bg-white rounded-full transform transition ${settings.notifications ? "translate-x-6" : "translate-x-0.5"}`} />
+              className={"w-12 h-6 rounded-full " + (settings.notifications ? "bg-blue-600" : "bg-gray-300")}>
+              <span className={"block w-5 h-5 bg-white rounded-full transform transition " + (settings.notifications ? "translate-x-6" : "translate-x-0.5")} />
             </button>
           </div>
           <div className="p-6 flex justify-between items-center">
@@ -915,7 +911,7 @@ const DashboardStats = ({ stats }) => {
           <div key={i} className="bg-white rounded-xl shadow-md p-6">
             <p className="text-sm text-gray-500">{stat.label}</p>
             <p className="text-3xl font-bold">{stat.value}</p>
-            <span className={`text-sm ${stat.change.startsWith("+") ? "text-green-600" : "text-red-600"}`}>{stat.change}</span>
+            <span className={"text-sm " + (stat.change.startsWith("+") ? "text-green-600" : "text-red-600")}>{stat.change}</span>
           </div>
         ))}
       </div>
@@ -943,7 +939,7 @@ const PricingTable = ({ onSelectPlan }) => {
         <h2 className="text-3xl font-bold text-center mb-12">Pricing</h2>
         <div className="grid md:grid-cols-3 gap-8">
           {plans.map((plan, i) => (
-            <div key={i} className={`bg-white rounded-2xl shadow-lg p-8 ${plan.popular ? "ring-2 ring-blue-600" : ""}`}>
+            <div key={i} className={"bg-white rounded-2xl shadow-lg p-8 " + (plan.popular ? "ring-2 ring-blue-600" : "")}>
               {plan.popular && <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">Popular</span>}
               <h3 className="text-xl font-bold mt-2">{plan.name}</h3>
               <div className="my-4"><span className="text-4xl font-bold">${plan.price}</span>/mo</div>
@@ -951,7 +947,7 @@ const PricingTable = ({ onSelectPlan }) => {
                 {plan.features.map((f, j) => <li key={j} className="text-gray-600">* {f}</li>)}
               </ul>
               <button onClick={() => onSelectPlan && onSelectPlan(plan)}
-                className={`w-full py-3 rounded-lg font-semibold ${plan.popular ? "bg-blue-600 text-white" : "bg-gray-100"}`}>
+                className={"w-full py-3 rounded-lg font-semibold " + (plan.popular ? "bg-blue-600 text-white" : "bg-gray-100")}>
                 Get Started
               </button>
             </div>
@@ -988,7 +984,7 @@ const TestimonialsCarousel = () => {
           <div className="flex justify-center mt-6 space-x-2">
             {items.map((_, i) => (
               <button key={i} onClick={() => setActive(i)}
-                className={`w-3 h-3 rounded-full ${i === active ? "bg-blue-600" : "bg-gray-300"}`} />
+                className={"w-3 h-3 rounded-full " + (i === active ? "bg-blue-600" : "bg-gray-300")} />
             ))}
           </div>
         </div>
