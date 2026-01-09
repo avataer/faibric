@@ -171,7 +171,9 @@ class ProjectDecomposer:
         ComponentType.LIST: [
             'list', 'feed', 'timeline', 'activity', 'notifications',
             'items', 'todo', 'tasks', 'messages', 'alerts', 'updates',
-            'shipments', 'workouts', 'prescriptions', 'history'
+            'shipments', 'workouts', 'prescriptions', 'history',
+            # PHASE 3: Added for FAQ accordion matching
+            'faq', 'frequently asked', 'questions', 'help', 'support'
         ],
         ComponentType.PRICING: [
             'pricing', 'plans', 'subscription', 'tiers', 'packages'
@@ -190,7 +192,9 @@ class ProjectDecomposer:
             'testimonials', 'reviews', 'quotes', 'feedback', 'customers say'
         ],
         ComponentType.GALLERY: [
-            'gallery', 'images', 'photos', 'portfolio', 'showcase', 'artwork'
+            'gallery', 'images', 'photos', 'portfolio', 'showcase', 'artwork',
+            # PHASE 3: Added for team grid matching
+            'team', 'members', 'staff', 'employees', 'people', 'our team'
         ],
         ComponentType.DATA_FETCHER: [
             'api', 'fetch', 'real-time', 'live', 'data', 'stock', 'crypto',
@@ -222,10 +226,10 @@ class ProjectDecomposer:
         'fintech': [
             (ComponentType.LAYOUT, 'app', 0),
             (ComponentType.NAVIGATION, 'sidebar', 0),
+            (ComponentType.DATA_FETCHER, 'crypto', 1),  # PHASE 3: Maps to CryptoTracker
             (ComponentType.CHART, 'line', 1),
-            (ComponentType.TABLE, 'transactions', 1),
             (ComponentType.STATS, 'cards', 1),
-            (ComponentType.DATA_FETCHER, 'default', 1),
+            (ComponentType.TABLE, 'transactions', 2),
         ],
         'fitness': [
             (ComponentType.LAYOUT, 'app', 0),
@@ -295,10 +299,10 @@ class ProjectDecomposer:
         'tracker': [
             (ComponentType.LAYOUT, 'app', 0),
             (ComponentType.NAVIGATION, 'sidebar', 0),
-            (ComponentType.DATA_FETCHER, 'default', 1),
-            (ComponentType.CHART, 'line', 1),
-            (ComponentType.TABLE, 'data', 1),
-            (ComponentType.STATS, 'cards', 2),
+            (ComponentType.DATA_FETCHER, 'crypto', 1),  # PHASE 3: Maps to CryptoTracker
+            (ComponentType.STATS, 'cards', 1),
+            (ComponentType.CHART, 'line', 2),
+            (ComponentType.TABLE, 'data', 2),
         ],
         # NEW: Blog/Content template
         'blog': [
@@ -561,29 +565,43 @@ class ComponentLibrary:
                 score += 50
                 reasons.append(f"Type match: {item_type}")
             
-            # Check variant match
+            # Check variant match - PHASE 3: Stricter matching
             item_variant = self._extract_variant(item)
             if item_variant and item_variant == requirement.variant:
-                score += 30
+                score += 30  # Exact variant match bonus
                 reasons.append(f"Variant match: {item_variant}")
-            elif item_variant:
-                score += 10  # Partial credit for having a variant
-                reasons.append(f"Different variant: {item_variant}")
-            
-            # Quality bonus
+            elif item_variant and requirement.variant:
+                # Different variant - small penalty for mismatch
+                score -= 5
+                reasons.append(f"Variant mismatch: {item_variant} vs {requirement.variant}")
+            elif not item_variant and requirement.variant:
+                # No variant but one was requested
+                score += 5  # Small bonus - can adapt
+                reasons.append(f"No variant (requested: {requirement.variant})")
+
+            # Quality bonus (0.9 quality = +9 points)
             score += item.quality_score * 10
-            
-            # Usage bonus (proven to work)
+
+            # Usage bonus (proven to work, max +10)
             score += min(item.usage_count, 10)
-            
+
+            # Keyword match bonus - check if requirement description matches item
+            if requirement.description:
+                desc_lower = requirement.description.lower()
+                item_keywords = item.keywords or []
+                keyword_matches = sum(1 for kw in item_keywords if kw.lower() in desc_lower)
+                if keyword_matches > 0:
+                    score += min(keyword_matches * 3, 15)  # Up to +15 for keyword matches
+                    reasons.append(f"Keywords: {keyword_matches} matches")
+
             if score > best_score:
                 best_score = score
                 best_match = item
                 best_reason = "; ".join(reasons)
-        
-        # Threshold for "good enough" match
-        # Lowered from 40 to 20 to enable more component reuse
-        MATCH_THRESHOLD = 20
+
+        # PHASE 3: Raised threshold from 20 to 35 for better quality matches
+        # Requires: type match (50) + some variant/quality/usage bonus
+        MATCH_THRESHOLD = 35
         
         if best_score >= MATCH_THRESHOLD and best_match:
             return ComponentMatch(

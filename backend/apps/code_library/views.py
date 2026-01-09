@@ -1366,8 +1366,8 @@ const CryptoTracker = ({ coins = ["bitcoin", "ethereum", "solana"], refreshInter
   );
 };
 ''',
-                "keywords": ["crypto", "tracker", "bitcoin", "prices", "live", "real-time"],
-                "tags": ["crypto", "tracker", "dashboard"],
+                "keywords": ["crypto", "tracker", "bitcoin", "prices", "live", "real-time", "data_fetcher"],
+                "tags": ["data_fetcher", "crypto"],  # PHASE 3: Maps to DATA_FETCHER/crypto requirement
             },
             "faq_accordion": {
                 "name": "FAQAccordion",
@@ -1410,8 +1410,8 @@ const FAQAccordion = ({ faqs, title = "Frequently Asked Questions" }) => {
   );
 };
 ''',
-                "keywords": ["faq", "accordion", "questions", "help", "support"],
-                "tags": ["faq", "accordion"],
+                "keywords": ["faq", "accordion", "questions", "help", "support", "list"],
+                "tags": ["list", "faq"],  # PHASE 3: Maps to LIST requirement
             },
             "team_grid": {
                 "name": "TeamGrid",
@@ -1446,8 +1446,8 @@ const TeamGrid = ({ members, title = "Our Team" }) => {
   );
 };
 ''',
-                "keywords": ["team", "members", "staff", "people", "about"],
-                "tags": ["team", "grid"],
+                "keywords": ["team", "members", "staff", "people", "about", "gallery"],
+                "tags": ["gallery", "team"],  # PHASE 3: Maps to GALLERY requirement
             },
             "sidebar_nav": {
                 "name": "SidebarNav",
@@ -1484,7 +1484,7 @@ const SidebarNav = ({ currentView, onNavigate, brandName = "Dashboard" }) => {
 };
 ''',
                 "keywords": ["sidebar", "navigation", "dashboard", "menu"],
-                "tags": ["sidebar", "nav", "dashboard"],
+                "tags": ["navigation", "sidebar"],  # PHASE 3: Maps to NAVIGATION/sidebar
             },
             "activity_feed": {
                 "name": "ActivityFeed",
@@ -1518,8 +1518,8 @@ const ActivityFeed = ({ activities, title = "Recent Activity" }) => {
   );
 };
 ''',
-                "keywords": ["activity", "feed", "timeline", "recent", "log"],
-                "tags": ["activity", "feed", "dashboard"],
+                "keywords": ["activity", "feed", "timeline", "recent", "log", "list"],
+                "tags": ["list", "activity"],  # PHASE 3: Maps to LIST requirement
             },
             "loading_skeleton": {
                 "name": "LoadingSkeleton",
