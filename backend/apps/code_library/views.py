@@ -644,6 +644,7 @@ def regenerate_library(request):
                 "name": "LayoutApp",
                 "description": "Main app layout wrapper with navigation slots",
                 "code": '''
+// v2-no-template-literals
 const LayoutApp = ({ children, currentView, onNavigate, brandName = "Brand" }) => {
   return (
     <div className="min-h-screen bg-gray-50">
