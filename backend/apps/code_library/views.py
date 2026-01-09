@@ -1321,8 +1321,11 @@ const FormSection = ({ title = "Form", onSubmit }) => {
                 quality_score=0.9,
                 is_active=True,
                 is_public=True,
+                is_approved=True,  # CRITICAL: Required for library search to find this
                 needs_review=False,
-                created_by="admin"
+                created_by="admin",
+                component_type=comp_type,  # e.g., "layout", "navigation"
+                variant=variant,  # e.g., "app", "header"
             )
             created.append({"id": str(item.id), "name": comp["name"]})
         
