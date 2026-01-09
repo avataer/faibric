@@ -1,5 +1,10 @@
 # Render.com Blueprint - Faibric AI App Builder
 # https://render.com/docs/infrastructure-as-code
+#
+# INFRASTRUCTURE POLICY:
+# - NEVER use free/starter plans in production
+# - Always use Standard plan or higher for reliability
+# - We prioritize quality over cost savings
 
 services:
   # ============================================
@@ -9,7 +14,7 @@ services:
     name: faibric-api
     runtime: python
     region: oregon
-    plan: starter
+    plan: standard  # 2GB RAM, always-on - NEVER use starter
     buildCommand: |
       cd backend && pip install -r requirements.txt
     startCommand: |
@@ -45,7 +50,7 @@ services:
     name: faibric-worker
     runtime: python
     region: oregon
-    plan: starter
+    plan: standard  # 2GB RAM, always-on - CRITICAL for AI generation
     buildCommand: |
       cd backend && pip install -r requirements.txt
     startCommand: |
@@ -96,7 +101,7 @@ services:
   - type: redis
     name: faibric-redis
     region: oregon
-    plan: starter
+    plan: standard  # 256MB, persistent - NEVER use starter for production
     maxmemoryPolicy: allkeys-lru
 
 # ============================================
@@ -105,6 +110,6 @@ services:
 databases:
   - name: faibric-db
     region: oregon
-    plan: starter
+    plan: standard  # 1GB storage, daily backups - NEVER use starter for production
     databaseName: faibric
     user: faibric

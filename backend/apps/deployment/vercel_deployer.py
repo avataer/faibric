@@ -347,8 +347,9 @@ root.render(React.createElement(App));
         code = re.sub(r'export\s+default\s+function', 'function', code)
         code = re.sub(r'^export\s+(?=const|let|var|function|class)', '', code, flags=re.MULTILINE)
         
-        # Remove interface declarations (multi-line) - be careful with braces
-        code = re.sub(r'^interface\s+\w+\s*\{[^}]*\}\s*$', '', code, flags=re.MULTILINE | re.DOTALL)
+        # Remove interface declarations - SINGLE LINE ONLY to avoid corruption
+        # DO NOT use re.DOTALL - it causes catastrophic matching across components
+        code = re.sub(r'^interface\s+\w+\s*\{[^}\n]*\}\s*$', '', code, flags=re.MULTILINE)
         
         # Remove type declarations
         code = re.sub(r'^type\s+\w+\s*=\s*[^;]+;\s*$', '', code, flags=re.MULTILINE)
@@ -395,14 +396,16 @@ root.render(React.createElement(App));
         code = re.sub(r'(?<![.\w])useMemo\s*\(', 'React.useMemo(', code)
         code = re.sub(r'(?<![.\w])useCallback\s*\(', 'React.useCallback(', code)
         
-        # Remove ONLY function parameter type annotations (in function signatures)
-        # (param: Type) -> (param) but NOT inside objects
-        # Pattern: word followed by : and a type, only inside parentheses
-        code = re.sub(r'\(([^)]*)\)', lambda m: '(' + re.sub(r'(\w+)\s*:\s*(?:string|number|boolean|any|void|null|undefined|React\.\w+|\w+\[\]|Record<[^>]+>|Array<[^>]+>)(?=\s*[,\)=])', r'\1', m.group(1)) + ')', code)
+        # Remove function parameter type annotations - but ONLY in function signatures
+        # SAFE approach: Only match parameter lists that look like function params (after = or =>)
+        # Pattern: word followed by : and a simple type, in function-like contexts
+        # DO NOT apply to all parentheses - that corrupts JSX expressions
+        code = re.sub(r'(\w+)\s*:\s*(string|number|boolean|any|void)(?=\s*[,\)])', r'\1', code)
         
         # Remove arrow function return type annotations
         # ): Type => becomes ) =>
-        code = re.sub(r'\)\s*:\s*[\w\[\]<>,\s\|]+\s*=>', ') =>', code)
+        # SAFE: Only match simple type names, not complex expressions
+        code = re.sub(r'\)\s*:\s*(?:JSX\.Element|React\.ReactNode|void|null|string|number|boolean|any)\s*=>', ') =>', code)
         
         # Remove variable type annotations ONLY for simple patterns
         # const x: string = -> const x =

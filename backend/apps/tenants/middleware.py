@@ -1,5 +1,8 @@
+import logging
 import threading
 from django.utils.deprecation import MiddlewareMixin
+
+logger = logging.getLogger(__name__)
 
 # Thread-local storage for current tenant
 _thread_locals = threading.local()
@@ -129,9 +132,9 @@ class TenantAuditMiddleware(MiddlewareMixin):
         # Log the action (async to not slow down response)
         try:
             self._create_audit_log(request, response)
-        except Exception:
-            # Don't fail the request if audit logging fails
-            pass
+        except Exception as e:
+            # Don't fail the request if audit logging fails, but log the error
+            logger.warning(f"Audit logging failed for {request.method} {request.path}: {e}")
         
         return response
     
