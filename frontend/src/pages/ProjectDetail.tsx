@@ -73,8 +73,8 @@ const ProjectDetail = () => {
             clearInterval(progressInterval)
             setProgress(null)
           }
-        } catch (error) {
-          console.error('Failed to get progress:', error)
+        } catch {
+          // Progress poll failed - will retry
         }
       }, 1000) // Poll every second
     }
@@ -89,8 +89,8 @@ const ProjectDetail = () => {
       const data = await projectsService.getProject(Number(id))
       setProject(data)
       dispatch(setCurrentProject(data))
-    } catch (error) {
-      console.error('Failed to load project:', error)
+    } catch {
+      // Failed to load project
     } finally {
       setLoading(false)
     }
@@ -102,8 +102,8 @@ const ProjectDetail = () => {
       await projectsService.publishProject(project.id)
       alert('Deployment started! Refresh to see status.')
       loadProject()
-    } catch (error) {
-      console.error('Failed to deploy:', error)
+    } catch {
+      // Deployment failed
     }
   }
 
@@ -112,8 +112,8 @@ const ProjectDetail = () => {
     try {
       await projectsService.deleteProject(project.id)
       navigate('/dashboard')
-    } catch (error) {
-      console.error('Failed to delete:', error)
+    } catch {
+      // Deletion failed
     }
   }
 
@@ -133,8 +133,7 @@ const ProjectDetail = () => {
           setRegenerating(false)
         }
       }, 5000)
-    } catch (error) {
-      console.error('Failed to regenerate:', error)
+    } catch {
       setRegenerating(false)
     }
   }

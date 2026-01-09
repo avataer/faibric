@@ -13,15 +13,17 @@ import {
   Step,
   StepLabel,
   Link,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Fade,
 } from '@mui/material'
 // Note: LinearProgress removed - now using BuildingStudio component
 import { api } from '../services/api'
 import BuildingStudio from '../components/BuildingStudio'
 
 type FlowStep = 'input' | 'email' | 'verify' | 'building' | 'deployed'
-
-// Check if we're in development mode
-const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost'
 
 interface SessionData {
   session_token: string
@@ -47,7 +49,12 @@ const LandingFlow = () => {
   const [email, setEmail] = useState(savedState?.email || '')
   const [sessionToken, setSessionToken] = useState<string | null>(savedState?.sessionToken || null)
   const [sessionData, setSessionData] = useState<SessionData | null>(savedState?.sessionData || null)
-  
+
+  // Email change dialog
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [resending, setResending] = useState(false)
+
   // Typing tracking
   const typingStartRef = useRef<number | null>(null)
   
@@ -95,8 +102,8 @@ const LandingFlow = () => {
             setStep('deployed')
             clearInterval(interval)
           }
-        } catch (err) {
-          console.error('Status check failed:', err)
+        } catch {
+          // Status check failed - will retry on next interval
         }
       }, 3000)
       
@@ -135,22 +142,7 @@ const LandingFlow = () => {
       })
       
       setSessionToken(res.data.session_token)
-      
-      // DEBUG MODE: Skip email, go straight to building
-      // Auto-submit a test email and trigger build immediately
-      const debugEmail = `debug-${Date.now()}@test.com`
-      setEmail(debugEmail)
-      
-      await api.post('/api/onboarding/email/', {
-        session_token: res.data.session_token,
-        email: debugEmail,
-      })
-      
-      await api.post('/api/onboarding/build/', {
-        session_token: res.data.session_token,
-      })
-      
-      setStep('building')
+      setStep('email')
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to submit request')
     } finally {
@@ -179,17 +171,38 @@ const LandingFlow = () => {
   }
 
   const handleChangeEmail = async () => {
-    const newEmail = prompt('Enter new email:')
-    if (!newEmail || !sessionToken) return
-    
+    if (!newEmail.trim() || !sessionToken) return
+
+    setLoading(true)
     try {
       await api.post('/api/onboarding/email/change/', {
         session_token: sessionToken,
         new_email: newEmail.trim(),
       })
       setEmail(newEmail.trim())
+      setNewEmail('')
+      setEmailDialogOpen(false)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to change email')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendEmail = async () => {
+    if (!sessionToken) return
+
+    setResending(true)
+    try {
+      await api.post('/api/onboarding/email/', {
+        session_token: sessionToken,
+        email: email.trim(),
+      })
+      setError(null)
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to resend email')
+    } finally {
+      setResending(false)
     }
   }
 
@@ -335,63 +348,69 @@ const LandingFlow = () => {
 
         {/* Step 3: Verify Email */}
         {step === 'verify' && (
-          <Card>
-            <CardContent sx={{ p: 4, textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ color: '#000000', fontWeight: 600, mb: 1 }}>
-                Check your email
-              </Typography>
-              <Typography variant="body1" sx={{ color: '#374151', mb: 2 }}>
-                We sent a magic link to <strong>{email}</strong>
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#6b7280', mb: 3 }}>
-                Click the link in your email to start building your app.
-              </Typography>
-              
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
-                <Link 
-                  component="button" 
-                  variant="body2" 
-                  onClick={handleChangeEmail}
-                  sx={{ cursor: 'pointer', color: '#2563eb' }}
-                >
-                  Wrong email? Click here to change it
-                </Link>
-                
-                {/* TEMPORARY: Skip verification while email is being configured */}
-                {(
+          <Fade in={step === 'verify'}>
+            <Card>
+              <CardContent sx={{ p: 4, textAlign: 'center' }}>
+                <Box sx={{ mb: 3 }}>
+                  <CircularProgress size={48} sx={{ color: '#2563eb' }} />
+                </Box>
+                <Typography variant="h5" sx={{ color: '#000000', fontWeight: 600, mb: 1 }}>
+                  Check your email
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#374151', mb: 2 }}>
+                  We sent a magic link to <strong>{email}</strong>
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#6b7280', mb: 3 }}>
+                  Click the link in your email to start building your app.
+                </Typography>
+
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
                   <Button
                     variant="outlined"
                     size="small"
-                    color="warning"
-                    onClick={async () => {
-                      if (sessionToken) {
-                        try {
-                          setLoading(true)
-                          await api.post('/api/onboarding/build/', { session_token: sessionToken })
-                          setStep('building')
-                        } catch (err: any) {
-                          // In production, this will fail with 403
-                          if (err.response?.status === 403) {
-                            setError('Email verification required. Check your inbox.')
-                          } else {
-                            console.error('Failed to start build:', err)
-                            setStep('building')
-                          }
-                        } finally {
-                          setLoading(false)
-                        }
-                      }
-                    }}
-                    sx={{ mt: 2 }}
-                    disabled={loading}
+                    onClick={handleResendEmail}
+                    disabled={resending}
                   >
-                    {loading ? <CircularProgress size={20} /> : 'Skip & Start Building →'}
+                    {resending ? 'Sending...' : 'Resend Email'}
                   </Button>
-                )}
-              </Box>
-            </CardContent>
-          </Card>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => setEmailDialogOpen(true)}
+                  >
+                    Change Email
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Fade>
         )}
+
+        {/* Email Change Dialog */}
+        <Dialog open={emailDialogOpen} onClose={() => setEmailDialogOpen(false)}>
+          <DialogTitle>Change Email Address</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              fullWidth
+              type="email"
+              label="New Email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              sx={{ mt: 1 }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEmailDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="contained"
+              onClick={handleChangeEmail}
+              disabled={loading || !newEmail.trim()}
+            >
+              {loading ? 'Updating...' : 'Update Email'}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Step 4 & 5: Building and Deployed - Stay in split-screen view */}
         {(step === 'building' || step === 'deployed') && sessionToken && (

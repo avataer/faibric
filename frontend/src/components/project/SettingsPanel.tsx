@@ -67,8 +67,7 @@ export const SettingsPanel = ({ projectId }: SettingsPanelProps) => {
       await projectServicesApi.provisionDatabase(projectId, 'app_db')
       setDbProvisioned(true)
       alert('Database provisioned successfully!')
-    } catch (error) {
-      console.error('Failed to provision database:', error)
+    } catch {
       alert('Failed to provision database. Check Supabase credentials.')
     }
     setProvisioningDb(false)
@@ -93,8 +92,7 @@ export const SettingsPanel = ({ projectId }: SettingsPanelProps) => {
         setStripeConnected(true)
         alert('Stripe connected!')
       }
-    } catch (error) {
-      console.error('Failed to connect Stripe:', error)
+    } catch {
       alert('Failed to connect Stripe. Check API keys.')
     }
   }
@@ -115,8 +113,8 @@ export const SettingsPanel = ({ projectId }: SettingsPanelProps) => {
       } else {
         setAuthConfig(result as AuthConfig)
       }
-    } catch (error) {
-      console.error('Failed to fetch auth config:', error)
+    } catch {
+      // Failed to fetch auth config
     }
     setLoading(false)
   }
@@ -132,8 +130,7 @@ export const SettingsPanel = ({ projectId }: SettingsPanelProps) => {
         github_oauth: authConfig.github_oauth,
       })
       alert('Settings saved!')
-    } catch (error) {
-      console.error('Failed to save:', error)
+    } catch {
       alert('Failed to save settings')
     }
     setSaving(false)

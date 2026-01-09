@@ -38,12 +38,10 @@ const CreateProduct = () => {
       if (response && response.id && !isNaN(response.id)) {
         navigate(`/create/${response.id}`)
       } else {
-        console.error('Invalid response:', response)
         alert('Failed to create project')
         setIsLoading(false)
       }
     } catch (error: any) {
-      console.error('Failed:', error)
       alert(`Error: ${error?.response?.data?.detail || error?.message || 'Failed to create project'}`)
       setIsLoading(false)
     }

@@ -165,9 +165,14 @@ RUN npm install --legacy-peer-deps
             return self._default_app(project)
         
         try:
-            import ast
             if isinstance(project.frontend_code, str):
-                code_dict = ast.literal_eval(project.frontend_code)
+                # Try JSON first (new format)
+                try:
+                    code_dict = json.loads(project.frontend_code)
+                except json.JSONDecodeError:
+                    # Fall back to ast.literal_eval (old format)
+                    import ast
+                    code_dict = ast.literal_eval(project.frontend_code)
             else:
                 code_dict = project.frontend_code
             

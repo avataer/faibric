@@ -40,8 +40,8 @@ export const VersionsPanel = ({ projectId, onRollback }: VersionsPanelProps) => 
     try {
       const result = await projectServicesApi.getVersions(projectId)
       setVersions(result.versions || [])
-    } catch (error) {
-      console.error('Failed to fetch versions:', error)
+    } catch {
+      // Failed to fetch versions
     }
     setLoading(false)
   }
@@ -56,8 +56,8 @@ export const VersionsPanel = ({ projectId, onRollback }: VersionsPanelProps) => 
           versions[0].version_number
         )
         setDiff(result)
-      } catch (error) {
-        console.error('Failed to fetch diff:', error)
+      } catch {
+        // Failed to fetch diff
       }
     } else {
       setDiff(null)
@@ -72,8 +72,8 @@ export const VersionsPanel = ({ projectId, onRollback }: VersionsPanelProps) => 
       setRollbackDialog(false)
       fetchVersions()
       if (onRollback) onRollback()
-    } catch (error) {
-      console.error('Rollback failed:', error)
+    } catch {
+      // Rollback failed
     }
     setRolling(false)
   }

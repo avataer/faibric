@@ -243,7 +243,7 @@ class BuildService:
             name=clean_name,
             description=session.initial_request,
             user_prompt=session.initial_request,
-            status='generating',
+            status='building',
         )
         
         session.converted_to_project = project

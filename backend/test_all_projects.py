@@ -149,7 +149,7 @@ def create_session_and_project(project_spec):
         name=project_spec["name"],
         description=project_spec["prompt"],
         user_prompt=project_spec["prompt"],
-        status='generating'
+        status='building'
     )
     
     # Link session to project

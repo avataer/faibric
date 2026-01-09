@@ -1,6 +1,7 @@
 """
 V3 Celery Tasks - Universal App Generation
 """
+import json
 import logging
 from celery import shared_task
 from django.core.cache import cache
@@ -38,7 +39,7 @@ def generate_app_v3_task(self, project_id: int):
         project.status = 'building'
         project.save()
         
-        send_progress(project_id, "[launch] Starting generation...")
+        send_progress(project_id, "🚀 Starting generation...")
         
         generator = UniversalGenerator()
         
@@ -55,7 +56,7 @@ def generate_app_v3_task(self, project_id: int):
         send_progress(project_id, f"📋 Building a {app_type}...")
         
         # Generate
-        send_progress(project_id, "[art] Generating components...")
+        send_progress(project_id, "🎨 Generating components...")
         result = generator.generate(project.user_prompt, project_id)
         
         # Store code
@@ -67,14 +68,14 @@ def generate_app_v3_task(self, project_id: int):
             'components': {k: v for k, v in components.items() if k != 'App'}
         }
         
-        project.frontend_code = repr(frontend_code)
+        project.frontend_code = json.dumps(frontend_code)
         project.status = 'ready'
         project.save()
-        
-        send_progress(project_id, f"[OK] Generated {len(components)} component(s)")
+
+        send_progress(project_id, f"✅ Generated {len(components)} component(s)")
         
         # Deploy
-        send_progress(project_id, "[launch] Deploying...")
+        send_progress(project_id, "🚀 Deploying...")
         deploy_app_task.delay(project_id)
         
         return {
@@ -90,7 +91,7 @@ def generate_app_v3_task(self, project_id: int):
         
     except Exception as e:
         logger.error(f"Generation failed for {project_id}: {e}", exc_info=True)
-        send_progress(project_id, f"[ERROR] Error: {str(e)}", 'error')
+        send_progress(project_id, f"❌ Error: {str(e)}", 'error')
         
         try:
             project = Project.objects.get(id=project_id)
@@ -110,18 +111,23 @@ def quick_modify_v3_task(project_id: int, user_request: str):
     try:
         project = Project.objects.get(id=project_id)
         
-        send_progress(project_id, "[edit] Modifying app...")
+        send_progress(project_id, "✏️ Modifying app...")
         
-        # Get current code
-        import ast
+        # Get current code (handle both JSON and legacy repr format)
         try:
-            code_dict = ast.literal_eval(project.frontend_code)
+            code_dict = json.loads(project.frontend_code)
             current_code = code_dict.get('App.tsx', '')
-        except:
-            current_code = project.frontend_code or ''
+        except json.JSONDecodeError:
+            # Fallback for legacy repr format
+            import ast
+            try:
+                code_dict = ast.literal_eval(project.frontend_code)
+                current_code = code_dict.get('App.tsx', '')
+            except:
+                current_code = project.frontend_code or ''
         
         if not current_code:
-            send_progress(project_id, "[WARN] No existing code, generating from scratch...")
+            send_progress(project_id, "⚠️ No existing code, generating from scratch...")
             return generate_app_v3_task(project_id)
         
         # Modify
@@ -134,14 +140,14 @@ def quick_modify_v3_task(project_id: int, user_request: str):
             'components': {}
         }
         
-        project.frontend_code = repr(frontend_code)
+        project.frontend_code = json.dumps(frontend_code)
         project.status = 'ready'
         project.save()
-        
-        send_progress(project_id, "[OK] Code updated!")
+
+        send_progress(project_id, "✅ Code updated!")
         
         # Redeploy
-        send_progress(project_id, "[launch] Redeploying...")
+        send_progress(project_id, "🚀 Redeploying...")
         
         # Stop old container first (if exists)
         import docker
@@ -164,6 +170,6 @@ def quick_modify_v3_task(project_id: int, user_request: str):
         
     except Exception as e:
         logger.error(f"Modification failed: {e}", exc_info=True)
-        send_progress(project_id, f"[ERROR] Error: {str(e)}", 'error')
+        send_progress(project_id, f"❌ Error: {str(e)}", 'error')
         return {'status': 'error', 'message': str(e)}
 

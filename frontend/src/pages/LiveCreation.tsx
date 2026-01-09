@@ -131,7 +131,6 @@ const LiveCreation = () => {
       }
 
     } catch (error: any) {
-      console.error('Failed to get progress:', error)
       // Don't set error immediately - might be transient
       if (pollCountRef.current > 5) {
         setError(error?.response?.data?.detail || 'Failed to load project')
@@ -174,7 +173,6 @@ const LiveCreation = () => {
   // Auto-reload iframe when URL changes
   useEffect(() => {
     if (deploymentUrl && iframeRef.current) {
-      console.log('Setting iframe src to:', deploymentUrl)
       const cacheBuster = `?t=${Date.now()}`
       iframeRef.current.src = deploymentUrl + cacheBuster
     }
@@ -208,8 +206,7 @@ const LiveCreation = () => {
         timestamp: Date.now()
       }
       setMessages(prev => [...prev, processingMsg])
-    } catch (error) {
-      console.error('Failed to send message:', error)
+    } catch {
       const errorMsg: AIMessage = {
         id: `error_${Date.now()}`,
         type: 'error',

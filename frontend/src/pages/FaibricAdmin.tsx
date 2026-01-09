@@ -136,8 +136,8 @@ const FaibricAdmin = () => {
     try {
       await api.post(`/api/insights/reviews/${issueId}/regenerate/`)
       loadData()
-    } catch (err) {
-      console.error('Failed to regenerate:', err)
+    } catch {
+      // Failed to regenerate
     }
   }
 
@@ -145,8 +145,8 @@ const FaibricAdmin = () => {
     try {
       await api.post('/api/onboarding/admin/reports/generate/')
       loadData()
-    } catch (err) {
-      console.error('Failed to generate report:', err)
+    } catch {
+      // Failed to generate report
     }
   }
 

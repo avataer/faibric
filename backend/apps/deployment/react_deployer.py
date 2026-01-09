@@ -111,12 +111,16 @@ class ReactDeployer:
         if not project.frontend_code:
             return self._generate_default_app(project)
         
-        # Parse the frontend_code string (it's stored as a string representation of a dict)
+        # Parse the frontend_code string
         try:
             if isinstance(project.frontend_code, str):
-                # Try to evaluate it safely
-                import ast
-                code_dict = ast.literal_eval(project.frontend_code)
+                # Try JSON first (new format)
+                try:
+                    code_dict = json.loads(project.frontend_code)
+                except json.JSONDecodeError:
+                    # Fall back to ast.literal_eval (old format)
+                    import ast
+                    code_dict = ast.literal_eval(project.frontend_code)
             else:
                 code_dict = project.frontend_code
             

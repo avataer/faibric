@@ -49,8 +49,8 @@ export const DomainsPanel = ({ projectId }: DomainsPanelProps) => {
     try {
       const result = await projectServicesApi.getDomains(projectId)
       setDomains(result.domains || [])
-    } catch (error) {
-      console.error('Failed to fetch domains:', error)
+    } catch {
+      // Failed to fetch domains
     }
     setLoading(false)
   }
@@ -89,8 +89,8 @@ export const DomainsPanel = ({ projectId }: DomainsPanelProps) => {
         alert('Domain not yet verified. Please check your DNS settings.')
       }
       fetchDomains()
-    } catch (error) {
-      console.error('Verification failed:', error)
+    } catch {
+      // Verification failed
     }
   }
 
@@ -99,8 +99,8 @@ export const DomainsPanel = ({ projectId }: DomainsPanelProps) => {
     try {
       await projectServicesApi.removeDomain(projectId, domain)
       fetchDomains()
-    } catch (error) {
-      console.error('Failed to remove domain:', error)
+    } catch {
+      // Failed to remove domain
     }
   }
 

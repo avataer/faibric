@@ -48,10 +48,10 @@ def generate_app_task(self, project_id):
     
     try:
         project = Project.objects.get(id=project_id)
-        project.status = 'generating'
+        project.status = 'building'
         project.save()
         
-        broadcast_progress(project_id, 1, "[launch] Starting AI generation...", 5)
+        broadcast_progress(project_id, 1, "🚀 Starting AI generation...", 5)
         
         # Initialize generators
         ai_client = AIClient()
@@ -65,10 +65,10 @@ def generate_app_task(self, project_id):
         project.ai_analysis = analysis
         project.save()
         
-        broadcast_progress(project_id, 3, f"[OK] Identified {len(analysis.get('models', []))} models and {len(analysis.get('api_endpoints', []))} API endpoints", 25)
+        broadcast_progress(project_id, 3, f"✅ Identified {len(analysis.get('models', []))} models and {len(analysis.get('api_endpoints', []))} API endpoints", 25)
         
         # Step 2: Generate database schema
-        broadcast_progress(project_id, 4, "[DB] Generating database models...", 35)
+        broadcast_progress(project_id, 4, "🗄️ Generating database models...", 35)
         generated_models = schema_gen.generate_models(analysis, project_id=project_id)
         schema_json = schema_gen.create_schema_json(analysis)
         project.database_schema = schema_json

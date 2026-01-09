@@ -31,8 +31,8 @@ const Dashboard = () => {
     try {
       const data = await projectsService.getProjects()
       dispatch(setProjects(data))
-    } catch (error) {
-      console.error('Failed to load projects:', error)
+    } catch {
+      // Failed to load projects - user will see empty state
     } finally {
       dispatch(setLoading(false))
     }

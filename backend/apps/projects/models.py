@@ -8,10 +8,11 @@ class Project(models.Model):
     """Model for user projects"""
     STATUS_CHOICES = [
         ('draft', 'Draft'),
-        ('generating', 'Generating'),
-        ('ready', 'Ready'),
-        ('deployed', 'Deployed'),
-        ('failed', 'Failed'),
+        ('building', 'Building'),      # AI generating code
+        ('ready', 'Ready'),            # Code generated, ready to deploy
+        ('deploying', 'Deploying'),    # Deployment in progress
+        ('deployed', 'Deployed'),      # Live and running
+        ('failed', 'Failed'),          # Build or deploy failed
     ]
     
     # Tenant isolation - all projects belong to a tenant

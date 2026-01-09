@@ -200,8 +200,8 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
             })
           }
         }
-      } catch (err) {
-        console.error('Status poll failed:', err)
+      } catch {
+        // Status poll failed - will retry on next interval
       }
     }
 
@@ -285,8 +285,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
       setBuildPhase(mode === 'modify' ? 'Modifying code...' : 'Starting new build...')
       setDeploymentUrl(null)
       
-    } catch (err) {
-      console.error('Failed to modify build:', err)
+    } catch {
       setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
         role: 'system',
@@ -313,8 +312,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
         content: 'Build stopped. You can start a new build or make changes.',
         timestamp: new Date(),
       }])
-    } catch (err) {
-      console.error('Failed to stop build:', err)
+    } catch {
       // Even if API fails, allow user to escape by calling onNewProject
       setIsBuilding(false)
       setMessages(prev => [...prev, {

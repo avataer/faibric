@@ -106,7 +106,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             
             # Update prompt and regenerate with V3
             project.user_prompt = f"{project.user_prompt}\n\nADDITIONAL REQUEST: {new_prompt}"
-            project.status = 'generating'
+            project.status = 'building'
             project.save()
 
             # Use V3 generation
@@ -165,7 +165,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         # Calculate progress based on project status
         project = self.get_object()
         progress_percent = 0
-        if project.status == 'generating':
+        if project.status == 'building':
             progress_percent = min(len(messages) * PROGRESS_PER_MESSAGE, MAX_PROGRESS_GENERATING)
         elif project.status == 'ready':
             progress_percent = MAX_PROGRESS_GENERATING

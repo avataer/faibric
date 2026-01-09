@@ -31,10 +31,10 @@ def generate_app_v2_task(self, project_id):
     
     try:
         project = Project.objects.get(id=project_id)
-        project.status = 'generating'
+        project.status = 'building'
         project.save()
         
-        broadcast_progress(project_id, "action", "[launch] Starting V2 generation...")
+        broadcast_progress(project_id, "action", "🚀 Starting generation...")
         
         # Initialize V2 generator
         generator = AIGeneratorV2()
@@ -130,7 +130,7 @@ export default App;
         
     except Exception as e:
         error_msg = str(e)[:200]
-        broadcast_progress(project_id, "error", f"[ERROR] Error: {error_msg}")
+        broadcast_progress(project_id, "error", f"❌ Error: {error_msg}")
         
         try:
             project = Project.objects.get(id=project_id)
@@ -155,16 +155,20 @@ def quick_modify_task(project_id, user_request):
     """
     from apps.projects.models import Project
     from apps.deployment.tasks import deploy_app_task
-    import ast
-    
+    import json
+
     try:
         project = Project.objects.get(id=project_id)
-        
+
         broadcast_progress(project_id, "action", f"💬 You: {user_request}")
-        
-        # Parse existing code
+
+        # Parse existing code (handle both JSON and legacy repr format)
         if isinstance(project.frontend_code, str):
-            code_dict = ast.literal_eval(project.frontend_code)
+            try:
+                code_dict = json.loads(project.frontend_code)
+            except json.JSONDecodeError:
+                import ast
+                code_dict = ast.literal_eval(project.frontend_code)
         else:
             code_dict = project.frontend_code
         
@@ -197,7 +201,7 @@ def quick_modify_task(project_id, user_request):
         project.status = 'deploying'
         project.save()
         
-        broadcast_progress(project_id, "thinking", "[launch] Redeploying...")
+        broadcast_progress(project_id, "thinking", "🚀 Redeploying...")
         
         # Remove old container and redeploy
         if project.container_id:
@@ -213,6 +217,6 @@ def quick_modify_task(project_id, user_request):
         return {'status': 'success'}
         
     except Exception as e:
-        broadcast_progress(project_id, "error", f"[ERROR] Failed: {str(e)[:100]}")
+        broadcast_progress(project_id, "error", f"❌ Failed: {str(e)[:100]}")
         return {'status': 'error', 'message': str(e)}
 

@@ -75,8 +75,8 @@ const AdminPanelBuilder = () => {
     try {
       const res = await api.get('/api/admin-builder/panels/')
       setPanels(res.data.results || res.data || [])
-    } catch (err) {
-      console.error('Failed to load panels:', err)
+    } catch {
+      // Failed to load panels
     } finally {
       setLoading(false)
     }
@@ -95,8 +95,8 @@ const AdminPanelBuilder = () => {
       setPanels([...panels, res.data])
       setSelectedPanel(res.data)
       setWidgets([])
-    } catch (err) {
-      console.error('Failed to create panel:', err)
+    } catch {
+      // Failed to create panel
     }
   }
 
@@ -105,8 +105,7 @@ const AdminPanelBuilder = () => {
     try {
       const res = await api.get(`/api/admin-builder/panels/${panel.id}/`)
       setWidgets(res.data.widgets || [])
-    } catch (err) {
-      console.error('Failed to load panel:', err)
+    } catch {
       setWidgets([])
     }
   }
@@ -137,8 +136,8 @@ const AdminPanelBuilder = () => {
         widgets,
       })
       alert('Panel saved!')
-    } catch (err) {
-      console.error('Failed to save panel:', err)
+    } catch {
+      // Failed to save panel
     }
   }
 

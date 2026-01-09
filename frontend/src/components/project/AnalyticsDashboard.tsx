@@ -78,8 +78,8 @@ export const AnalyticsDashboard = ({ projectId }: AnalyticsDashboardProps) => {
       try {
         const result = await projectServicesApi.getAnalytics(projectId, timeRange)
         setData(result)
-      } catch (error) {
-        console.error('Failed to fetch analytics:', error)
+      } catch {
+        // Failed to fetch analytics
       }
       setLoading(false)
     }

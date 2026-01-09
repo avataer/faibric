@@ -27,15 +27,15 @@ def generate_app(request):
         name=project_name,
         description=user_prompt[:500],  # First 500 chars
         user_prompt=user_prompt,
-        status='generating'
+        status='building'
     )
-    
+
     # Start async generation
     generate_app_task.delay(project.id)
-    
+
     return Response({
         'project_id': project.id,
-        'status': 'generating',
+        'status': 'building',
         'message': 'App generation started'
     }, status=status.HTTP_202_ACCEPTED)
 

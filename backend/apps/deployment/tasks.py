@@ -37,21 +37,60 @@ def use_render_deployer():
 def deploy_app_task(self, project_id, use_v2=True):
     """
     Deploy a project as a React app
-    
+
     Args:
         project_id: Project to deploy
         use_v2: Use V2 fast deployer (default True for Docker, ignored for Render)
     """
     from apps.projects.models import Project
     from django.core.cache import cache
-    
+    from .validators import (
+        validate_frontend_code,
+        validate_build_locally,
+        CodeValidationError
+    )
+
     try:
         project = Project.objects.get(id=project_id)
         project.status = 'deploying'
         project.save()
-        
-        broadcast_deploy_message(project_id, '[launch] Starting deployment...')
-        
+
+        broadcast_deploy_message(project_id, '[DEPLOY] Starting deployment...')
+
+        # Step 1: Static code validation
+        try:
+            code_dict = validate_frontend_code(project)
+            broadcast_deploy_message(project_id, '[OK] Static validation passed')
+        except CodeValidationError as e:
+            broadcast_deploy_message(project_id, f'[WARN] Static validation: {str(e)}')
+            code_dict = None
+
+        # Step 2: Local build validation (catches errors in ~5s instead of 15min on Render)
+        if code_dict and use_render_deployer():
+            broadcast_deploy_message(project_id, '[BUILD] Running local build test...')
+            build_result = validate_build_locally(code_dict, project.name or "app")
+
+            if not build_result.get('success'):
+                error_msg = build_result.get('error', 'Build failed')
+                details = build_result.get('details', '')
+
+                broadcast_deploy_message(
+                    project_id,
+                    f'[ERROR] Local build failed: {error_msg}'
+                )
+
+                # Save error details to project for debugging
+                project.status = 'error'
+                project.save()
+
+                return {
+                    'status': 'error',
+                    'message': f'Build validation failed: {error_msg}',
+                    'details': details
+                }
+
+            broadcast_deploy_message(project_id, '[OK] Local build passed - deploying to cloud')
+
         # Check if we should use Render or Docker
         if use_render_deployer():
             # Deploy to Render.com
@@ -63,7 +102,7 @@ def deploy_app_task(self, project_id, use_v2=True):
             result = deployer.deploy_react_app(project)
             deployment_url = result['url']
             
-            broadcast_deploy_message(project_id, f'[OK] Deployed at {deployment_url}')
+            broadcast_deploy_message(project_id, f'✅ Deployed at {deployment_url}')
             
             # Update project
             project.deployment_url = deployment_url
@@ -101,7 +140,7 @@ def deploy_app_task(self, project_id, use_v2=True):
             subdomain = domain_mgr.assign_subdomain(project)
             deployment_url = domain_mgr.get_full_url(subdomain)
             
-            broadcast_deploy_message(project_id, f'[OK] Deployed at {deployment_url}')
+            broadcast_deploy_message(project_id, f'✅ Deployed at {deployment_url}')
             
             # Update project
             project.container_id = container_id
@@ -119,7 +158,7 @@ def deploy_app_task(self, project_id, use_v2=True):
         
     except Exception as e:
         error_msg = str(e)[:200]
-        broadcast_deploy_message(project_id, f'[ERROR] Deployment failed: {error_msg}')
+        broadcast_deploy_message(project_id, f'❌ Deployment failed: {error_msg}')
         
         try:
             project = Project.objects.get(id=project_id)

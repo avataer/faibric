@@ -241,11 +241,12 @@ class ModularComposer:
     def _clean_component_for_embedding(self, code: str, component_name: str) -> str:
         """
         Clean a library component for embedding.
-        
+
         We DON'T modify the component logic - just:
         - Remove import statements (CDN provides React)
         - Remove export statements (we'll export App)
         - Ensure component name is consistent
+        - RENAME the component to the expected name
         """
         if not code or not code.strip():
             # Empty component - generate a placeholder
@@ -255,7 +256,7 @@ class ModularComposer:
     {component_name} Component
   </div>
 );'''
-        
+
         # Remove import statements LINE BY LINE (not DOTALL - that causes corruption!)
         # Pattern 1: import { x, y } from 'module'; (standard ES6 import)
         # Pattern 2: import x from 'module'; (default import)
@@ -263,14 +264,51 @@ class ModularComposer:
         # CRITICAL: Use MULTILINE, not DOTALL - DOTALL causes catastrophic regex matching
         code = re.sub(r'^import\s+.*?from\s+[\'"][^"\']+[\'"];?\s*$', '', code, flags=re.MULTILINE)
         code = re.sub(r'^import\s+[\'"][^"\']+[\'"];?\s*$', '', code, flags=re.MULTILINE)
-        
+
+        # CRITICAL FIX: Detect and rename component to expected name
+        # This fixes "Footer is not defined" errors when library component is named differently
+        actual_name = self._extract_component_name(code)
+        if actual_name and actual_name != component_name:
+            logger.info(f"[MODULAR] Renaming component: {actual_name} -> {component_name}")
+            # Replace const/function declaration
+            code = re.sub(rf'\bconst\s+{re.escape(actual_name)}\s*=', f'const {component_name} =', code)
+            code = re.sub(rf'\bfunction\s+{re.escape(actual_name)}\s*\(', f'function {component_name}(', code)
+            # Also update export default if present (before removing it)
+            code = re.sub(rf'export\s+default\s+{re.escape(actual_name)}', f'export default {component_name}', code)
+
         # Remove export default at end
         code = re.sub(r'\n?export\s+default\s+\w+;\s*$', '', code)
-        
+
         # Remove export keyword from declarations (keep the rest)
         code = re.sub(r'^export\s+(?=const|function|class)', '', code, flags=re.MULTILINE)
-        
+
         return code.strip()
+
+    def _extract_component_name(self, code: str) -> Optional[str]:
+        """
+        Extract the actual component name from code.
+
+        Looks for patterns like:
+        - const ComponentName = () =>
+        - function ComponentName()
+        - export default function ComponentName
+        """
+        # Pattern 1: const ComponentName = (
+        match = re.search(r'const\s+([A-Z][a-zA-Z0-9]*)\s*=\s*\([^)]*\)\s*=>', code)
+        if match:
+            return match.group(1)
+
+        # Pattern 2: function ComponentName(
+        match = re.search(r'function\s+([A-Z][a-zA-Z0-9]*)\s*\(', code)
+        if match:
+            return match.group(1)
+
+        # Pattern 3: export default ComponentName
+        match = re.search(r'export\s+default\s+([A-Z][a-zA-Z0-9]*)\s*;?\s*$', code, re.MULTILINE)
+        if match:
+            return match.group(1)
+
+        return None
     
     def _generate_app_tsx_imports_only(self, component_files: List[ComponentFile]) -> str:
         """Generate App.tsx with imports (for build-based deploys)."""
