@@ -503,7 +503,29 @@ class CodeValidator:
                 message="Contains Lorem Ipsum placeholder text",
                 severity="warning"
             ))
-        
+
+        # PHASE 3 FIX: Check for generic placeholder content
+        # These indicate components weren't properly adapted to the business context
+        generic_patterns = [
+            ('Item 1', 'generic_item', 'Contains generic "Item 1" placeholder'),
+            ('Item 2', 'generic_item', 'Contains generic "Item 2" placeholder'),
+            ('Item A', 'generic_item', 'Contains generic "Item A" placeholder'),
+            ('Sample Title', 'generic_title', 'Contains generic "Sample Title"'),
+            ('Your Company', 'generic_brand', 'Contains generic "Your Company"'),
+            ('example.com', 'generic_domain', 'Contains generic "example.com"'),
+            ('Description for item', 'generic_desc', 'Contains generic description placeholder'),
+            ('"Brand"', 'generic_brand', 'Contains default "Brand" placeholder'),
+            ('brandName = "Brand"', 'generic_brand', 'Contains default brandName'),
+        ]
+
+        for pattern, error_type, message in generic_patterns:
+            if pattern in code:
+                warnings.append(ValidationError(
+                    error_type=f"generic_{error_type}",
+                    message=message,
+                    severity="warning"
+                ))
+
         return warnings
     
     def _check_brace_balance(self, code: str) -> Tuple[str, List[ValidationError]]:

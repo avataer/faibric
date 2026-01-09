@@ -473,14 +473,66 @@ Return ONLY the component code, nothing else.
     ) -> str:
         """
         Adapt an existing component for the specific use case.
-        
-        This is CHEAP (uses existing code) but customizes it.
+
+        Uses Haiku (fast/cheap) to customize the component with business-specific content.
+        This is the key to making reused components feel custom.
         """
         # Sanitize the code first
         code = self._sanitize_code(code)
-        # For now, return as-is with minor adaptations
-        # In future, could use a cheaper model to tweak
-        return code
+
+        # Extract business context from prompt
+        adaptation_prompt = f"""You are adapting a React component for a specific business.
+
+BUSINESS CONTEXT (from customer request):
+{full_prompt}
+
+COMPONENT TYPE: {requirement.component_type.value}
+COMPONENT VARIANT: {requirement.variant}
+
+ORIGINAL COMPONENT CODE:
+```jsx
+{code}
+```
+
+TASK: Adapt this component to match the business context. You MUST:
+1. Replace generic placeholder text with business-specific content
+2. Update default data arrays with realistic items for THIS business
+3. Keep the component structure and styling intact
+4. Use the business name, services, and theme colors mentioned in the context
+5. Generate realistic, professional content (not Lorem ipsum)
+
+CRITICAL RULES:
+- Return ONLY the adapted JSX code, no markdown or explanation
+- Keep the same function/const name
+- Keep the same props interface
+- Do NOT add new imports or dependencies
+- Do NOT use emojis
+- Do NOT change the component's core functionality
+
+Return the adapted component code:"""
+
+        try:
+            # Use Haiku for fast/cheap adaptation
+            response = self.client.messages.create(
+                model="claude-3-5-haiku-20241022",
+                max_tokens=4000,
+                messages=[{"role": "user", "content": adaptation_prompt}]
+            )
+
+            adapted_code = response.content[0].text.strip()
+
+            # Clean up any markdown formatting
+            if adapted_code.startswith("```"):
+                lines = adapted_code.split("\n")
+                # Remove first line (```jsx) and last line (```)
+                adapted_code = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+
+            print(f"[ADAPT] Customized {requirement.component_type.value}/{requirement.variant} for business context")
+            return adapted_code
+
+        except Exception as e:
+            print(f"[ADAPT] [WARN] Adaptation failed, using original: {e}")
+            return code
     
     def _compose_app(
         self,
