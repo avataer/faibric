@@ -1297,8 +1297,529 @@ const FormSection = ({ title = "Form", onSubmit }) => {
                 "keywords": ["form", "default", "input"],
                 "tags": ["form", "default"],
             },
+            # ═══════════════════════════════════════════════════════════════
+            # PHASE 2: Advanced Components (added for better reuse)
+            # ═══════════════════════════════════════════════════════════════
+            "crypto_tracker": {
+                "name": "CryptoTracker",
+                "description": "Live cryptocurrency price tracker with real API data",
+                "code": '''
+const CryptoTracker = ({ coins = ["bitcoin", "ethereum", "solana"], refreshInterval = 30000 }) => {
+  const [prices, setPrices] = React.useState({});
+  const [loading, setLoading] = React.useState(true);
+  const [lastUpdated, setLastUpdated] = React.useState(null);
+
+  const fetchPrices = async () => {
+    try {
+      const response = await fetch("https://api.faibric.com/api/gateway/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service: "coingecko",
+          endpoint: "/simple/price?ids=" + coins.join(",") + "&vs_currencies=usd&include_24hr_change=true"
+        })
+      });
+      const result = await response.json();
+      setPrices(result.data || result);
+      setLastUpdated(new Date().toLocaleTimeString());
+    } catch (err) {
+      console.error("Fetch error:", err);
+    }
+    setLoading(false);
+  };
+
+  React.useEffect(() => {
+    fetchPrices();
+    const interval = setInterval(fetchPrices, refreshInterval);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <section className="py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Crypto Prices</h2>
+        {lastUpdated && <span className="text-sm text-gray-500">Updated: {lastUpdated}</span>}
+      </div>
+      <div className="grid md:grid-cols-3 gap-6">
+        {loading ? (
+          [1, 2, 3].map(i => (
+            <div key={i} className="bg-white rounded-xl shadow p-6 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-24 mb-4"></div>
+              <div className="h-8 bg-gray-200 rounded w-32"></div>
+            </div>
+          ))
+        ) : (
+          Object.entries(prices).map(([coin, data]) => (
+            <div key={coin} className="bg-white rounded-xl shadow-md p-6">
+              <p className="text-gray-500 capitalize mb-2">{coin}</p>
+              <p className="text-3xl font-bold">${data.usd ? data.usd.toLocaleString() : "---"}</p>
+              {data.usd_24h_change && (
+                <span className={"text-sm " + (data.usd_24h_change >= 0 ? "text-green-600" : "text-red-600")}>
+                  {data.usd_24h_change >= 0 ? "+" : ""}{data.usd_24h_change.toFixed(2)}%
+                </span>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["crypto", "tracker", "bitcoin", "prices", "live", "real-time"],
+                "tags": ["crypto", "tracker", "dashboard"],
+            },
+            "faq_accordion": {
+                "name": "FAQAccordion",
+                "description": "FAQ section with expandable accordion items",
+                "code": '''
+const FAQAccordion = ({ faqs, title = "Frequently Asked Questions" }) => {
+  const [openIndex, setOpenIndex] = React.useState(null);
+  const defaultFaqs = [
+    { question: "How do I get started?", answer: "Getting started is easy. Simply sign up and follow our quick setup guide." },
+    { question: "What payment methods do you accept?", answer: "We accept all major credit cards, PayPal, and bank transfers." },
+    { question: "Can I cancel my subscription?", answer: "Yes, you can cancel anytime. No questions asked." },
+    { question: "Do you offer support?", answer: "Yes, we offer 24/7 customer support via chat, email, and phone." }
+  ];
+  const items = faqs || defaultFaqs;
+
+  return (
+    <section className="py-16 bg-gray-50">
+      <div className="max-w-3xl mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">{title}</h2>
+        <div className="space-y-4">
+          {items.map((faq, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-md overflow-hidden">
+              <button
+                onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                className="w-full px-6 py-4 text-left flex justify-between items-center"
+              >
+                <span className="font-medium">{faq.question}</span>
+                <span className={"transform transition-transform " + (openIndex === i ? "rotate-180" : "")}>
+                  [V]
+                </span>
+              </button>
+              {openIndex === i && (
+                <div className="px-6 pb-4 text-gray-600">{faq.answer}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["faq", "accordion", "questions", "help", "support"],
+                "tags": ["faq", "accordion"],
+            },
+            "team_grid": {
+                "name": "TeamGrid",
+                "description": "Team members display grid with photos and roles",
+                "code": '''
+const TeamGrid = ({ members, title = "Our Team" }) => {
+  const defaultMembers = [
+    { name: "Sarah Johnson", role: "CEO & Founder", image: "https://i.pravatar.cc/200?img=1" },
+    { name: "Michael Chen", role: "CTO", image: "https://i.pravatar.cc/200?img=2" },
+    { name: "Emily Davis", role: "Head of Design", image: "https://i.pravatar.cc/200?img=3" },
+    { name: "James Wilson", role: "Lead Developer", image: "https://i.pravatar.cc/200?img=4" }
+  ];
+  const team = members || defaultMembers;
+
+  return (
+    <section className="py-16">
+      <div className="max-w-6xl mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-12">{title}</h2>
+        <div className="grid md:grid-cols-4 gap-8">
+          {team.map((member, i) => (
+            <div key={i} className="text-center">
+              <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gray-200">
+                <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+              </div>
+              <h3 className="font-semibold text-lg">{member.name}</h3>
+              <p className="text-gray-500">{member.role}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["team", "members", "staff", "people", "about"],
+                "tags": ["team", "grid"],
+            },
+            "sidebar_nav": {
+                "name": "SidebarNav",
+                "description": "Dashboard sidebar navigation with icons",
+                "code": '''
+const SidebarNav = ({ currentView, onNavigate, brandName = "Dashboard" }) => {
+  const navItems = [
+    { id: "dashboard", label: "Dashboard", icon: "[D]" },
+    { id: "analytics", label: "Analytics", icon: "[A]" },
+    { id: "users", label: "Users", icon: "[U]" },
+    { id: "reports", label: "Reports", icon: "[R]" },
+    { id: "settings", label: "Settings", icon: "[S]" }
+  ];
+
+  return (
+    <aside className="w-64 bg-gray-900 text-white min-h-screen">
+      <div className="p-6">
+        <span className="text-xl font-bold">{brandName}</span>
+      </div>
+      <nav className="mt-6">
+        {navItems.map(item => (
+          <button
+            key={item.id}
+            onClick={() => onNavigate(item.id)}
+            className={"w-full flex items-center px-6 py-3 text-left transition-colors " + (currentView === item.id ? "bg-blue-600 text-white" : "text-gray-300 hover:bg-gray-800")}
+          >
+            <span className="mr-3">{item.icon}</span>
+            {item.label}
+          </button>
+        ))}
+      </nav>
+    </aside>
+  );
+};
+''',
+                "keywords": ["sidebar", "navigation", "dashboard", "menu"],
+                "tags": ["sidebar", "nav", "dashboard"],
+            },
+            "activity_feed": {
+                "name": "ActivityFeed",
+                "description": "Recent activity feed with timestamps",
+                "code": '''
+const ActivityFeed = ({ activities, title = "Recent Activity" }) => {
+  const defaultActivities = [
+    { user: "John", action: "created a new project", time: "2 min ago", type: "create" },
+    { user: "Sarah", action: "updated settings", time: "15 min ago", type: "update" },
+    { user: "Mike", action: "deleted a file", time: "1 hour ago", type: "delete" },
+    { user: "Emily", action: "invited a team member", time: "3 hours ago", type: "invite" }
+  ];
+  const items = activities || defaultActivities;
+  const typeColors = { create: "bg-green-500", update: "bg-blue-500", delete: "bg-red-500", invite: "bg-purple-500" };
+
+  return (
+    <section className="py-8">
+      <h3 className="text-xl font-bold mb-6">{title}</h3>
+      <div className="bg-white rounded-xl shadow-md divide-y">
+        {items.map((activity, i) => (
+          <div key={i} className="p-4 flex items-center">
+            <div className={"w-2 h-2 rounded-full mr-4 " + (typeColors[activity.type] || "bg-gray-500")}></div>
+            <div className="flex-1">
+              <p><span className="font-medium">{activity.user}</span> {activity.action}</p>
+              <p className="text-sm text-gray-500">{activity.time}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+''',
+                "keywords": ["activity", "feed", "timeline", "recent", "log"],
+                "tags": ["activity", "feed", "dashboard"],
+            },
+            "loading_skeleton": {
+                "name": "LoadingSkeleton",
+                "description": "Loading skeleton placeholder for content",
+                "code": '''
+const LoadingSkeleton = ({ rows = 3, type = "card" }) => {
+  if (type === "table") {
+    return (
+      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="p-4 border-b bg-gray-50">
+          <div className="flex gap-4">
+            {[1, 2, 3, 4].map(i => <div key={i} className="h-4 bg-gray-200 rounded flex-1 animate-pulse"></div>)}
+          </div>
+        </div>
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="p-4 border-b">
+            <div className="flex gap-4">
+              {[1, 2, 3, 4].map(j => <div key={j} className="h-4 bg-gray-100 rounded flex-1 animate-pulse"></div>)}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+        </div>
+      ))}
+    </div>
+  );
+};
+''',
+                "keywords": ["loading", "skeleton", "placeholder", "shimmer"],
+                "tags": ["loading", "skeleton"],
+            },
+            "empty_state": {
+                "name": "EmptyState",
+                "description": "Empty state placeholder with icon and action",
+                "code": '''
+const EmptyState = ({ title = "No data yet", description = "Get started by adding your first item.", actionText = "Add Item", onAction }) => {
+  return (
+    <div className="text-center py-16">
+      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <span className="text-2xl text-gray-400">[+]</span>
+      </div>
+      <h3 className="text-xl font-semibold text-gray-700 mb-2">{title}</h3>
+      <p className="text-gray-500 mb-6 max-w-sm mx-auto">{description}</p>
+      {onAction && (
+        <button onClick={onAction} className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">
+          {actionText}
+        </button>
+      )}
+    </div>
+  );
+};
+''',
+                "keywords": ["empty", "state", "placeholder", "no-data"],
+                "tags": ["empty", "state"],
+            },
+            "tabs_container": {
+                "name": "TabsContainer",
+                "description": "Tab navigation container with content panels",
+                "code": '''
+const TabsContainer = ({ tabs, defaultTab }) => {
+  const defaultTabs = [
+    { id: "overview", label: "Overview", content: "Overview content goes here." },
+    { id: "details", label: "Details", content: "Details content goes here." },
+    { id: "settings", label: "Settings", content: "Settings content goes here." }
+  ];
+  const items = tabs || defaultTabs;
+  const [activeTab, setActiveTab] = React.useState(defaultTab || items[0]?.id);
+
+  return (
+    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      <div className="flex border-b">
+        {items.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={"px-6 py-4 font-medium transition-colors " + (activeTab === tab.id ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:text-gray-700")}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      <div className="p-6">
+        {items.find(t => t.id === activeTab)?.content}
+      </div>
+    </div>
+  );
+};
+''',
+                "keywords": ["tabs", "container", "panels", "navigation"],
+                "tags": ["tabs", "container"],
+            },
+            "modal_dialog": {
+                "name": "ModalDialog",
+                "description": "Modal dialog overlay with content",
+                "code": '''
+const ModalDialog = ({ isOpen, onClose, title = "Dialog", children }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose}></div>
+      <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h3 className="text-xl font-semibold">{title}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">[X]</button>
+        </div>
+        <div className="p-6">{children}</div>
+        <div className="flex justify-end gap-4 p-6 border-t">
+          <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+          <button onClick={onClose} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Confirm</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+''',
+                "keywords": ["modal", "dialog", "popup", "overlay"],
+                "tags": ["modal", "dialog"],
+            },
+            "notification_banner": {
+                "name": "NotificationBanner",
+                "description": "Notification banner with dismiss action",
+                "code": '''
+const NotificationBanner = ({ type = "info", message = "This is a notification.", onDismiss }) => {
+  const colors = {
+    info: "bg-blue-50 text-blue-800 border-blue-200",
+    success: "bg-green-50 text-green-800 border-green-200",
+    warning: "bg-yellow-50 text-yellow-800 border-yellow-200",
+    error: "bg-red-50 text-red-800 border-red-200"
+  };
+
+  return (
+    <div className={"p-4 rounded-lg border flex justify-between items-center " + colors[type]}>
+      <div className="flex items-center">
+        <span className="mr-3">[!]</span>
+        <p>{message}</p>
+      </div>
+      {onDismiss && (
+        <button onClick={onDismiss} className="text-current opacity-50 hover:opacity-100">[X]</button>
+      )}
+    </div>
+  );
+};
+''',
+                "keywords": ["notification", "banner", "alert", "message"],
+                "tags": ["notification", "banner"],
+            },
+            "search_header": {
+                "name": "SearchHeader",
+                "description": "Search header with filters",
+                "code": '''
+const SearchHeader = ({ onSearch, placeholder = "Search...", filters = [] }) => {
+  const [query, setQuery] = React.useState("");
+  const [activeFilter, setActiveFilter] = React.useState("all");
+  const defaultFilters = [
+    { id: "all", label: "All" },
+    { id: "recent", label: "Recent" },
+    { id: "popular", label: "Popular" }
+  ];
+  const filterItems = filters.length > 0 ? filters : defaultFilters;
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    onSearch && onSearch({ query, filter: activeFilter });
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+      <form onSubmit={handleSearch} className="flex gap-4">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={placeholder}
+          className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+        <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          Search
+        </button>
+      </form>
+      <div className="flex gap-2 mt-4">
+        {filterItems.map(filter => (
+          <button
+            key={filter.id}
+            onClick={() => setActiveFilter(filter.id)}
+            className={"px-4 py-1 rounded-full text-sm " + (activeFilter === filter.id ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+''',
+                "keywords": ["search", "header", "filter", "query"],
+                "tags": ["search", "header"],
+            },
+            "progress_bar": {
+                "name": "ProgressBar",
+                "description": "Progress bar with percentage display",
+                "code": '''
+const ProgressBar = ({ value = 0, max = 100, label = "", showPercent = true, color = "blue" }) => {
+  const percent = Math.min(100, Math.max(0, (value / max) * 100));
+  const colors = {
+    blue: "bg-blue-600",
+    green: "bg-green-600",
+    red: "bg-red-600",
+    yellow: "bg-yellow-500"
+  };
+
+  return (
+    <div className="w-full">
+      {(label || showPercent) && (
+        <div className="flex justify-between mb-2">
+          {label && <span className="text-sm font-medium text-gray-700">{label}</span>}
+          {showPercent && <span className="text-sm text-gray-500">{percent.toFixed(0)}%</span>}
+        </div>
+      )}
+      <div className="w-full bg-gray-200 rounded-full h-2.5">
+        <div className={"h-2.5 rounded-full transition-all " + colors[color]} style={{ width: percent + "%" }}></div>
+      </div>
+    </div>
+  );
+};
+''',
+                "keywords": ["progress", "bar", "percentage", "loading"],
+                "tags": ["progress", "bar"],
+            },
+            "avatar_group": {
+                "name": "AvatarGroup",
+                "description": "Group of overlapping avatars",
+                "code": '''
+const AvatarGroup = ({ users, max = 4 }) => {
+  const defaultUsers = [
+    { name: "John", image: "https://i.pravatar.cc/100?img=1" },
+    { name: "Sarah", image: "https://i.pravatar.cc/100?img=2" },
+    { name: "Mike", image: "https://i.pravatar.cc/100?img=3" },
+    { name: "Emily", image: "https://i.pravatar.cc/100?img=4" },
+    { name: "Tom", image: "https://i.pravatar.cc/100?img=5" }
+  ];
+  const items = users || defaultUsers;
+  const visible = items.slice(0, max);
+  const remaining = items.length - max;
+
+  return (
+    <div className="flex -space-x-3">
+      {visible.map((user, i) => (
+        <div key={i} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden" title={user.name}>
+          <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+        </div>
+      ))}
+      {remaining > 0 && (
+        <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center">
+          <span className="text-xs font-medium text-gray-600">+{remaining}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+''',
+                "keywords": ["avatar", "group", "users", "team"],
+                "tags": ["avatar", "group"],
+            },
+            "badge_status": {
+                "name": "BadgeStatus",
+                "description": "Status badge with color variants",
+                "code": '''
+const BadgeStatus = ({ status = "active", label }) => {
+  const statusConfig = {
+    active: { bg: "bg-green-100", text: "text-green-800", label: "Active" },
+    pending: { bg: "bg-yellow-100", text: "text-yellow-800", label: "Pending" },
+    inactive: { bg: "bg-gray-100", text: "text-gray-800", label: "Inactive" },
+    error: { bg: "bg-red-100", text: "text-red-800", label: "Error" }
+  };
+  const config = statusConfig[status] || statusConfig.active;
+
+  return (
+    <span className={"inline-flex items-center px-3 py-1 rounded-full text-sm font-medium " + config.bg + " " + config.text}>
+      <span className={"w-2 h-2 rounded-full mr-2 " + config.text.replace("text-", "bg-")}></span>
+      {label || config.label}
+    </span>
+  );
+};
+''',
+                "keywords": ["badge", "status", "tag", "label"],
+                "tags": ["badge", "status"],
+            },
         }
-        
+
         # Create components
         created = []
         for key, comp in COMPONENTS.items():
