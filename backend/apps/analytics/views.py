@@ -98,41 +98,49 @@ class TrackEventView(APIView):
         
         # Determine distinct_id
         distinct_id = data.get('distinct_id') or data.get('user_id') or data.get('anonymous_id')
-        
-        # Create event
-        event = Event.objects.create(
-            tenant=tenant,
-            event_name=data['event'],
-            distinct_id=distinct_id,
-            anonymous_id=data.get('anonymous_id', ''),
-            user_id=data.get('user_id', ''),
-            properties=data.get('properties', {}),
-            context=data.get('context', {}),
-            timestamp=data.get('timestamp', timezone.now()),
-            ip_address=self._get_client_ip(request),
-            user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
-        )
-        
-        # Update user profile
-        profile, _ = UserProfile.objects.get_or_create(
-            tenant=tenant,
-            distinct_id=distinct_id,
-        )
-        profile.total_events += 1
-        profile.save(update_fields=['total_events', 'last_seen'])
-        
-        # Forward to analytics services
+
         try:
-            config = AnalyticsConfig.objects.get(tenant=tenant)
-            proxy = AnalyticsProxy(config)
-            proxy.track_event(event)
-        except AnalyticsConfig.DoesNotExist:
-            pass
-        
-        # Process funnels
-        FunnelAnalyzer.process_event_for_funnels(event)
-        
-        return Response({'success': True, 'event_id': str(event.id)})
+            # Create event
+            event = Event.objects.create(
+                tenant=tenant,
+                event_name=data['event'],
+                distinct_id=distinct_id,
+                anonymous_id=data.get('anonymous_id', ''),
+                user_id=data.get('user_id', ''),
+                properties=data.get('properties', {}),
+                context=data.get('context', {}),
+                timestamp=data.get('timestamp', timezone.now()),
+                ip_address=self._get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
+            )
+
+            # Update user profile
+            profile, _ = UserProfile.objects.get_or_create(
+                tenant=tenant,
+                distinct_id=distinct_id,
+            )
+            profile.total_events += 1
+            profile.save(update_fields=['total_events', 'last_seen'])
+
+            # Forward to analytics services
+            try:
+                config = AnalyticsConfig.objects.get(tenant=tenant)
+                proxy = AnalyticsProxy(config)
+                proxy.track_event(event)
+            except AnalyticsConfig.DoesNotExist:
+                pass
+
+            # Process funnels
+            FunnelAnalyzer.process_event_for_funnels(event)
+
+            return Response({'success': True, 'event_id': str(event.id)})
+        except Exception as e:
+            import traceback
+            return Response({
+                'error': str(e),
+                'type': type(e).__name__,
+                'traceback': traceback.format_exc()
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def _get_client_ip(self, request):
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
