@@ -120,7 +120,7 @@ def generate_app_task(self, project_id):
         
         # Combine all frontend code
         frontend_code = {
-            'App.tsx': app_structure,
+            'App.jsx': app_structure,
             'components': components
         }
         project.frontend_code = str(frontend_code)  # Store as JSON string

@@ -44,7 +44,7 @@ def _check_has_is_approved_column():
 class GenerationRequest:
     """Request for code generation."""
     description: str
-    language: str = 'typescript'
+    language: str = 'javascript'  # Plain JS per Base44 lessons - LLMs are more reliable
     item_type: str = 'component'
     
     # Options
@@ -239,22 +239,19 @@ class CodeGenerationPipeline:
     
     def _get_mock_code(self, request: GenerationRequest) -> str:
         """Generate mock code for testing."""
-        if request.language == 'typescript':
+        if request.language in ['javascript', 'typescript']:
+            # Plain JavaScript (no TypeScript) per Base44 lessons
             return f'''
 import React from 'react';
 
-interface Props {{
-  // Add props here
-}}
-
-export const {request.description.replace(' ', '')}Component: React.FC<Props> = (props) => {{
+function {request.description.replace(' ', '')}Component(props) {{
   return (
     <div>
       <h1>{request.description}</h1>
       {{/* Implementation here */}}
     </div>
   );
-}};
+}}
 
 export default {request.description.replace(' ', '')}Component;
 '''
@@ -332,7 +329,7 @@ if __name__ == "__main__":
         create_kwargs = {
             'name': request.description[:200],
             'item_type': request.item_type or 'component',
-            'language': request.language or 'tsx',
+            'language': request.language or 'jsx',
             'code': code,
             'description': f"Auto-generated: {request.description}",
             'keywords': keywords,  # JSONField - pass as list

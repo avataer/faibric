@@ -84,8 +84,11 @@ LOG_FIELD_CANDIDATE_COUNT = 'candidate_count'
 
 # ALL code generation uses Opus 4.5 - no exceptions
 # Haiku is only for classification, summarization, and admin questions
-GENERATION_MODEL = "claude-sonnet-4-20250514"  # Opus 4.5 for ALL code
-UTILITY_MODEL = "claude-3-5-haiku-20241022"    # Only for non-code tasks
+# Import from the single source of truth
+from apps.ai_engine.models_config import CODE_MODEL, CHAT_MODEL
+
+GENERATION_MODEL = CODE_MODEL  # Claude Opus 4.5 for ALL code
+UTILITY_MODEL = CHAT_MODEL     # Claude Haiku 4.5 for non-code tasks only
 
 
 

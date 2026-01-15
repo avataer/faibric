@@ -195,7 +195,7 @@ class UIGenerator:
         return generated_components
     
     def generate_app_structure(self, components):
-        """Generate App.tsx - with or without routing based on component count"""
+        """Generate App.jsx - with or without routing based on component count"""
         
         # If only 1 component, don't use routing at all
         if len(components) == 1:

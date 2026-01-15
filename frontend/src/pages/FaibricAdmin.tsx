@@ -20,8 +20,28 @@ import {
   CircularProgress,
   Alert,
   LinearProgress,
+  TextField,
 } from '@mui/material'
 import { api } from '../services/api'
+
+interface DeploymentVersion {
+  version_number: number
+  created_at: string
+  change_description: string
+  is_deployed: boolean
+  code_preview: string
+}
+
+interface DeploymentStatus {
+  project_id: string
+  status: string
+  deployment_url: string
+  subdomain: string
+  container?: {
+    status: string
+    uptime: string
+  }
+}
 
 interface FunnelStep {
   name: string
@@ -70,11 +90,55 @@ interface DailyReport {
   revenue: string
 }
 
+interface BillingProfile {
+  id: string
+  billing_name: string
+  billing_email: string
+  card_last_four: string
+  card_brand: string
+  card_exp_month: number
+  card_exp_year: number
+  has_valid_payment_method: boolean
+}
+
+interface Subscription {
+  id: string
+  plan: string
+  status: string
+  monthly_price: number
+  max_apps: number
+  max_ai_tokens_per_month: number
+  max_storage_gb: number
+  current_period_start: string
+  current_period_end: string
+  is_active: boolean
+}
+
+interface PaymentMethod {
+  id: string
+  brand: string
+  last4: string
+  exp_month: number
+  exp_year: number
+}
+
+interface Invoice {
+  id: string
+  number: string
+  status: string
+  total: number
+  currency: string
+  period_start: string
+  period_end: string
+  pdf_url: string
+  created_at: string
+}
+
 const FaibricAdmin = () => {
   const [tab, setTab] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
   // Data states
   const [funnelData, setFunnelData] = useState<FunnelStep[]>([])
   const [sessions, setSessions] = useState<Session[]>([])
@@ -84,8 +148,26 @@ const FaibricAdmin = () => {
   const [reports, setReports] = useState<DailyReport[]>([])
   const [creditsStats, setCreditsStats] = useState<any>(null)
 
+  // History tab states
+  const [historyProjectId, setHistoryProjectId] = useState<string>('')
+  const [versions, setVersions] = useState<DeploymentVersion[]>([])
+  const [deploymentStatus, setDeploymentStatus] = useState<DeploymentStatus | null>(null)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState<string | null>(null)
+  const [rollbackLoading, setRollbackLoading] = useState<number | null>(null)
+
+  // Billing tab states
+  const [billingProfile, setBillingProfile] = useState<BillingProfile | null>(null)
+  const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [billingLoading, setBillingLoading] = useState(false)
+  const [billingError, setBillingError] = useState<string | null>(null)
+  const [changingPlan, setChangingPlan] = useState<string | null>(null)
+
   useEffect(() => {
     loadData()
+    loadBillingData()
   }, [])
 
   const loadData = async () => {
@@ -148,6 +230,123 @@ const FaibricAdmin = () => {
     } catch {
       // Failed to generate report
     }
+  }
+
+  const loadDeploymentHistory = async (projectId: string) => {
+    if (!projectId) return
+    setHistoryLoading(true)
+    setHistoryError(null)
+    try {
+      const [versionsRes, statusRes] = await Promise.all([
+        api.get(`/api/services/versions/${projectId}/`).catch(e => ({ data: null, error: e })),
+        api.get(`/api/deployment/${projectId}/status/`).catch(e => ({ data: null, error: e })),
+      ])
+
+      if (versionsRes.data) {
+        setVersions(versionsRes.data.versions || [])
+      }
+      if (statusRes.data) {
+        setDeploymentStatus(statusRes.data)
+      }
+    } catch (err: any) {
+      setHistoryError(err.message || 'Failed to load deployment history')
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
+
+  const handleRollback = async (versionNumber: number) => {
+    if (!historyProjectId) return
+    setRollbackLoading(versionNumber)
+    try {
+      await api.post(`/api/services/versions/${historyProjectId}/rollback/`, {
+        version: versionNumber
+      })
+      await loadDeploymentHistory(historyProjectId)
+    } catch (err: any) {
+      setHistoryError(err.message || 'Failed to rollback')
+    } finally {
+      setRollbackLoading(null)
+    }
+  }
+
+  const handleUndeploy = async () => {
+    if (!historyProjectId) return
+    try {
+      await api.post(`/api/deployment/${historyProjectId}/undeploy/`)
+      await loadDeploymentHistory(historyProjectId)
+    } catch (err: any) {
+      setHistoryError(err.message || 'Failed to undeploy')
+    }
+  }
+
+  const loadBillingData = async () => {
+    setBillingLoading(true)
+    setBillingError(null)
+    try {
+      const [profileRes, subscriptionRes, methodsRes, invoicesRes] = await Promise.all([
+        api.get('/api/billing/profile/').catch(e => ({ data: null, error: e })),
+        api.get('/api/billing/subscription/').catch(e => ({ data: null, error: e })),
+        api.get('/api/billing/payment-methods/').catch(e => ({ data: null, error: e })),
+        api.get('/api/billing/invoices/').catch(e => ({ data: null, error: e })),
+      ])
+
+      if (profileRes.data) setBillingProfile(profileRes.data)
+      if (subscriptionRes.data) setSubscription(subscriptionRes.data)
+      if (methodsRes.data) setPaymentMethods(Array.isArray(methodsRes.data) ? methodsRes.data : methodsRes.data.results || [])
+      if (invoicesRes.data) setInvoices(Array.isArray(invoicesRes.data) ? invoicesRes.data : invoicesRes.data.results || [])
+    } catch (err: any) {
+      setBillingError(err.message || 'Failed to load billing data')
+    } finally {
+      setBillingLoading(false)
+    }
+  }
+
+  const handleChangePlan = async (newPlan: string) => {
+    setChangingPlan(newPlan)
+    setBillingError(null)
+    try {
+      await api.post('/api/billing/subscription/change-plan/', { plan: newPlan })
+      await loadBillingData()
+    } catch (err: any) {
+      setBillingError(err.message || 'Failed to change plan')
+    } finally {
+      setChangingPlan(null)
+    }
+  }
+
+  const handleSetupPayment = async () => {
+    setBillingError(null)
+    try {
+      const response = await api.post('/api/billing/setup-payment/')
+      if (response.data && response.data.client_secret) {
+        // Redirect to Stripe Checkout or open Stripe Elements modal
+        // For simplicity, we open Stripe's hosted payment page
+        window.open(`https://checkout.stripe.com/pay/${response.data.client_secret}`, '_blank')
+      }
+    } catch (err: any) {
+      setBillingError(err.message || 'Failed to setup payment')
+    }
+  }
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to cancel your subscription? You will be reverted to the free plan.')) {
+      return
+    }
+    setBillingError(null)
+    try {
+      await api.post('/api/billing/subscription/cancel/')
+      await loadBillingData()
+    } catch (err: any) {
+      setBillingError(err.message || 'Failed to cancel subscription')
+    }
+  }
+
+  const PLAN_CONFIG = {
+    free: { name: 'Free', price: 0, apps: 3, tokens: '50K', storage: '1 GB' },
+    starter: { name: 'Starter', price: 29, apps: 10, tokens: '200K', storage: '10 GB' },
+    pro: { name: 'Pro', price: 79, apps: 50, tokens: '1M', storage: '50 GB' },
+    enterprise: { name: 'Enterprise', price: 199, apps: 'Unlimited', tokens: '10M', storage: '500 GB' },
   }
 
   if (loading) {
@@ -249,6 +448,8 @@ const FaibricAdmin = () => {
         <Tab label="Google Ads" />
         <Tab label="Daily Reports" />
         <Tab label="LLM Usage" />
+        <Tab label="Deployment History" />
+        <Tab label="Billing" />
       </Tabs>
 
       {/* Tab Content */}
@@ -539,6 +740,382 @@ const FaibricAdmin = () => {
             </TableContainer>
           </CardContent>
         </Card>
+      )}
+
+      {tab === 6 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" sx={{ color: '#000000', mb: 3 }}>Deployment History</Typography>
+
+            {/* Project ID Input */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+              <TextField
+                label="Project ID"
+                value={historyProjectId}
+                onChange={(e) => setHistoryProjectId(e.target.value)}
+                placeholder="Enter FAIBRIC_PROJECT_ID"
+                size="small"
+                sx={{ width: 300 }}
+              />
+              <Button
+                variant="contained"
+                onClick={() => loadDeploymentHistory(historyProjectId)}
+                disabled={!historyProjectId || historyLoading}
+              >
+                {historyLoading ? <CircularProgress size={20} /> : 'Load History'}
+              </Button>
+            </Box>
+
+            {historyError && (
+              <Alert severity="error" sx={{ mb: 3 }}>{historyError}</Alert>
+            )}
+
+            {/* Current Deployment Status */}
+            {deploymentStatus && (
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="subtitle1" sx={{ color: '#000000', mb: 2 }}>
+                  Current Deployment Status
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={3}>
+                    <Box sx={{ p: 2, border: '1px solid #e5e7eb', borderRadius: 2 }}>
+                      <Typography variant="body2" sx={{ color: '#374151' }}>Status</Typography>
+                      <Chip
+                        label={deploymentStatus.status}
+                        size="small"
+                        color={
+                          deploymentStatus.status === 'deployed' ? 'success' :
+                          deploymentStatus.status === 'deploying' ? 'info' :
+                          deploymentStatus.status === 'failed' ? 'error' : 'default'
+                        }
+                        sx={{ mt: 1 }}
+                      />
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ p: 2, border: '1px solid #e5e7eb', borderRadius: 2 }}>
+                      <Typography variant="body2" sx={{ color: '#374151' }}>Deployment URL</Typography>
+                      <Typography variant="body1" sx={{ color: '#2563eb', mt: 1 }}>
+                        {deploymentStatus.deployment_url || 'Not deployed'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Box sx={{ p: 2, border: '1px solid #e5e7eb', borderRadius: 2 }}>
+                      <Typography variant="body2" sx={{ color: '#374151' }}>Subdomain</Typography>
+                      <Typography variant="body1" sx={{ color: '#000000', mt: 1 }}>
+                        {deploymentStatus.subdomain || '-'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={2}>
+                    <Box sx={{ p: 2, border: '1px solid #e5e7eb', borderRadius: 2 }}>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        onClick={handleUndeploy}
+                        disabled={deploymentStatus.status !== 'deployed'}
+                        fullWidth
+                      >
+                        Undeploy
+                      </Button>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+
+            {/* Version History Table */}
+            {versions.length > 0 && (
+              <>
+                <Typography variant="subtitle1" sx={{ color: '#000000', mb: 2 }}>
+                  Version History
+                </Typography>
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Version</TableCell>
+                        <TableCell>Date</TableCell>
+                        <TableCell>Description</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {versions.map((version) => (
+                        <TableRow key={version.version_number}>
+                          <TableCell>
+                            <strong>v{version.version_number}</strong>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(version.created_at).toLocaleString()}
+                          </TableCell>
+                          <TableCell sx={{ maxWidth: 300 }}>
+                            {version.change_description || 'No description'}
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={version.is_deployed ? 'Deployed' : 'Available'}
+                              size="small"
+                              color={version.is_deployed ? 'success' : 'default'}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleRollback(version.version_number)}
+                              disabled={version.is_deployed || rollbackLoading === version.version_number}
+                            >
+                              {rollbackLoading === version.version_number ? (
+                                <CircularProgress size={16} />
+                              ) : (
+                                'Rollback'
+                              )}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
+
+            {!historyLoading && versions.length === 0 && historyProjectId && (
+              <Alert severity="info">
+                No version history found for this project. Enter a valid FAIBRIC_PROJECT_ID and click "Load History".
+              </Alert>
+            )}
+
+            {!historyProjectId && (
+              <Alert severity="info">
+                Enter a FAIBRIC_PROJECT_ID to view deployment history and manage versions.
+                You can find this ID in the deployed app's window.FAIBRIC_PROJECT_ID variable.
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {tab === 7 && (
+        <Box>
+          {billingError && (
+            <Alert severity="error" sx={{ mb: 3 }}>{billingError}</Alert>
+          )}
+
+          {billingLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Grid container spacing={3}>
+              {/* Subscription Status Card */}
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ color: '#000000', mb: 3 }}>
+                      Subscription Status
+                    </Typography>
+                    {subscription ? (
+                      <Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                          <Typography variant="h4" sx={{ color: '#2563eb' }}>
+                            {PLAN_CONFIG[subscription.plan as keyof typeof PLAN_CONFIG]?.name || subscription.plan}
+                          </Typography>
+                          <Chip
+                            label={subscription.status}
+                            size="small"
+                            color={subscription.is_active ? 'success' : 'default'}
+                          />
+                        </Box>
+                        <Typography variant="h5" sx={{ color: '#000000', mb: 2 }}>
+                          ${subscription.monthly_price}/month
+                        </Typography>
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="body2" sx={{ color: '#374151' }}>
+                            Apps: {subscription.max_apps}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#374151' }}>
+                            AI Tokens: {(subscription.max_ai_tokens_per_month / 1000).toFixed(0)}K/month
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#374151' }}>
+                            Storage: {subscription.max_storage_gb} GB
+                          </Typography>
+                        </Box>
+                        {subscription.current_period_end && (
+                          <Typography variant="caption" sx={{ color: '#6b7280' }}>
+                            Current period ends: {new Date(subscription.current_period_end).toLocaleDateString()}
+                          </Typography>
+                        )}
+                        {subscription.plan !== 'free' && (
+                          <Box sx={{ mt: 2 }}>
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              size="small"
+                              onClick={handleCancelSubscription}
+                            >
+                              Cancel Subscription
+                            </Button>
+                          </Box>
+                        )}
+                      </Box>
+                    ) : (
+                      <Alert severity="info">No subscription found</Alert>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Payment Methods Card */}
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                      <Typography variant="h6" sx={{ color: '#000000' }}>
+                        Payment Methods
+                      </Typography>
+                      <Button variant="contained" size="small" onClick={handleSetupPayment}>
+                        Add Payment Method
+                      </Button>
+                    </Box>
+                    {billingProfile?.has_valid_payment_method && billingProfile.card_last_four ? (
+                      <Box sx={{ p: 2, border: '1px solid #e5e7eb', borderRadius: 2 }}>
+                        <Typography variant="body1" sx={{ color: '#000000' }}>
+                          {billingProfile.card_brand?.toUpperCase()} **** {billingProfile.card_last_four}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#6b7280' }}>
+                          Expires {billingProfile.card_exp_month}/{billingProfile.card_exp_year}
+                        </Typography>
+                      </Box>
+                    ) : paymentMethods.length > 0 ? (
+                      paymentMethods.map((method) => (
+                        <Box key={method.id} sx={{ p: 2, border: '1px solid #e5e7eb', borderRadius: 2, mb: 1 }}>
+                          <Typography variant="body1" sx={{ color: '#000000' }}>
+                            {method.brand?.toUpperCase()} **** {method.last4}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: '#6b7280' }}>
+                            Expires {method.exp_month}/{method.exp_year}
+                          </Typography>
+                        </Box>
+                      ))
+                    ) : (
+                      <Alert severity="info">No payment methods on file</Alert>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Plan Selection Card */}
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ color: '#000000', mb: 3 }}>
+                      Upgrade or Downgrade Plan
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {Object.entries(PLAN_CONFIG).map(([planKey, plan]) => (
+                        <Grid item xs={12} sm={6} md={3} key={planKey}>
+                          <Box
+                            sx={{
+                              p: 3,
+                              border: subscription?.plan === planKey ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                              borderRadius: 2,
+                              textAlign: 'center',
+                              bgcolor: subscription?.plan === planKey ? '#eff6ff' : 'transparent',
+                            }}
+                          >
+                            <Typography variant="h6" sx={{ color: '#000000' }}>{plan.name}</Typography>
+                            <Typography variant="h4" sx={{ color: '#2563eb', my: 1 }}>
+                              ${plan.price}
+                              <Typography component="span" variant="body2" sx={{ color: '#6b7280' }}>/mo</Typography>
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#374151' }}>{plan.apps} Apps</Typography>
+                            <Typography variant="body2" sx={{ color: '#374151' }}>{plan.tokens} Tokens</Typography>
+                            <Typography variant="body2" sx={{ color: '#374151' }}>{plan.storage}</Typography>
+                            <Button
+                              variant={subscription?.plan === planKey ? 'outlined' : 'contained'}
+                              size="small"
+                              sx={{ mt: 2 }}
+                              disabled={subscription?.plan === planKey || changingPlan === planKey}
+                              onClick={() => handleChangePlan(planKey)}
+                            >
+                              {changingPlan === planKey ? (
+                                <CircularProgress size={16} />
+                              ) : subscription?.plan === planKey ? (
+                                'Current Plan'
+                              ) : (
+                                'Select Plan'
+                              )}
+                            </Button>
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Invoice History Card */}
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ color: '#000000', mb: 3 }}>
+                      Invoice History
+                    </Typography>
+                    {invoices.length > 0 ? (
+                      <TableContainer>
+                        <Table>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Invoice #</TableCell>
+                              <TableCell>Date</TableCell>
+                              <TableCell>Period</TableCell>
+                              <TableCell>Amount</TableCell>
+                              <TableCell>Status</TableCell>
+                              <TableCell>Actions</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {invoices.map((invoice) => (
+                              <TableRow key={invoice.id}>
+                                <TableCell><strong>{invoice.number}</strong></TableCell>
+                                <TableCell>{new Date(invoice.created_at).toLocaleDateString()}</TableCell>
+                                <TableCell>
+                                  {new Date(invoice.period_start).toLocaleDateString()} - {new Date(invoice.period_end).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell>${invoice.total?.toFixed(2)} {invoice.currency?.toUpperCase()}</TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={invoice.status}
+                                    size="small"
+                                    color={invoice.status === 'paid' ? 'success' : invoice.status === 'open' ? 'warning' : 'default'}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  {invoice.pdf_url && (
+                                    <Button size="small" href={invoice.pdf_url} target="_blank">
+                                      Download PDF
+                                    </Button>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    ) : (
+                      <Alert severity="info">No invoices yet</Alert>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          )}
+        </Box>
       )}
     </Container>
   )

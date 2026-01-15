@@ -645,12 +645,17 @@ class ComponentLibrary:
             # Still save but mark for review
             version_notes = f"[NEEDS FIX] {error}\n\n{version_notes}"
 
-        # Check for TypeScript that would require transformation
+        # RULE 3: No TypeScript - strip any TypeScript annotations before saving
+        # This ensures library components are always plain JavaScript
+        from .typescript_stripper import strip_typescript_annotations
+        code = strip_typescript_annotations(code)
+
+        # Check for TypeScript that may have slipped through
         has_complex_ts = bool(re.search(r'<\w+\s*extends\s+\w+>', code)) or \
                          bool(re.search(r':\s*\w+\[\]', code)) or \
                          bool(re.search(r'as\s+\w+', code))
         if has_complex_ts:
-            print(f"[LIBRARY] [WARN] Component has TypeScript that may need transformation")
+            print(f"[LIBRARY] [WARN] Component still has TypeScript after stripping - may need manual review")
 
         name = f"{component_type.value.title()} - {variant.title()}"
         slug = f"{component_type.value}-{variant}-{version}".lower()

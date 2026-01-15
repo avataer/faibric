@@ -10,6 +10,7 @@ Component-Based Generation Pipeline
 
 import json
 import logging
+import re
 import anthropic
 from typing import Dict, List, Optional
 from django.conf import settings
@@ -41,6 +42,24 @@ logger = logging.getLogger(__name__)
 # Check Connector V2 health on module load
 _connector_v2_status = None
 
+# Import TypeScript stripper (in separate file to avoid circular imports)
+from .typescript_stripper import strip_typescript_annotations, validate_jsx_tags
+
+# Import complexity detection (Base44 lesson: auto-refactoring triggers)
+from .complexity import measure_complexity, get_refactor_prompt_injection, check_and_warn
+
+
+class JSXValidationError(Exception):
+    """
+    Raised when generated JSX code fails validation.
+
+    This exception is caught by build_service.py which triggers AI retry.
+    The code is NOT deployed until it passes validation.
+    """
+    def __init__(self, message: str, code: str = None):
+        super().__init__(message)
+        self.code = code  # The invalid code, for AI to fix
+
 
 class ComponentGenerationPipeline:
     """
@@ -63,6 +82,9 @@ class ComponentGenerationPipeline:
         self.validator = ConnectionValidator()
         self.wire_generator = WireGenerator()
         
+        # Store generated images for deployment
+        self.generated_images = {}
+
         # Stats for tracking
         self.stats = {
             'components_required': 0,
@@ -75,9 +97,139 @@ class ComponentGenerationPipeline:
         }
         
         # Component files for modular composition
-        # Dict mapping filepath to code, e.g., {"src/components/Hero.tsx": "<code>"}
+        # Dict mapping filepath to code, e.g., {"src/components/Hero.jsx": "<code>"}
         self.component_files = {}
-    
+
+    def _get_available_scope(self, components: Dict[str, str] = None) -> str:
+        """
+        Generate a pre-seeded scope definition for the AI.
+
+        Per Base44 lessons: Tell the AI exactly what variables, functions,
+        and components are available to prevent undefined reference errors.
+        """
+        scope_parts = []
+
+        # 1. Standard handlers always available
+        scope_parts.append("""
+AVAILABLE HANDLERS (use these, do NOT create new undefined handlers):
+- handleNavigate(viewId) - Switch between views, already defined
+- handleSubmit(e) - Form submission, calls e.preventDefault()
+- handleClick(item) - Generic click handler
+- handleChange(value) - Input change handler
+- () => {} - Use empty arrow function if no handler needed
+""")
+
+        # 2. Standard state variables
+        scope_parts.append("""
+AVAILABLE STATE VARIABLES:
+- currentView - Current active view/page (string)
+- setCurrentView - Setter for currentView
+- loading - Data loading state (boolean)
+- error - Error message (string or null)
+- data - Fetched API data (object)
+""")
+
+        # 3. Available components from this build
+        if components:
+            comp_names = list(components.keys())
+            scope_parts.append(f"""
+AVAILABLE COMPONENTS (already defined, import and use these):
+{chr(10).join(f'- {name}' for name in comp_names)}
+""")
+
+        # 4. Standard icons (from lucide-react)
+        scope_parts.append("""
+AVAILABLE ICONS (import from 'lucide-react'):
+- Home, User, Settings, Menu, X, Check, Plus, Minus
+- ArrowRight, ArrowLeft, ChevronDown, ChevronUp
+- Mail, Phone, MapPin, Clock, Calendar
+- Facebook, Twitter, Linkedin, Instagram
+NOTE: If you need an icon not listed, use null instead of an undefined variable.
+""")
+
+        # 5. Forbidden patterns
+        scope_parts.append("""
+FORBIDDEN PATTERNS (will cause runtime errors):
+- onClick={handleSomething} where handleSomething is not defined above
+- icon={someIcon} where someIcon is not imported
+- defaultSocialIcons.xxx - this variable does not exist
+- defaultIcons.xxx - this variable does not exist
+Instead, use: onClick={() => {}} or icon={null}
+""")
+
+        # 6. CRITICAL: Defensive array patterns to prevent undefined.map() errors
+        scope_parts.append("""
+CRITICAL - ARRAY SAFETY (prevents "Cannot read properties of undefined (reading 'map')"):
+When using .map() on any array, ALWAYS use defensive patterns:
+
+GOOD: {(items || []).map(item => ...)}
+GOOD: {items?.map(item => ...) || null}
+GOOD: {Array.isArray(items) && items.map(item => ...)}
+
+BAD: {items.map(item => ...)}  // CRASHES if items is undefined
+
+ALWAYS define arrays with default empty arrays:
+const [items, setItems] = useState([]);  // NOT useState()
+const items = props.items || [];  // NOT const items = props.items
+
+NEVER call .map() without a null check. This is the #1 cause of blank pages.
+""")
+
+        return "\n".join(scope_parts)
+
+    def _format_interface_for_prompt(self, interface: ComponentInterface) -> str:
+        """
+        Format a component interface as a prompt-friendly specification.
+
+        This tells the AI exactly what props are valid for a component,
+        preventing it from adding or removing props arbitrarily.
+        """
+        if not interface:
+            return ""
+
+        lines = ["COMPONENT INTERFACE CONTRACT (DO NOT VIOLATE):"]
+
+        # Inputs (props)
+        required_props = []
+        optional_props = []
+
+        for inp in getattr(interface, 'inputs', []):
+            if hasattr(inp, 'data_schema') and inp.data_schema:
+                type_str = getattr(inp.data_schema, 'typescript_type', 'any')
+            else:
+                type_str = 'any'
+
+            prop_name = getattr(inp, 'name', str(inp))
+            is_required = getattr(inp, 'required', False)
+
+            if is_required:
+                required_props.append(f"  - {prop_name}: {type_str}")
+            else:
+                default = getattr(inp, 'default_value', None)
+                default_str = f" = {default}" if default is not None else ""
+                optional_props.append(f"  - {prop_name}: {type_str}{default_str}")
+
+        if required_props:
+            lines.append("REQUIRED PROPS (must keep):")
+            lines.extend(required_props)
+
+        if optional_props:
+            lines.append("OPTIONAL PROPS (keep if present in original):")
+            lines.extend(optional_props)
+
+        # Outputs (callbacks)
+        outputs = getattr(interface, 'outputs', [])
+        if outputs:
+            lines.append("EVENT HANDLERS (component may call these):")
+            for out in outputs:
+                out_name = getattr(out, 'name', str(out))
+                lines.append(f"  - {out_name}")
+
+        lines.append("")
+        lines.append("RULE: Do NOT add props not in this interface. Do NOT remove existing props.")
+
+        return "\n".join(lines)
+
     def _update_progress(self, progress: int, message: str):
         """Update build progress for the customer to see."""
         if self.session:
@@ -98,12 +250,62 @@ class ComponentGenerationPipeline:
         CRITICAL FIXES:
         - Fix #1: Layout/Navigation are PERMANENT (priority=0), never dropped
         - Fix #2: Gateway First - force real data for trackers/dashboards
-        
-        Returns the final App.tsx code.
+
+        Returns the final App.jsx code.
         """
         print(f"[COMPONENT PIPELINE] Starting build for: {prompt[:50]}...")
         self._update_progress(5, "Analyzing your requirements...")
-        
+
+        # DISABLED: template_matcher returns static templates that don't customize content.
+        # The golden_templates system below uses AI to generate customized content
+        # for each prompt, which solves the "generic templates" issue.
+        #
+        # Old code used template_matcher which only replaced {{BUSINESS_NAME}} and {{TAGLINE}}
+        # but didn't customize services, features, testimonials, etc. to match the prompt.
+        # Result: "NFT dog artist" prompt got generic "Portfolio Website" template.
+
+        # GOLDEN TEMPLATES: AI generates DATA, templates handle STRUCTURE
+        # This is the reliable approach - 60-80% reduction in syntax errors
+        try:
+            from .golden_templates import compose_from_templates
+            print(f"[COMPONENT PIPELINE] Trying GOLDEN TEMPLATES (data + template injection)...")
+            self._update_progress(15, "Generating content...")
+
+            app_code, metadata = compose_from_templates(prompt)
+
+            if app_code and 'function App' in app_code and 'export default' in app_code:
+                print(f"[COMPONENT PIPELINE] GOLDEN TEMPLATES SUCCESS: {metadata.get('line_count', 0)} lines")
+                print(f"[COMPONENT PIPELINE] Components: {metadata.get('components_used', [])}")
+
+                self.stats['golden_templates'] = True
+                self.stats['template_components'] = metadata.get('components_used', [])
+                self.stats['components_reused'] = len(metadata.get('components_used', []))
+                self.stats['components_generated'] = 0
+
+                # Store generated images from metadata
+                self.generated_images = metadata.get('generated_images', {})
+                if self.generated_images:
+                    print(f"[COMPONENT PIPELINE] AI images generated: {list(self.generated_images.keys())}")
+
+                # Validate with esbuild
+                from apps.code_library.jsx_validator import validate_jsx
+                is_valid, error = validate_jsx(app_code)
+
+                if is_valid:
+                    print(f"[COMPONENT PIPELINE] Golden template code VALIDATED")
+                    self._update_progress(95, "Finalizing code...")
+                    return app_code
+                else:
+                    print(f"[COMPONENT PIPELINE] Golden template validation failed: {error}")
+                    # Don't raise, fall through to component generation
+            else:
+                print(f"[COMPONENT PIPELINE] Golden template output incomplete")
+
+        except Exception as e:
+            print(f"[COMPONENT PIPELINE] Golden templates error: {e}")
+
+        print(f"[COMPONENT PIPELINE] Falling back to component-by-component generation...")
+
         # Step 1: Decompose into required components
         requirements = self.decomposer.decompose(prompt)
         
@@ -183,11 +385,69 @@ class ComponentGenerationPipeline:
             for issue in code_validation.issues:
                 print(f"    {issue.level.value.upper()}: {issue.message}")
             self.stats['code_quality_issues'] = [i.to_dict() for i in code_validation.issues]
+
+            # Fix undefined components by generating stubs
+            undefined_issues = [i for i in code_validation.issues if i.code == "UNDEFINED_COMPONENT"]
+            if undefined_issues:
+                print(f"[COMPONENT PIPELINE] Generating stubs for {len(undefined_issues)} undefined components...")
+                stubs = []
+                for issue in undefined_issues:
+                    comp_name = issue.component
+                    stub = f'''
+const {comp_name} = ({{ children, ...props }}) => (
+  <div className="p-4 border rounded" {{...props}}>
+    {{children || <span>{comp_name}</span>}}
+  </div>
+);
+'''
+                    stubs.append(stub)
+                    print(f"    [STUB] Generated stub for {comp_name}")
+
+                # Insert stubs after the icon components section
+                stub_code = '\n// AUTO-GENERATED STUBS for undefined components\n' + '\n'.join(stubs)
+                # Find a good insertion point (after icon definitions, before first Section component)
+                insert_match = re.search(r'(// ={10,}.*?SECTION|const \w+Section)', final_code)
+                if insert_match:
+                    insert_pos = insert_match.start()
+                    final_code = final_code[:insert_pos] + stub_code + '\n\n' + final_code[insert_pos:]
+                else:
+                    # Fallback: insert after first component definitions
+                    final_code = final_code.replace('// React is provided globally', '// React is provided globally\n' + stub_code)
         else:
             print(f"[COMPONENT PIPELINE] [OK] Code quality validation passed")
-        
+
+        # NOTE: Regex band-aids for JSX errors REMOVED per Rule 1
+        # We fixed the AI prompts to prevent these errors at generation time
+        # See: CRITICAL - PLAIN JAVASCRIPT ONLY sections in _generate_component and _adapt_component
+
+        # Step 3.6: Validate JSX tag balancing (log warning but don't attempt regex fix)
+        # NOTE: fix_jsx_tags() REMOVED per Rule 1 - it was adding stray closing tags
+        # that broke valid code. Prompts now instruct AI to generate balanced JSX.
+        jsx_valid, jsx_error = validate_jsx_tags(final_code)
+        if not jsx_valid:
+            print(f"[COMPONENT PIPELINE] [WARN] JSX tag mismatch detected: {jsx_error}")
+            print(f"[COMPONENT PIPELINE] [WARN] Not attempting auto-fix (per Rule 1 - no regex for JSX)")
+            self.stats['jsx_tag_error'] = jsx_error
+        else:
+            print(f"[COMPONENT PIPELINE] [OK] JSX tag validation passed")
+
+        # Step 3.7: Check code complexity (Base44 lesson: auto-refactoring triggers)
+        complexity_metrics = measure_complexity(final_code)
+        self.stats['complexity'] = complexity_metrics
+
+        if complexity_metrics['needs_refactor']:
+            print(f"[COMPONENT PIPELINE] [WARN] Code complexity exceeds thresholds:")
+            for reason in complexity_metrics['refactor_reasons']:
+                print(f"    - {reason}")
+            print(f"[COMPONENT PIPELINE] [INFO] Consider refactoring before adding features")
+        else:
+            print(f"[COMPONENT PIPELINE] [OK] Code complexity within limits "
+                  f"(lines={complexity_metrics['line_count']}, "
+                  f"functions={complexity_metrics['function_count']}, "
+                  f"depth={complexity_metrics['nesting_depth']})")
+
         self._update_progress(95, "Finalizing code...")
-        
+
         # Stats summary
         print(f"[COMPONENT PIPELINE] BUILD COMPLETE:")
         print(f"  - Components required: {self.stats['components_required']}")
@@ -224,8 +484,11 @@ class ComponentGenerationPipeline:
             except Exception as e:
                 print(f"    [WARN] Failed to increment usage: {e}")
             
+            # Strip TypeScript annotations (library was built with TS, but we now use plain JS)
+            code = strip_typescript_annotations(match.component.code)
+
             # Adapt the component for this specific use case
-            adapted = self._adapt_component(match.component.code, requirement, full_prompt)
+            adapted = self._adapt_component(code, requirement, full_prompt)
             return adapted
         
         else:
@@ -252,13 +515,13 @@ class ComponentGenerationPipeline:
             return code
     
     def _generate_component(
-        self, 
+        self,
         requirement: ComponentRequirement,
         full_prompt: str
     ) -> str:
         """
         Generate a NEW component using Opus 4.5.
-        
+
         This component should be:
         - Self-contained
         - Reusable
@@ -268,7 +531,14 @@ class ComponentGenerationPipeline:
         # Get user rules and owner instructions for injection
         rules_injection = get_rules_prompt_injection()
         instruction_injection = get_instruction_prompt()
-        
+
+        # Get interface contract for this component type (Base44 lesson)
+        interface = get_interface(requirement.component_type.value)
+        interface_spec = self._format_interface_for_prompt(interface) if interface else ""
+
+        # Get pre-seeded scope (Base44 lesson - tell AI what's available)
+        scope_spec = self._get_available_scope()
+
         prompt = f"""
 Generate a REUSABLE React component for the following requirement.
 
@@ -276,8 +546,14 @@ COMPONENT TYPE: {requirement.component_type.value}
 VARIANT: {requirement.variant}
 CONTEXT: {full_prompt}
 DESCRIPTION: {requirement.description}
+
+{interface_spec}
+
+{scope_spec}
+
 {rules_injection}
 {instruction_injection}
+
 REQUIREMENTS:
 1. Make it a REUSABLE building block, not tied to one specific use case
 2. Use Tailwind CSS for styling
@@ -288,9 +564,39 @@ REQUIREMENTS:
      body: JSON.stringify({{ service: 'SERVICE', endpoint: '/endpoint' }})
    }})
 4. Export the component as default
-5. Include TypeScript interfaces if needed
-6. Add brief comments explaining key parts
-7. Use TEXT LABELS only for icons, NEVER use emojis
+5. Add brief comments explaining key parts
+6. Use TEXT LABELS only for icons, NEVER use emojis
+7. Only use handlers and variables from AVAILABLE HANDLERS and AVAILABLE STATE VARIABLES above
+
+CRITICAL - PLAIN JAVASCRIPT ONLY (NO TYPESCRIPT):
+You MUST generate plain JavaScript. TypeScript will cause build failures.
+
+FORBIDDEN (TypeScript syntax - DO NOT USE):
+- Type annotations: const x: string = ..., function foo(a: number)
+- Interface definitions: interface Props {{ ... }}
+- Type definitions: type MyType = ...
+- Generic types: Array<string>, Record<K,V>, React.FC<Props>
+- Type imports: import type {{ X }} from 'y'
+- Type assertions: value as Type, <Type>value
+- keyof, typeof in type context
+- Optional chaining with types: param?: Type
+
+CORRECT (plain JavaScript):
+- const x = "hello"
+- function foo(a) {{ ... }}
+- const MyComponent = ({{ prop1, prop2 = "default" }}) => {{ ... }}
+- Array, Object, Map, Set (without generics)
+
+ALSO CRITICAL - VALID JSX:
+- Every opening tag MUST have a matching closing tag
+- Do NOT create duplicate variable names in the same scope
+- Use React.Fragment or <></> for multiple root elements
+
+CRITICAL - SELF-CONTAINED COMPONENT:
+- The component must be COMPLETELY self-contained
+- Do NOT reference undefined components like <ReusableForm>, <CustomWidget>, etc.
+- Use ONLY HTML elements (div, span, form, input, button) or components defined IN THIS CODE
+- Every JSX tag starting with uppercase MUST be defined in the code you return
 
 AVAILABLE SERVICES (via Gateway):
 - yahoo_finance: Stock data (e.g., /chart/AAPL)
@@ -474,47 +780,100 @@ Return ONLY the component code, nothing else.
         """
         Adapt an existing component for the specific use case.
 
-        Uses Haiku (fast/cheap) to customize the component with business-specific content.
+        Uses Opus 4.5 to customize the component with business-specific content.
         This is the key to making reused components feel custom.
+
+        NOTE: Previously used Haiku but it was generating invalid JSX (missing closing tags).
+        Opus 4.5 is more reliable for code generation.
         """
         # Sanitize the code first
         code = self._sanitize_code(code)
 
+        # Get interface contract for this component type (Base44 lesson)
+        interface = get_interface(requirement.component_type.value)
+        interface_spec = self._format_interface_for_prompt(interface) if interface else ""
+
+        # Get pre-seeded scope (Base44 lesson - tell AI what's available)
+        scope_spec = self._get_available_scope()
+
         # Extract business context from prompt
-        adaptation_prompt = f"""You are adapting a React component for a specific business.
+        adaptation_prompt = f"""You are a senior frontend developer creating a BEAUTIFUL, MODERN website for a specific business.
 
-BUSINESS CONTEXT (from customer request):
-{full_prompt}
+THE BUSINESS: {full_prompt}
 
-COMPONENT TYPE: {requirement.component_type.value}
-COMPONENT VARIANT: {requirement.variant}
+YOUR JOB:
+1. Rewrite ALL text content to match THIS business
+2. ENHANCE the styling to look BEAUTIFUL and MODERN
 
-ORIGINAL COMPONENT CODE:
+ORIGINAL TEMPLATE:
 ```jsx
 {code}
 ```
 
-TASK: Adapt this component to match the business context. You MUST:
-1. Replace generic placeholder text with business-specific content
-2. Update default data arrays with realistic items for THIS business
-3. Keep the component structure and styling intact
-4. Use the business name, services, and theme colors mentioned in the context
-5. Generate realistic, professional content (not Lorem ipsum)
+{interface_spec}
 
-CRITICAL RULES:
-- Return ONLY the adapted JSX code, no markdown or explanation
-- Keep the same function/const name
-- Keep the same props interface
-- Do NOT add new imports or dependencies
-- Do NOT use emojis
-- Do NOT change the component's core functionality
+{scope_spec}
 
-Return the adapted component code:"""
+CONTENT CHANGES (be aggressive):
+1. ALL text strings - titles, descriptions, labels, button text
+2. ALL data arrays - menu items, services, features, testimonials
+3. Business name, tagline, services offered
+4. Section headings and descriptions
+5. Any placeholder text -> replace with {full_prompt} content
+
+STYLING (CRITICAL - use ONLY standard Tailwind colors):
+ONLY use these Tailwind color names (NEVER invent colors like burgundy, gold, cream, rich-brown):
+- slate, gray, zinc, neutral, stone (grays)
+- red, orange, amber, yellow (warm)
+- lime, green, emerald, teal, cyan, sky, blue (cool)
+- indigo, violet, purple, fuchsia, pink, rose (purple/pink)
+
+BEAUTIFUL MODERN STYLING:
+1. Gradients: bg-gradient-to-r from-indigo-600 to-purple-600, bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900
+2. Shadows: shadow-lg, shadow-xl, shadow-2xl
+3. Rounded: rounded-xl, rounded-2xl, rounded-full
+4. Hover: hover:scale-105, hover:shadow-xl, transition-all duration-300
+5. Cards: bg-white shadow-xl rounded-2xl p-6
+6. Buttons: bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg
+
+IMAGES (CRITICAL - use Picsum, NEVER Unsplash):
+- Hero backgrounds: Use inline style with Picsum: style={{backgroundImage: "url('https://picsum.photos/seed/KEYWORD/1920/1080')"}}
+- Gallery images: <img src="https://picsum.photos/seed/UNIQUE_WORD/800/600" className="..." />
+- Profile photos: https://picsum.photos/seed/person1/400/400
+- NEVER use unsplash.com URLs - they are broken
+- NEVER use local paths like /image.jpg - they don't exist
+- Each image MUST have a UNIQUE seed keyword
+
+EXAMPLE HERO with image:
+<section className="min-h-screen bg-cover bg-center relative" style={{backgroundImage: "url('https://picsum.photos/seed/restaurant1/1920/1080')"}}>
+  <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent"></div>
+  <div className="relative z-10 container mx-auto px-6 py-32">
+    <h1 className="text-5xl font-bold text-white mb-4">Business Name</h1>
+  </div>
+</section>
+
+YOU MUST KEEP:
+- The function name and props signature
+- JSX structure (div, span, button elements)
+- React hooks and state management
+
+TECHNICAL RULES:
+- Plain JavaScript (no TypeScript annotations)
+- Keep JSX tags balanced
+- Only use standard lucide-react icons that exist: Home, User, Settings, Menu, X, Check, Plus, Minus, Mail, Phone, MapPin, Clock, Calendar, Star, Heart, ShoppingCart, Search, Bell, ChevronRight, ChevronDown, ArrowRight
+- IMPORTANT: Use DOUBLE QUOTES for ALL strings, never single quotes. This avoids apostrophe escaping issues.
+  - WRONG: 'Tuscany's finest wine'
+  - CORRECT: "Tuscany's finest wine"
+
+CRITICAL: Your response must start with "const" or "function" - NO explanatory text before the code.
+Do NOT say "Here's..." or explain anything. ONLY output the code starting with the component definition."""
 
         try:
-            # Use Haiku for fast/cheap adaptation
+            # Use Opus 4.5 for ALL code generation (including adaptation)
+            # Haiku was causing JSX syntax errors (missing closing tags)
+            from apps.ai_engine.models_config import CODE_MODEL
             response = self.client.messages.create(
-                model="claude-3-5-haiku-20241022",
+                model=CODE_MODEL,  # Claude Opus 4.5
                 max_tokens=4000,
                 messages=[{"role": "user", "content": adaptation_prompt}]
             )
@@ -527,13 +886,86 @@ Return the adapted component code:"""
                 # Remove first line (```jsx) and last line (```)
                 adapted_code = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
 
+            # CRITICAL: Strip any explanatory text before the actual code
+            # AI sometimes says "Here's the code:" before the actual code
+            import re
+            # Find where actual code starts (const, function, or //)
+            code_start = re.search(r'^(const |function |// )', adapted_code, re.MULTILINE)
+            if code_start and code_start.start() > 0:
+                print(f"[ADAPT] [WARN] Stripping {code_start.start()} chars of explanatory text before code")
+                adapted_code = adapted_code[code_start.start():]
+
+            # CRITICAL: Validate props are preserved
+            # If AI removed props that exist in original, restore them
+            adapted_code = self._restore_missing_props(code, adapted_code)
+
+            # NOTE: _fix_undefined_references() removed - pre-seeded scope in prompts now prevents these errors
+            # See BASE44 lessons and docs/guides/NO_REGEX_FOR_JSX.md
+
             print(f"[ADAPT] Customized {requirement.component_type.value}/{requirement.variant} for business context")
             return adapted_code
 
         except Exception as e:
             print(f"[ADAPT] [WARN] Adaptation failed, using original: {e}")
             return code
-    
+
+    # _fix_undefined_references() REMOVED - see BASE44 lessons
+    # Pre-seeded scope in AI prompts now prevents undefined variable errors at generation time
+    # Using regex to fix JSX errors hides problems and breaks functionality
+    # See: docs/guides/NO_REGEX_FOR_JSX.md
+
+    def _restore_missing_props(self, original_code: str, adapted_code: str) -> str:
+        """
+        Restore props that AI accidentally removed during adaptation.
+
+        Extracts props from original destructuring and ensures they exist in adapted code.
+        """
+        import re
+
+        # Extract original destructured props
+        orig_match = re.search(r'(?:const|function)\s+\w+\s*=?\s*\(\{\s*([^}]+)\}\)', original_code, re.DOTALL)
+        adapted_match = re.search(r'(?:const|function)\s+\w+\s*=?\s*\(\{\s*([^}]+)\}\)', adapted_code, re.DOTALL)
+
+        if not orig_match or not adapted_match:
+            return adapted_code
+
+        # Parse props (looking for prop names, ignoring defaults)
+        def extract_prop_names(params_str):
+            props = set()
+            for line in params_str.split('\n'):
+                line = line.strip().rstrip(',')
+                if '=' in line:
+                    prop = line.split('=')[0].strip()
+                elif ':' in line and '?' in line:
+                    continue  # Skip TypeScript interface lines
+                else:
+                    prop = line.strip()
+                if prop and not prop.startswith('//'):
+                    props.add(prop)
+            return props
+
+        orig_props = extract_prop_names(orig_match.group(1))
+        adapted_props = extract_prop_names(adapted_match.group(1))
+
+        missing_props = orig_props - adapted_props
+
+        if missing_props:
+            print(f"[ADAPT] [WARN] AI removed props: {missing_props}, restoring them")
+            # Add missing props to the adapted code's destructuring
+            adapted_params = adapted_match.group(1)
+            for prop in missing_props:
+                # Find the prop with default in original
+                orig_prop_match = re.search(rf'{re.escape(prop)}\s*(?:=\s*[^,]+)?(?:,|\s*$)', orig_match.group(1))
+                if orig_prop_match:
+                    prop_with_default = orig_prop_match.group(0).strip().rstrip(',')
+                    # Add to the end of destructuring
+                    adapted_params = adapted_params.rstrip() + ',\n  ' + prop_with_default
+
+            # Replace the destructuring in adapted code
+            adapted_code = adapted_code[:adapted_match.start(1)] + adapted_params + adapted_code[adapted_match.end(1):]
+
+        return adapted_code
+
     def _compose_app(
         self,
         components: Dict[str, str],
@@ -543,21 +975,21 @@ Return the adapted component code:"""
         wiring_blueprint: str = ""
     ) -> str:
         """
-        Compose all components into a final App.tsx.
-        
+        Compose all components into a final App.jsx.
+
         STRATEGY:
         1. Try Connector V2 first (deterministic, 130,000x faster)
         2. Fall back to AI if Connector V2 is unhealthy
-        
+
         Uses Opus 4.5 to intelligently combine components.
         """
         global _connector_v2_status
-        
+
         # STRATEGY:
         # 1. Try MODULAR composition (components as separate files)
-        # 2. This produces a small App.tsx + component files
+        # 2. This produces a small App.jsx + component files
         # 3. Store component files in self.component_files for deployer
-        
+
         try:
             logger.info("[COMPOSE] Using MODULAR composition (separate component files)")
             files_dict, app_code = compose_modular(
@@ -565,30 +997,36 @@ Return the adapted component code:"""
                 prompt=prompt,
                 needs_real_data=needs_real_data
             )
-            
+
             # Store component files for the deployer to use
             self.component_files = files_dict
-            
-            # Validate the generated App.tsx
+
+            # Validate the generated App.jsx
             if app_code and 'function App' in app_code and 'export default' in app_code:
-                logger.info(f"[COMPOSE] Modular SUCCESS: {len(app_code)} bytes App.tsx, {len(files_dict)} total files")
+                logger.info(f"[COMPOSE] Modular SUCCESS: {len(app_code)} bytes App.jsx, {len(files_dict)} total files")
                 self.stats['wiring_method'] = 'modular'
                 self.stats['component_files'] = list(files_dict.keys())
                 
-                # VALIDATE with esbuild - if invalid, AI will fix in build_service
-                # We don't fix here - just return the code and let the build pipeline handle it
+                # VALIDATE with esbuild - BLOCKING validation
+                # If invalid, raise JSXValidationError for build_service to retry with AI
                 from apps.code_library.jsx_validator import validate_jsx
                 is_valid, error = validate_jsx(app_code)
-                
+
                 if is_valid:
-                    logger.info("[COMPOSE] Modular code validated by esbuild")
+                    logger.info("[COMPOSE] Modular code validated by esbuild - PASSED")
+                    return app_code
                 else:
-                    # Log warning but still return - build_service will handle AI retry
-                    logger.warning(f"[COMPOSE] esbuild found issues: {error} - will be fixed by AI retry")
-                
-                return app_code
+                    # BLOCKING: Raise exception - do NOT return invalid code
+                    logger.error(f"[COMPOSE] JSX validation FAILED: {error}")
+                    raise JSXValidationError(
+                        f"Generated code has syntax error: {error}",
+                        code=app_code
+                    )
             else:
                 logger.warning("[COMPOSE] Modular output incomplete, falling back to AI")
+        except JSXValidationError:
+            # Re-raise validation errors - don't fall back, let build_service handle retry
+            raise
         except Exception as e:
             logger.error(f"[COMPOSE] Modular failed: {e}, falling back to AI")
         
@@ -790,9 +1228,12 @@ COMPONENT WIRING BLUEPRINT (FOLLOW THIS EXACTLY)
 
 {wiring_blueprint}
 """
-        
+
+        # BASE44 LESSON: Pre-seed the available scope to prevent undefined reference errors
+        available_scope = self._get_available_scope(components)
+
         compose_prompt = f"""
-Create a COMPLETE React App.tsx for this request:
+Create a COMPLETE React App.jsx for this request:
 
 USER REQUEST: {prompt}
 
@@ -803,6 +1244,8 @@ COMPONENT TYPES NEEDED: {components_desc}
 {gateway_instruction}
 
 {spa_instruction}
+
+{available_scope}
 
 CRITICAL JSX RULES - MUST FOLLOW (VIOLATING THESE WILL CAUSE BUILD FAILURE):
 1. Every JSX element MUST have COMPLETE opening tags: <ComponentName prop={{value}}>, NOT just prop={{value}}
@@ -834,14 +1277,13 @@ const Placeholder = () => <span className="animate-pulse text-gray-400">$---</sp
 Use: loading ? <Placeholder /> : <span>${{{{data.price}}}}</span>
 
 REQUIREMENTS:
-1. Create a SINGLE complete App.tsx file
-2. Include TypeScript interfaces for all props  
-3. Use Tailwind CSS for styling
-4. Navigation clicks MUST change the view using React state
-5. MUST end with exactly: export default App;
-6. Keep code SIMPLE - avoid complex nested generics
-7. Include the DataPlaceholder component for loading/error states
-8. Settings view must show API connection options
+1. Create a SINGLE complete App.jsx file (plain JavaScript, NO TypeScript)
+2. Use Tailwind CSS for styling
+3. Navigation clicks MUST change the view using React state
+4. MUST end with exactly: export default App;
+5. Keep code SIMPLE - use plain JavaScript function components
+6. Include the DataPlaceholder component for loading/error states
+7. Settings view must show API connection options
 
 STRUCTURE:
 - Import React at top
@@ -1028,7 +1470,11 @@ Return ONLY the complete code.
     def get_stats(self) -> Dict:
         """Get build statistics."""
         return self.stats
-    
+
+    def get_generated_images(self) -> Dict[str, bytes]:
+        """Get AI-generated images for deployment."""
+        return self.generated_images
+
     # ═══════════════════════════════════════════════════════════════════════════
     # CONNECTOR SYSTEM METHODS
     # ═══════════════════════════════════════════════════════════════════════════

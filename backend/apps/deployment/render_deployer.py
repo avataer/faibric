@@ -65,14 +65,17 @@ class RenderDeployer:
             
             # Create or update Render static site
             render_url = self._create_render_site(branch_name, project)
-            
-            # Generate the canonical faibric.com URL
+
+            # Generate the canonical faibric.com URL (for reference)
             canonical_url = url_generator.generate_url(slug=branch_name)
-            
+
+            # BYPASS: Return Render URL directly to avoid SSL rate limits on faibric.com
+            # The faibric.com subdomains have hit Let's Encrypt rate limits
+            # Return render_url as primary URL until rate limit resets
             return {
                 'success': True,
-                'url': canonical_url,  # Return faibric.com URL
-                'render_url': render_url,  # Keep Render URL for reference
+                'url': render_url,  # Return Render URL directly (bypass faibric.com SSL issues)
+                'canonical_url': canonical_url,  # Keep faibric.com URL for reference
                 'branch': branch_name
             }
             
@@ -92,27 +95,27 @@ class RenderDeployer:
     def _extract_frontend_code(self, project):
         """Extract frontend code from project"""
         if not project.frontend_code:
-            return self._default_app(project)
+            raise ValueError("No frontend code found - cannot deploy")
 
         try:
             if isinstance(project.frontend_code, str):
-                # Try JSON first (new format)
                 try:
                     code_dict = json.loads(project.frontend_code)
                 except json.JSONDecodeError:
-                    # Fall back to ast.literal_eval (old format)
                     import ast
                     code_dict = ast.literal_eval(project.frontend_code)
             else:
                 code_dict = project.frontend_code
 
+            if not code_dict.get('App.jsx') and not code_dict.get('App.tsx'):
+                raise ValueError("Frontend code missing App.jsx")
+
             return {
-                'App.tsx': code_dict.get('App.tsx', self._default_app_tsx()),
+                'App.jsx': code_dict.get('App.jsx') or code_dict.get('App.tsx', ''),
                 'components': code_dict.get('components', {})
             }
         except Exception as e:
-            print(f"Failed to parse frontend code: {e}")
-            return self._default_app(project)
+            raise ValueError(f"Failed to parse frontend code: {e}")
     
     def _push_to_github(self, branch_name, frontend_code, project):
         """Push generated code to GitHub branch"""
@@ -278,7 +281,7 @@ class RenderDeployer:
         """Generate all files needed for the React app"""
         files = {}
         
-        # package.json - MUST include Tailwind CSS!
+        # package.json - Plain JavaScript (no TypeScript per Base44 lessons)
         files['package.json'] = json.dumps({
             "name": f"app-{project.id}",
             "private": True,
@@ -294,19 +297,16 @@ class RenderDeployer:
                 "react-dom": "^18.2.0"
             },
             "devDependencies": {
-                "@types/react": "^18.2.0",
-                "@types/react-dom": "^18.2.0",
                 "@vitejs/plugin-react": "^4.2.0",
                 "vite": "^5.0.0",
-                "typescript": "^5.3.0",
                 "tailwindcss": "^3.4.0",
                 "postcss": "^8.4.0",
                 "autoprefixer": "^10.4.0"
             }
         }, indent=2)
         
-        # vite.config.ts
-        files['vite.config.ts'] = """import { defineConfig } from 'vite'
+        # vite.config.js (plain JavaScript)
+        files['vite.config.js'] = """import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
@@ -337,42 +337,9 @@ export default {
 }
 """
         
-        # tsconfig.json - TypeScript configuration
-        files['tsconfig.json'] = json.dumps({
-            "compilerOptions": {
-                "target": "ES2020",
-                "useDefineForClassFields": True,
-                "lib": ["ES2020", "DOM", "DOM.Iterable"],
-                "module": "ESNext",
-                "skipLibCheck": True,
-                "moduleResolution": "bundler",
-                "allowImportingTsExtensions": True,
-                "resolveJsonModule": True,
-                "isolatedModules": True,
-                "noEmit": True,
-                "jsx": "react-jsx",
-                "strict": True,
-                "noUnusedLocals": False,
-                "noUnusedParameters": False,
-                "noFallthroughCasesInSwitch": True
-            },
-            "include": ["src"],
-            "references": [{"path": "./tsconfig.node.json"}]
-        }, indent=2)
-        
-        # tsconfig.node.json
-        files['tsconfig.node.json'] = json.dumps({
-            "compilerOptions": {
-                "composite": True,
-                "skipLibCheck": True,
-                "module": "ESNext",
-                "moduleResolution": "bundler",
-                "allowSyntheticDefaultImports": True,
-                "strict": True
-            },
-            "include": ["vite.config.ts"]
-        }, indent=2)
-        
+        # No tsconfig.json - using plain JavaScript per Base44 lessons
+        # LLMs produce more reliable JS than TS
+
         # index.html - with SPA routing handler for 404 redirects
         files['index.html'] = f"""<!DOCTYPE html>
 <html lang="en">
@@ -394,7 +361,7 @@ export default {
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
 """
@@ -412,31 +379,39 @@ body {
 }
 """
         
-        # src/main.tsx - MUST import index.css for Tailwind to work!
-        files['src/main.tsx'] = """import React from 'react'
+        # src/main.jsx - MUST import index.css for Tailwind to work!
+        files['src/main.jsx'] = """import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 )
 """
         
-        # src/App.tsx - with admin panel injection
-        app_code = frontend_code['App.tsx']
-        
+        # src/App.jsx - with admin panel injection
+        app_code = frontend_code.get('App.jsx') or frontend_code.get('App.tsx', '')
+
         # Inject admin panel if not present
         if 'isAdminRoute' not in app_code:
             app_code = self._inject_admin_panel(app_code, project)
-        
-        files['src/App.tsx'] = app_code
-        
-        # Components
+
+        # CRITICAL: Add React import for Vite builds
+        # Modular composer generates code with React.useState() etc expecting React as global
+        # Vite requires explicit import
+        if not app_code.strip().startswith('import React'):
+            app_code = "import React from 'react';\n\n" + app_code
+
+        files['src/App.jsx'] = app_code
+
+        # Components - use .jsx extension
         for comp_name, comp_code in frontend_code.get('components', {}).items():
-            files[f'src/components/{comp_name}.tsx'] = comp_code
+            # Strip any existing extension and add .jsx
+            clean_name = comp_name.replace('.tsx', '').replace('.jsx', '').replace('.js', '')
+            files[f'src/components/{clean_name}.jsx'] = comp_code
         
         # render.yaml - SPA routing configuration (used by Blueprint deploys)
         files['render.yaml'] = f"""services:
@@ -508,146 +483,376 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     def _inject_admin_panel(self, code: str, project) -> str:
         """
         Inject Faibric admin panel as a WRAPPER around the original App.
-        
+
         Strategy: Rename App to _OriginalApp, create new App that wraps it.
         This is SAFER than injecting code inside the function.
+
+        Features:
+        - Overview: Page views and sessions
+        - Builder: Chat interface (LEFT) + Live preview (RIGHT)
+        - Settings: Password management
         """
         import re
-        
+
         # Skip if already has admin panel
         if 'FaibricAdmin' in code or 'isAdminRoute' in code:
             return code
-        
+
         # Find the App function/component and rename it
         # Pattern: function App, const App =, const App: Type =, export default function App
         # NOTE: Must handle TypeScript type annotations like "const App: React.FC = () =>"
         app_patterns = [
             (r'export\s+default\s+function\s+App', 'function _OriginalApp'),
             (r'function\s+App\s*\(', 'function _OriginalApp('),
-            (r'const\s+App:\s*[^=]+\s*=', 'const _OriginalApp: React.FC = '),  # TypeScript typed: const App: React.FC = 
+            (r'const\s+App:\s*[^=]+\s*=', 'const _OriginalApp = '),  # Remove TypeScript type annotation
             (r'const\s+App\s*=', 'const _OriginalApp ='),  # Plain: const App =
         ]
-        
+
         renamed = False
         for pattern, replacement in app_patterns:
             if re.search(pattern, code):
                 code = re.sub(pattern, replacement, code, count=1)
                 renamed = True
                 break
-        
+
         if not renamed:
             print("[ADMIN] WARNING: Could not find App to rename")
             return code
-        
+
         # Remove any existing export default App
         code = re.sub(r'export\s+default\s+App\s*;?\s*$', '', code, flags=re.MULTILINE)
-        
-        # Add the admin wrapper at the end of the file
-        admin_wrapper = '''
 
-// FAIBRIC ADMIN PANEL WRAPPER
-function FaibricAdmin() {
+        # Get session token for the builder feature
+        session_token = ""
+        api_url = "https://faibric-api.onrender.com"
+        site_url = ""
+        try:
+            # Try to get session token from project's linked session
+            session = project.landingsession_set.first()
+            if session:
+                session_token = session.session_token
+            site_url = project.deployment_url or ""
+        except Exception as e:
+            print(f"[ADMIN] Could not get session token: {e}")
+
+        # Add the admin wrapper at the end of the file
+        admin_wrapper = f'''
+
+// FAIBRIC ADMIN PANEL WRAPPER with BUILDER
+const FAIBRIC_SESSION_TOKEN = "{session_token}";
+const FAIBRIC_API_URL = "{api_url}";
+const FAIBRIC_SITE_URL = "{site_url}";
+
+function FaibricBuilder() {{
+  const [messages, setMessages] = React.useState([
+    {{ role: "system", content: "Welcome! Describe what changes you want to make to your website." }}
+  ]);
+  const [input, setInput] = React.useState("");
+  const [isBuilding, setIsBuilding] = React.useState(false);
+  const [buildProgress, setBuildProgress] = React.useState(0);
+  const [previewUrl, setPreviewUrl] = React.useState(window.location.origin);
+  const [iframeKey, setIframeKey] = React.useState(0);
+  const messagesEndRef = React.useRef(null);
+
+  // Scroll to bottom when messages change
+  React.useEffect(() => {{
+    messagesEndRef.current?.scrollIntoView({{ behavior: "smooth" }});
+  }}, [messages]);
+
+  // Poll for build status
+  React.useEffect(() => {{
+    if (!isBuilding || !FAIBRIC_SESSION_TOKEN) return;
+
+    const poll = setInterval(async () => {{
+      try {{
+        const res = await fetch(FAIBRIC_API_URL + "/api/onboarding/status/" + FAIBRIC_SESSION_TOKEN + "/");
+        const data = await res.json();
+
+        if (data.build_progress) setBuildProgress(data.build_progress);
+
+        // Check for new events
+        if (data.events && data.events.length > 0) {{
+          const latestEvent = data.events[0];
+          if (latestEvent.event_data?.message) {{
+            setMessages(prev => {{
+              const lastMsg = prev[prev.length - 1];
+              if (lastMsg?.content !== latestEvent.event_data.message) {{
+                return [...prev, {{ role: "system", content: latestEvent.event_data.message }}];
+              }}
+              return prev;
+            }});
+          }}
+        }}
+
+        if (data.status === "deployed") {{
+          setIsBuilding(false);
+          setBuildProgress(100);
+          if (data.deployment_url) {{
+            setPreviewUrl(data.deployment_url);
+            setIframeKey(k => k + 1);
+          }}
+          setMessages(prev => [...prev, {{ role: "system", content: "Changes deployed! Refreshing preview..." }}]);
+          clearInterval(poll);
+        }}
+      }} catch (e) {{
+        console.error("Poll error:", e);
+      }}
+    }}, 2000);
+
+    return () => clearInterval(poll);
+  }}, [isBuilding]);
+
+  const handleSend = async () => {{
+    if (!input.trim() || isBuilding) return;
+
+    const userMessage = input.trim();
+    setMessages(prev => [...prev, {{ role: "user", content: userMessage }}]);
+    setInput("");
+    setIsBuilding(true);
+    setBuildProgress(10);
+
+    if (!FAIBRIC_SESSION_TOKEN) {{
+      setMessages(prev => [...prev, {{ role: "system", content: "Builder not configured. Please contact support." }}]);
+      setIsBuilding(false);
+      return;
+    }}
+
+    try {{
+      const res = await fetch(FAIBRIC_API_URL + "/api/onboarding/modify/", {{
+        method: "POST",
+        headers: {{ "Content-Type": "application/json" }},
+        body: JSON.stringify({{
+          session_token: FAIBRIC_SESSION_TOKEN,
+          request: userMessage
+        }})
+      }});
+
+      const data = await res.json();
+
+      if (data.success) {{
+        setMessages(prev => [...prev, {{
+          role: "assistant",
+          content: data.mode === "modify"
+            ? "Got it! Applying your changes..."
+            : "Starting fresh build with your new request..."
+        }}]);
+      }} else {{
+        setMessages(prev => [...prev, {{ role: "system", content: "Error: " + (data.error || "Failed to submit") }}]);
+        setIsBuilding(false);
+      }}
+    }} catch (e) {{
+      setMessages(prev => [...prev, {{ role: "system", content: "Connection error. Please try again." }}]);
+      setIsBuilding(false);
+    }}
+  }};
+
+  return (
+    <div className="flex h-[calc(100vh-64px)]">
+      {{/* LEFT: Chat Panel */}}
+      <div className="w-2/5 min-w-[350px] flex flex-col border-r border-gray-200 bg-white">
+        {{/* Chat Header */}}
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+          <h3 className="font-semibold text-lg">Faibric Builder</h3>
+          {{isBuilding && (
+            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+              Building... {{buildProgress}}%
+            </span>
+          )}}
+        </div>
+
+        {{/* Messages */}}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {{messages.map((msg, i) => (
+            <div key={{i}} className={{`flex ${{msg.role === "user" ? "justify-end" : "justify-start"}}`}}>
+              <div className={{`max-w-[80%] p-3 rounded-lg ${{
+                msg.role === "user"
+                  ? "bg-blue-600 text-white"
+                  : msg.role === "assistant"
+                    ? "bg-gray-100 text-gray-800 border border-gray-200"
+                    : "bg-gray-50 text-gray-600 italic text-sm"
+              }}`}}>
+                {{msg.content}}
+              </div>
+            </div>
+          ))}}
+          <div ref={{messagesEndRef}} />
+        </div>
+
+        {{/* Input */}}
+        <div className="p-4 border-t border-gray-200">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={{input}}
+              onChange={{(e) => setInput(e.target.value)}}
+              onKeyDown={{(e) => e.key === "Enter" && !isBuilding && handleSend()}}
+              placeholder={{isBuilding ? "Building in progress..." : "Describe changes you want..."}}
+              disabled={{isBuilding}}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+            />
+            <button
+              onClick={{handleSend}}
+              disabled={{!input.trim() || isBuilding}}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {{/* RIGHT: Preview Panel */}}
+      <div className="flex-1 flex flex-col bg-gray-50">
+        {{/* Preview Header */}}
+        <div className="p-4 border-b border-gray-200 bg-white flex items-center justify-between">
+          <h3 className="font-semibold">Live Preview</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={{() => setIframeKey(k => k + 1)}}
+              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+            >
+              Refresh
+            </button>
+            <button
+              onClick={{() => window.open(previewUrl, "_blank")}}
+              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+            >
+              Open in Tab
+            </button>
+          </div>
+        </div>
+
+        {{/* Preview iframe */}}
+        <div className="flex-1 p-4">
+          <iframe
+            key={{iframeKey}}
+            src={{previewUrl}}
+            className="w-full h-full border border-gray-200 rounded-lg bg-white"
+            title="Website Preview"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}}
+
+function FaibricAdmin() {{
   const [adminAuth, setAdminAuth] = React.useState(!!localStorage.getItem("faibric_admin_token"));
   const [adminView, setAdminView] = React.useState("overview");
   const passRef = React.useRef(null);
-  
-  const login = () => {
+
+  const login = () => {{
     const p = passRef.current?.value || "";
-    if (p === (localStorage.getItem("faibric_admin_pass") || "faibric123")) {
+    if (p === (localStorage.getItem("faibric_admin_pass") || "faibric123")) {{
       localStorage.setItem("faibric_admin_token", "1");
       setAdminAuth(true);
-    } else alert("Wrong password");
-  };
-  
-  if (!adminAuth) {
+    }} else alert("Wrong password");
+  }};
+
+  if (!adminAuth) {{
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full">
           <h1 className="text-2xl font-bold mb-4 text-center">Faibric Admin</h1>
-          <input ref={passRef} type="password" placeholder="Password" 
-            onKeyDown={(e) => e.key === "Enter" && login()}
+          <input ref={{passRef}} type="password" placeholder="Password"
+            onKeyDown={{(e) => e.key === "Enter" && login()}}
             className="w-full p-3 border rounded-lg mb-4" autoFocus />
-          <button onClick={login} className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold">Login</button>
+          <button onClick={{login}} className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold">Login</button>
           <a href="/" className="block text-center text-gray-500 text-sm mt-4">Back to App</a>
         </div>
       </div>
     );
-  }
-  
+  }}
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       <nav className="bg-gray-900 text-white p-4 flex justify-between items-center">
         <div className="flex gap-4">
           <span className="font-bold">Faibric Admin</span>
-          {["overview", "settings"].map(v => (
-            <button key={v} onClick={() => setAdminView(v)} 
-              className={"px-3 py-1 rounded " + (adminView === v ? "bg-blue-600" : "hover:bg-gray-700")}>
-              {v.charAt(0).toUpperCase() + v.slice(1)}
+          {{["overview", "builder", "settings"].map(v => (
+            <button key={{v}} onClick={{() => setAdminView(v)}}
+              className={{"px-3 py-1 rounded " + (adminView === v ? "bg-blue-600" : "hover:bg-gray-700")}}>
+              {{v.charAt(0).toUpperCase() + v.slice(1)}}
             </button>
-          ))}
+          ))}}
         </div>
         <div className="flex gap-4">
           <a href="/" className="hover:underline">View App</a>
-          <button onClick={() => {localStorage.removeItem("faibric_admin_token"); setAdminAuth(false)}} className="text-red-400">Logout</button>
+          <button onClick={{() => {{localStorage.removeItem("faibric_admin_token"); setAdminAuth(false)}}}} className="text-red-400">Logout</button>
         </div>
       </nav>
-      <main className="p-6 max-w-4xl mx-auto">
-        {adminView === "overview" && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white p-6 rounded-xl shadow">
-                <p className="text-gray-500">Page Views</p>
-                <p className="text-3xl font-bold">{parseInt(localStorage.getItem("faibric_views") || "0")}</p>
+
+      {{adminView === "builder" ? (
+        <FaibricBuilder />
+      ) : (
+        <main className="p-6 max-w-4xl mx-auto flex-1">
+          {{adminView === "overview" && (
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white p-6 rounded-xl shadow">
+                  <p className="text-gray-500">Page Views</p>
+                  <p className="text-3xl font-bold">{{parseInt(localStorage.getItem("faibric_views") || "0")}}</p>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow">
+                  <p className="text-gray-500">Sessions</p>
+                  <p className="text-3xl font-bold">{{parseInt(localStorage.getItem("faibric_sessions") || "0")}}</p>
+                </div>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow">
-                <p className="text-gray-500">Sessions</p>
-                <p className="text-3xl font-bold">{parseInt(localStorage.getItem("faibric_sessions") || "0")}</p>
+              <div className="mt-6 bg-white p-6 rounded-xl shadow">
+                <h3 className="font-semibold mb-2">Quick Actions</h3>
+                <button
+                  onClick={{() => setAdminView("builder")}}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Open Builder
+                </button>
               </div>
             </div>
-          </div>
-        )}
-        {adminView === "settings" && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Settings</h2>
-            <div className="bg-white p-6 rounded-xl shadow">
-              <h3 className="font-semibold mb-2">Change Password</h3>
-              <input type="password" placeholder="New password" 
-                onBlur={(e) => {if(e.target.value){localStorage.setItem("faibric_admin_pass",e.target.value); alert("Saved!")}}}
-                className="w-full p-2 border rounded" />
+          )}}
+          {{adminView === "settings" && (
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Settings</h2>
+              <div className="bg-white p-6 rounded-xl shadow">
+                <h3 className="font-semibold mb-2">Change Password</h3>
+                <input type="password" placeholder="New password"
+                  onBlur={{(e) => {{if(e.target.value){{localStorage.setItem("faibric_admin_pass",e.target.value); alert("Saved!")}}}}}}
+                  className="w-full p-2 border rounded" />
+              </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}}
+        </main>
+      )}}
     </div>
   );
-}
+}}
 
 // Main App with admin routing
-function App() {
+function App() {{
   // Track page view
-  React.useEffect(() => {
+  React.useEffect(() => {{
     const v = parseInt(localStorage.getItem("faibric_views") || "0") + 1;
     localStorage.setItem("faibric_views", v.toString());
-    if (!sessionStorage.getItem("faibric_session")) {
+    if (!sessionStorage.getItem("faibric_session")) {{
       sessionStorage.setItem("faibric_session", "1");
       localStorage.setItem("faibric_sessions", (parseInt(localStorage.getItem("faibric_sessions") || "0") + 1).toString());
-    }
-  }, []);
-  
+    }}
+  }}, []);
+
   // Check if admin route
-  if (window.location.pathname.includes("/faibric")) {
+  if (window.location.pathname.includes("/faibric")) {{
     return <FaibricAdmin />;
-  }
-  
+  }}
+
   return <_OriginalApp />;
-}
+}}
 
 export default App;
 '''
-        
+
         code = code + admin_wrapper
-        print("[ADMIN] Injected admin panel wrapper")
+        print("[ADMIN] Injected admin panel wrapper with Builder")
         return code
     
     def _create_render_site(self, branch_name, project):
@@ -836,13 +1041,13 @@ export default App;
     
     def _default_app(self, project):
         return {
-            'App.tsx': self._default_app_tsx(),
+            'App.jsx': self._default_app_jsx(),
             'components': {
                 'Welcome': self._default_welcome(project)
             }
         }
-    
-    def _default_app_tsx(self):
+
+    def _default_app_jsx(self):
         return """import React from 'react';
 import Welcome from './components/Welcome';
 

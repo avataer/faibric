@@ -118,21 +118,21 @@ def _validate_with_esbuild(code: str) -> Tuple[bool, Optional[str]]:
     """Validate using esbuild (when available)."""
     # Write code to temp file
     with tempfile.NamedTemporaryFile(
-        mode='w', 
-        suffix='.tsx', 
+        mode='w',
+        suffix='.jsx',
         delete=False,
         encoding='utf-8'
     ) as f:
         f.write(code)
         temp_path = f.name
-    
+
     try:
         esbuild_path = _get_esbuild_path()
         if not esbuild_path:
             return _fallback_validate(code)
-        
+
         # Run esbuild to parse/transform (not bundle)
-        # The file already has .tsx extension, so esbuild will infer the loader
+        # The file already has .jsx extension, so esbuild will infer the loader
         result = subprocess.run(
             [
                 esbuild_path,
@@ -303,14 +303,14 @@ def transform_jsx(code: str) -> Tuple[bool, str, Optional[str]]:
     
     # Write code to temp file
     with tempfile.NamedTemporaryFile(
-        mode='w', 
-        suffix='.tsx', 
+        mode='w',
+        suffix='.jsx',
         delete=False,
         encoding='utf-8'
     ) as f:
         f.write(code)
         temp_path = f.name
-    
+
     try:
         esbuild_path = _get_esbuild_path()
         if not esbuild_path:

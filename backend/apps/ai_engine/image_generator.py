@@ -78,12 +78,20 @@ class ImageGenerator:
                 quality="low",  # Fast generation, still good quality per OpenAI docs
                 n=1,
             )
-            
-            image_url = response.data[0].url
-            logger.info(f"[ImageGen] Generated gpt-image-1.5 image: {prompt[:50]}...")
-            
-            # Download the image
-            image_bytes = self._download_image(image_url)
+
+            # gpt-image-1.5 returns Base64 by default, not URLs
+            image_data = response.data[0]
+            if image_data.b64_json:
+                # Decode Base64 image directly
+                import base64
+                image_bytes = base64.b64decode(image_data.b64_json)
+                logger.info(f"[ImageGen] Generated gpt-image-1.5 image (base64): {prompt[:50]}...")
+            elif image_data.url:
+                # Fallback to URL if provided
+                logger.info(f"[ImageGen] Generated gpt-image-1.5 image (url): {prompt[:50]}...")
+                image_bytes = self._download_image(image_data.url)
+            else:
+                raise Exception("No image data returned from OpenAI (neither b64_json nor url)")
             
             # Store for later upload
             self.generated_images[filename] = image_bytes

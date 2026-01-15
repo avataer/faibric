@@ -64,7 +64,7 @@ def generate_app_v3_task(self, project_id: int):
         app_code = components.get('App', '')
         
         frontend_code = {
-            'App.tsx': app_code,
+            'App.jsx': app_code,
             'components': {k: v for k, v in components.items() if k != 'App'}
         }
         
@@ -116,13 +116,13 @@ def quick_modify_v3_task(project_id: int, user_request: str):
         # Get current code (handle both JSON and legacy repr format)
         try:
             code_dict = json.loads(project.frontend_code)
-            current_code = code_dict.get('App.tsx', '')
+            current_code = code_dict.get('App.jsx', '')
         except json.JSONDecodeError:
             # Fallback for legacy repr format
             import ast
             try:
                 code_dict = ast.literal_eval(project.frontend_code)
-                current_code = code_dict.get('App.tsx', '')
+                current_code = code_dict.get('App.jsx', '')
             except:
                 current_code = project.frontend_code or ''
         
@@ -136,7 +136,7 @@ def quick_modify_v3_task(project_id: int, user_request: str):
         
         # Store
         frontend_code = {
-            'App.tsx': new_code,
+            'App.jsx': new_code,
             'components': {}
         }
         

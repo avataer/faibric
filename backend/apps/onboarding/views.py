@@ -65,12 +65,73 @@ class LandingFlowView(APIView):
         })
 
 
+class DevFlowView(APIView):
+    """
+    DEV MODE: Skip email verification and go directly to building.
+    This is for local development testing only.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Create session and immediately start building (no email required).
+        """
+        import threading
+        from django.contrib.auth import get_user_model
+        from apps.tenants.models import Tenant
+
+        serializer = SubmitRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Create session
+        session = OnboardingService.create_session(
+            initial_request=serializer.validated_data['request'],
+            ip_address=request.META.get('REMOTE_ADDR'),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+        )
+
+        # Auto-verify with dev user
+        User = get_user_model()
+        user, _ = User.objects.get_or_create(
+            email='dev@faibric.local',
+            defaults={'is_active': True}
+        )
+        tenant = Tenant.objects.filter(owner=user).first()
+        if not tenant:
+            tenant = Tenant.objects.create(
+                name='Dev Tenant',
+                slug='dev-tenant',
+                owner=user
+            )
+
+        session.email = 'dev@faibric.local'
+        session.email_verified = True
+        session.status = 'verified'
+        session.converted_to_user = user
+        session.converted_to_tenant = tenant
+        session.save()
+
+        # Start building in background
+        def run_build():
+            from .build_service import BuildService
+            BuildService.build_from_session(session.session_token)
+
+        thread = threading.Thread(target=run_build, daemon=True)
+        thread.start()
+
+        return Response({
+            'success': True,
+            'session_token': session.session_token,
+            'message': 'Building started (dev mode - no email required)',
+        })
+
+
 class EmailFlowView(APIView):
     """
     Email collection endpoints.
     """
     permission_classes = [AllowAny]
-    
+
     def post(self, request):
         """
         Step 2: Provide email.
@@ -406,12 +467,12 @@ class ModifyBuildView(APIView):
             
             def run_modification():
                 from apps.ai_engine.v2.generator import AIGeneratorV2
-                from apps.deployment.render_deployer import RenderDeployer
+                from apps.deployment.hybrid_deployer import get_hybrid_deployer
                 from .models import UserInput
-                
+
                 try:
                     project = session.converted_to_project
-                    
+
                     # Get existing code
                     try:
                         code_data = json.loads(project.frontend_code)
@@ -421,73 +482,90 @@ class ModifyBuildView(APIView):
                             current_code = str(project.frontend_code)
                     except:
                         current_code = str(project.frontend_code)
-                    
+
                     # BUILD FULL CLIENT CONTEXT - everything the client has ever said
                     context_parts = []
-                    
+
                     # 1. Original request (most important!)
                     context_parts.append(f"ORIGINAL CLIENT REQUEST: {session.initial_request}")
-                    
+
                     # 2. Project description if different
                     if project.description and project.description != session.initial_request:
                         context_parts.append(f"PROJECT DESCRIPTION: {project.description}")
-                    
+
                     # 3. All follow-up messages from this session
                     follow_ups = UserInput.objects.filter(
                         session=session,
                         input_type='follow_up'
                     ).order_by('timestamp')
-                    
+
                     if follow_ups.exists():
                         context_parts.append("PREVIOUS MESSAGES FROM CLIENT:")
                         for fu in follow_ups:
                             context_parts.append(f"  - {fu.input_text}")
-                    
+
                     # 4. Current modification request
                     context_parts.append(f"CURRENT MODIFICATION REQUEST: {user_request}")
-                    
+
                     full_context = "\n".join(context_parts)
-                    
+
                     # Modify with AI (quick!)
                     SessionEvent.objects.create(
                         session=session,
                         event_type='build_progress',
                         event_data={'message': 'AI modifying code...'}
                     )
-                    
+
                     generator = AIGeneratorV2()
                     new_code = generator.modify_app(
                         current_code=current_code,
                         user_request=full_context,  # Pass FULL context, not just modification
                         project_id=project.id
                     )
-                    
+
                     # Store modified code
                     project.frontend_code = json.dumps({'App.tsx': new_code})
                     project.save()
-                    
+
                     SessionEvent.objects.create(
                         session=session,
                         event_type='build_progress',
                         event_data={'message': 'Deploying changes...'}
                     )
-                    
-                    # Deploy
-                    deployer = RenderDeployer()
-                    deploy_result = deployer.deploy_react_app(project)
-                    
-                    # Update URLs
-                    project.deployment_url = deploy_result.get('url', '')
-                    project.save()
-                    
-                    session.status = 'deployed'
-                    session.save()
-                    
-                    SessionEvent.objects.create(
-                        session=session,
-                        event_type='build_progress',
-                        event_data={'message': f"Changes deployed: {deploy_result.get('url')}"}
+
+                    # Deploy using HybridDeployer with session_token
+                    # CRITICAL: session_token must be passed so it's injected into the deployed HTML
+                    # This allows future modifications to work (Builder uses session_token to call /api/onboarding/modify/)
+                    hybrid = get_hybrid_deployer()
+                    deploy_result = hybrid.deploy(
+                        project_name=project.name,
+                        app_code=new_code,
+                        project_id=str(project.id),
+                        session_token=session_token
                     )
+                    
+                    # Update URLs (deploy_result is a DeploymentResult dataclass)
+                    if deploy_result.success:
+                        project.deployment_url = deploy_result.url or ''
+                        project.status = 'deployed'
+                        project.save()
+
+                        session.status = 'deployed'
+                        session.save()
+
+                        SessionEvent.objects.create(
+                            session=session,
+                            event_type='build_progress',
+                            event_data={'message': f"Changes deployed: {deploy_result.url}"}
+                        )
+                    else:
+                        # Deployment failed
+                        logger.error(f"Modification deployment failed: {deploy_result.error}")
+                        SessionEvent.objects.create(
+                            session=session,
+                            event_type='error',
+                            event_data={'error': f"Deployment failed: {deploy_result.error}"}
+                        )
                     
                 except Exception as e:
                     logger.exception(f"Modification failed: {e}")

@@ -1,0 +1,107 @@
+================================================================================
+SESSION: 2026-01-10
+================================================================================
+
+DURATION: ~33 minutes (before API error)
+
+SESSION ENDED DUE TO:
+- Claude API Error 400: "thinking or redacted_thinking blocks in the latest
+  assistant message cannot be modified"
+- This is a known issue with extended thinking mode on long sessions
+- NOT a Faibric code issue - infrastructure/API level
+
+--------------------------------------------------------------------------------
+GIT STATUS AT SESSION START:
+--------------------------------------------------------------------------------
+
+Branch: main
+
+Modified files:
+- CLAUDE.md
+- backend/Dockerfile
+- backend/apps/ai_engine/generators.py
+- backend/apps/ai_engine/tasks.py
+- backend/apps/ai_engine/v2/generator.py
+- backend/apps/ai_engine/v2/tasks.py
+- backend/apps/ai_engine/v3/prompts.py
+- backend/apps/ai_engine/v3/tasks.py
+- backend/apps/ai_engine/v6/pipeline.py
+- backend/apps/code_library/component_pipeline.py
+- backend/apps/code_library/components.py
+- backend/apps/code_library/connection_validator.py
+- backend/apps/code_library/jsx_validator.py
+- backend/apps/code_library/models.py
+- backend/apps/code_library/pipeline.py
+- backend/apps/deployment/react_deployer.py
+- backend/apps/deployment/render_deployer.py
+- backend/apps/deployment/validators.py
+- backend/apps/deployment/vercel_deployer.py
+- backend/apps/onboarding/build_service.py
+- backend/apps/onboarding/urls.py
+- backend/apps/onboarding/views.py
+- frontend/src/components/BuildingStudio.tsx
+- frontend/src/pages/LandingFlow.tsx
+
+Deleted (moved to docs/research/):
+- FAIBRIC_STRATEGY.md
+- FAIBRIC_V6_ENTERPRISE_PLAN.md
+- SCRT_ANTON_MODEL.md
+- SCRT_RESEARCH_FINDINGS.md
+
+New untracked files:
+- .claude-sessions/
+- .claude/
+- backend/apps/code_library/complexity.py
+- backend/apps/code_library/management/commands/create_golden_templates.py
+- backend/apps/code_library/management/commands/create_more_templates.py
+- backend/apps/code_library/template_matcher.py
+- backend/apps/code_library/typescript_stripper.py
+- docs/RULES_OF_PROJECT.md
+- docs/customer_test_screenshot.png
+- docs/research/BASE44_LESSONS.md
+- docs/research/FAIBRIC_STRATEGY.md
+- docs/research/FAIBRIC_V6_ENTERPRISE_PLAN.md
+- docs/research/SCRT_ANTON_MODEL.md
+- docs/research/SCRT_RESEARCH_FINDINGS.md
+- frontend/src/components/building-studio/
+- frontend/src/hooks/useBuildProgress.ts
+- frontend/src/hooks/useBuildStatus.ts
+- frontend/src/hooks/useMessages.ts
+
+--------------------------------------------------------------------------------
+WHAT WAS BEING WORKED ON:
+--------------------------------------------------------------------------------
+
+Based on the git status, recent work included:
+1. Code library improvements (template matching, complexity analysis)
+2. TypeScript stripping for generated apps
+3. Building studio UI refactoring
+4. New hooks for build progress/status
+5. Documentation reorganization (moved research files to docs/research/)
+
+Previous session (2026-01-09) worked on:
+- Component library expansion
+- AI adaptation of components to business context
+- Navigation/view switching fixes
+
+--------------------------------------------------------------------------------
+NEXT STEPS FOR CONTINUATION:
+--------------------------------------------------------------------------------
+
+1. Check what specific task was in progress before the API error
+2. Review recent commits for context:
+   - a6abc51: Fix navigation not switching views
+   - ee7da28: Rename library components
+   - f13e41b: Adapt components to business context using AI
+   - 76affc3: Phase 3 - component matching and reuse
+   - 72d0866: Phase 2 - Expand component library
+
+3. If work was in progress, check for any uncommitted important changes
+
+--------------------------------------------------------------------------------
+NOTES:
+--------------------------------------------------------------------------------
+
+- The API error is transient - start a fresh session to continue
+- No data was lost in the codebase
+- This session file preserves context for the next session

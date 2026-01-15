@@ -58,7 +58,7 @@ def generate_app_v2_task(self, project_id):
         
         # Build frontend_code structure (compatible with deployer)
         frontend_code = {
-            'App.tsx': '',
+            'App.jsx': '',
             'components': {}
         }
         
@@ -88,14 +88,14 @@ def generate_app_v2_task(self, project_id):
                 code = code + "\n\nexport default App;"
             
             if clean_name == 'App' or name == 'App':
-                frontend_code['App.tsx'] = code
+                frontend_code['App.jsx'] = code
             else:
                 frontend_code['components'][clean_name] = code
         
-        # Fallback if no App.tsx found
-        if not frontend_code['App.tsx'] and frontend_code['components']:
+        # Fallback if no App.jsx found
+        if not frontend_code['App.jsx'] and frontend_code['components']:
             first_comp = list(frontend_code['components'].keys())[0]
-            frontend_code['App.tsx'] = f"""import React from 'react';
+            frontend_code['App.jsx'] = f"""import React from 'react';
 import {first_comp} from './components/{first_comp}';
 
 function App() {{
@@ -106,7 +106,8 @@ export default App;
 """
         
         # Save to project
-        project.frontend_code = str(frontend_code)
+        import json
+        project.frontend_code = json.dumps(frontend_code)
         project.ai_analysis = {
             'app_type': app_type,
             'title': result.get('title', project.name),
@@ -177,7 +178,7 @@ def quick_modify_task(project_id, user_request):
             main_component = list(code_dict['components'].keys())[0]
             current_code = code_dict['components'][main_component]
         else:
-            current_code = code_dict.get('App.tsx', '')
+            current_code = code_dict.get('App.jsx', '')
             main_component = None
         
         if not current_code:
@@ -195,9 +196,9 @@ def quick_modify_task(project_id, user_request):
         if main_component:
             code_dict['components'][main_component] = new_code
         else:
-            code_dict['App.tsx'] = new_code
-        
-        project.frontend_code = str(code_dict)
+            code_dict['App.jsx'] = new_code
+
+        project.frontend_code = json.dumps(code_dict)
         project.status = 'deploying'
         project.save()
         

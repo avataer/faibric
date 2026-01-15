@@ -86,13 +86,13 @@ class ReactDeployer:
             container = self.client.containers.get(container_name)
             
             # Write new component code to container
-            file_path = f"/app/src/components/{component_name}.tsx"
-            
+            file_path = f"/app/src/components/{component_name}.jsx"
+
             # Create tar with updated file
             tar_stream = BytesIO()
             with tarfile.open(fileobj=tar_stream, mode='w') as tar:
                 file_data = new_code.encode('utf-8')
-                tarinfo = tarfile.TarInfo(name=f'src/components/{component_name}.tsx')
+                tarinfo = tarfile.TarInfo(name=f'src/components/{component_name}.jsx')
                 tarinfo.size = len(file_data)
                 tar.addfile(tarinfo, BytesIO(file_data))
             
@@ -125,7 +125,7 @@ class ReactDeployer:
                 code_dict = project.frontend_code
             
             return {
-                'App.tsx': code_dict.get('App.tsx', self._default_app_tsx()),
+                'App.jsx': code_dict.get('App.jsx') or code_dict.get('App.tsx', self._default_app_jsx()),
                 'components': code_dict.get('components', {})
             }
         except Exception as e:
@@ -135,14 +135,14 @@ class ReactDeployer:
     def _generate_default_app(self, project):
         """Generate a minimal working React app"""
         return {
-            'App.tsx': self._default_app_tsx(),
+            'App.jsx': self._default_app_jsx(),
             'components': {
                 'Welcome': self._default_welcome_component(project)
             }
         }
-    
-    def _default_app_tsx(self):
-        """Default App.tsx"""
+
+    def _default_app_jsx(self):
+        """Default App.jsx"""
         return """import React from 'react';
 import Welcome from './components/Welcome';
 
@@ -222,7 +222,7 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 """
         
-        # package.json
+        # package.json - Plain JavaScript (no TypeScript per Base44 lessons)
         package_json = {
             "name": f"faibric-app-{project.id}",
             "private": True,
@@ -239,14 +239,12 @@ CMD ["nginx", "-g", "daemon off;"]
                 "react-router-dom": "^6.20.0"
             },
             "devDependencies": {
-                "@types/react": "^18.2.43",
-                "@types/react-dom": "^18.2.17",
                 "@vitejs/plugin-react": "^4.2.1",
                 "vite": "^5.0.8"
             }
         }
-        
-        # vite.config.ts
+
+        # vite.config.js (plain JavaScript)
         vite_config = """import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -262,7 +260,7 @@ export default defineConfig({
   }
 })
 """
-        
+
         # index.html
         index_html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -273,17 +271,17 @@ export default defineConfig({
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
 """
-        
-        # main.tsx
-        main_tsx = """import React from 'react'
+
+        # main.jsx (plain JavaScript)
+        main_jsx = """import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
@@ -295,25 +293,26 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         with tarfile.open(fileobj=context, mode='w') as tar:
             # Add Dockerfile
             self._add_file_to_tar(tar, 'Dockerfile', dockerfile)
-            
+
             # Add package.json
             self._add_file_to_tar(tar, 'package.json', json.dumps(package_json, indent=2))
-            
-            # Add vite.config.ts
-            self._add_file_to_tar(tar, 'vite.config.ts', vite_config)
-            
+
+            # Add vite.config.js
+            self._add_file_to_tar(tar, 'vite.config.js', vite_config)
+
             # Add index.html
             self._add_file_to_tar(tar, 'index.html', index_html)
-            
-            # Add src/main.tsx
-            self._add_file_to_tar(tar, 'src/main.tsx', main_tsx)
-            
-            # Add src/App.tsx
-            self._add_file_to_tar(tar, 'src/App.tsx', frontend_code['App.tsx'])
-            
-            # Add components
+
+            # Add src/main.jsx
+            self._add_file_to_tar(tar, 'src/main.jsx', main_jsx)
+
+            # Add src/App.jsx
+            self._add_file_to_tar(tar, 'src/App.jsx', frontend_code['App.jsx'])
+
+            # Add components with .jsx extension
             for comp_name, comp_code in frontend_code['components'].items():
-                self._add_file_to_tar(tar, f'src/components/{comp_name}.tsx', comp_code)
+                clean_name = comp_name.replace('.tsx', '').replace('.jsx', '').replace('.js', '')
+                self._add_file_to_tar(tar, f'src/components/{clean_name}.jsx', comp_code)
         
         context.seek(0)
         return context

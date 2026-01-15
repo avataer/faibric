@@ -45,7 +45,7 @@ def get_or_create_node_modules_cache():
     if not cache_dir.exists():
         cache_dir.mkdir(parents=True)
 
-        # Write package.json with all dependencies
+        # Write package.json - Plain JavaScript (no TypeScript per Base44 lessons)
         package_json = {
             "name": "faibric-build-cache",
             "private": True,
@@ -65,10 +65,7 @@ def get_or_create_node_modules_cache():
                 "@supabase/supabase-js": "^2.39.0"
             },
             "devDependencies": {
-                "@types/react": "^18.2.0",
-                "@types/react-dom": "^18.2.0",
                 "@vitejs/plugin-react": "^4.2.0",
-                "typescript": "^5.3.0",
                 "vite": "^5.0.0",
                 "tailwindcss": "^3.3.0",
                 "postcss": "^8.4.0",
@@ -104,7 +101,6 @@ def validate_build_locally(code_dict: dict, project_name: str = "test-app") -> d
 
     This catches errors that static analysis misses:
     - Import errors
-    - TypeScript errors
     - JSX syntax errors
     - Missing dependencies
 
@@ -143,10 +139,7 @@ def validate_build_locally(code_dict: dict, project_name: str = "test-app") -> d
                 "@supabase/supabase-js": "^2.39.0"
             },
             "devDependencies": {
-                "@types/react": "^18.2.0",
-                "@types/react-dom": "^18.2.0",
                 "@vitejs/plugin-react": "^4.2.0",
-                "typescript": "^5.3.0",
                 "vite": "^5.0.0",
                 "tailwindcss": "^3.3.0",
                 "postcss": "^8.4.0",
@@ -156,7 +149,7 @@ def validate_build_locally(code_dict: dict, project_name: str = "test-app") -> d
         with open(build_dir / "package.json", "w") as f:
             json.dump(package_json, f, indent=2)
 
-        # Write vite.config.ts
+        # Write vite.config.js (plain JavaScript)
         vite_config = """import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -164,7 +157,7 @@ export default defineConfig({
   plugins: [react()],
 })
 """
-        with open(build_dir / "vite.config.ts", "w") as f:
+        with open(build_dir / "vite.config.js", "w") as f:
             f.write(vite_config)
 
         # Write tailwind.config.js
@@ -199,7 +192,7 @@ export default {
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
 """
@@ -210,20 +203,20 @@ export default {
         src_dir = build_dir / "src"
         src_dir.mkdir()
 
-        # Write main.tsx
-        main_tsx = """import React from 'react'
+        # Write main.jsx (plain JavaScript)
+        main_jsx = """import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 )
 """
-        with open(src_dir / "main.tsx", "w") as f:
-            f.write(main_tsx)
+        with open(src_dir / "main.jsx", "w") as f:
+            f.write(main_jsx)
 
         # Write index.css
         index_css = """@tailwind base;
@@ -233,21 +226,22 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         with open(src_dir / "index.css", "w") as f:
             f.write(index_css)
 
-        # Write App.tsx
-        app_code = code_dict.get('App.tsx', '')
+        # Write App.jsx (accept either App.jsx or App.tsx from code_dict)
+        app_code = code_dict.get('App.jsx') or code_dict.get('App.tsx', '')
         if not app_code:
-            return {"success": False, "error": "Missing App.tsx", "details": ""}
-        with open(src_dir / "App.tsx", "w") as f:
+            return {"success": False, "error": "Missing App.jsx", "details": ""}
+        with open(src_dir / "App.jsx", "w") as f:
             f.write(app_code)
 
-        # Write components
+        # Write components with .jsx extension
         components = code_dict.get('components', {})
         if components:
             comp_dir = src_dir / "components"
             comp_dir.mkdir()
             for comp_name, comp_code in components.items():
-                # Ensure .tsx extension
-                filename = comp_name if comp_name.endswith('.tsx') else f"{comp_name}.tsx"
+                # Strip any existing extension and use .jsx
+                clean_name = comp_name.replace('.tsx', '').replace('.jsx', '').replace('.js', '')
+                filename = f"{clean_name}.jsx"
                 with open(comp_dir / filename, "w") as f:
                     f.write(comp_code)
 
@@ -267,13 +261,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
             # Parse common error patterns
             error_msg = "Build failed"
-            if "error TS" in error_output:
-                # TypeScript error
-                import re
-                ts_error = re.search(r'error TS\d+: (.+)', error_output)
-                if ts_error:
-                    error_msg = f"TypeScript: {ts_error.group(1)}"
-            elif "SyntaxError" in error_output:
+            if "SyntaxError" in error_output:
                 error_msg = "Syntax error in code"
             elif "Cannot find module" in error_output:
                 import re
@@ -336,12 +324,13 @@ def validate_frontend_code(project):
     if not isinstance(code_dict, dict):
         raise CodeValidationError("Frontend code must be a dictionary")
 
-    app_code = code_dict.get('App.tsx', '')
+    # Accept either App.jsx or App.tsx (prefer .jsx)
+    app_code = code_dict.get('App.jsx') or code_dict.get('App.tsx', '')
     if not app_code:
-        raise CodeValidationError("Missing App.tsx in frontend code")
+        raise CodeValidationError("Missing App.jsx in frontend code")
 
-    # Validate App.tsx content
-    validate_react_code(app_code, 'App.tsx')
+    # Validate App code
+    validate_react_code(app_code, 'App.jsx')
 
     # Validate components
     components = code_dict.get('components', {})
@@ -353,7 +342,7 @@ def validate_frontend_code(project):
 
 def validate_react_code(code: str, filename: str):
     """
-    Basic validation of React/TSX code.
+    Basic validation of React/JSX code.
 
     Checks for common issues that would prevent compilation.
     """

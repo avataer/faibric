@@ -1,0 +1,95 @@
+SESSION DATE: 2026-01-09
+STATUS: In Progress
+
+================================================================================
+WHAT WAS DONE THIS SESSION
+================================================================================
+
+1. SET UP SESSION CONTINUITY SYSTEM
+   - Created .claude-sessions/ folder for persistent context
+   - Updated CLAUDE.md with instructions to read session files + project docs
+   - This prevents amnesia across sessions
+
+2. REFACTORED BuildingStudio.tsx
+   - Reduced from 539 lines to 117 lines (78% reduction)
+   - Extracted 3 custom hooks:
+     * frontend/src/hooks/useMessages.ts (message management with deduplication)
+     * frontend/src/hooks/useBuildProgress.ts (smooth progress animation)
+     * frontend/src/hooks/useBuildStatus.ts (polling, status tracking)
+   - Extracted 2 sub-components:
+     * frontend/src/components/building-studio/ChatPanel.tsx
+     * frontend/src/components/building-studio/PreviewPanel.tsx
+   - Created types file: frontend/src/components/building-studio/types.ts
+   - Created barrel export: frontend/src/components/building-studio/index.ts
+   - Build verified: TypeScript compilation passed
+
+3. ADDED "NEVER DELETE MD FILES" RULE
+   - Added rule #5 to CLAUDE.md Owner Instructions
+   - MD files must be archived to docs/archived/, never deleted
+
+4. ORGANIZED STRATEGY FILES
+   - Moved from root to docs/research/:
+     * FAIBRIC_STRATEGY.md
+     * SCRT_RESEARCH_FINDINGS.md (contains founder interview in Section 16)
+     * SCRT_ANTON_MODEL.md
+     * FAIBRIC_V6_ENTERPRISE_PLAN.md
+
+5. ADDED FOUNDER PHILOSOPHY TO CLAUDE.MD
+   - Summary of founder's operating system (flow-based, not market-based)
+   - Faibric's purpose: BE
+   - The formula for "hot": Design beautifully + Basic things work
+   - Link to full interview: docs/research/SCRT_RESEARCH_FINDINGS.md Section 16
+   - Instructions for AI assistants
+
+================================================================================
+PENDING / NEXT STEPS
+================================================================================
+
+- User wanted to test the app as a customer with "professional dog walker" use case
+- Need to verify the refactored BuildingStudio works end-to-end
+- Backend needs to be running for full testing
+
+================================================================================
+FILES MODIFIED THIS SESSION
+================================================================================
+
+CREATED:
+- .claude-sessions/ (folder)
+- .claude-sessions/2026-01-09_session.txt
+- frontend/src/hooks/useMessages.ts
+- frontend/src/hooks/useBuildProgress.ts
+- frontend/src/hooks/useBuildStatus.ts
+- frontend/src/components/building-studio/types.ts
+- frontend/src/components/building-studio/ChatPanel.tsx
+- frontend/src/components/building-studio/PreviewPanel.tsx
+- frontend/src/components/building-studio/index.ts
+
+MODIFIED:
+- frontend/src/components/BuildingStudio.tsx (refactored to use hooks/components)
+- CLAUDE.md (added session continuity, founder philosophy, never delete MD rule)
+
+MOVED:
+- FAIBRIC_STRATEGY.md -> docs/research/
+- SCRT_RESEARCH_FINDINGS.md -> docs/research/
+- SCRT_ANTON_MODEL.md -> docs/research/
+- FAIBRIC_V6_ENTERPRISE_PLAN.md -> docs/research/
+
+================================================================================
+FOUNDER PHILOSOPHY SUMMARY (for quick reference)
+================================================================================
+
+Abram's operating system:
+- Flow guidance, not market analysis
+- Direct perception, not user research
+- "Hot" feeling, not metrics
+- "I am the business. All I do is flow."
+
+Faibric's purpose: BE (not do, not solve, not help - just BE)
+
+Formula for "hot":
+1. Design beautifully
+2. Basic things just work
+
+The only judge: Abram. When he feels the "click," it's done.
+
+Full interview: docs/research/SCRT_RESEARCH_FINDINGS.md Section 16

@@ -1,0 +1,60 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_bash.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_edit.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_edit.py"
+          }
+        ]
+      },
+      {
+        "matcher": "NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_notebook.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_task.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Stop",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_stop.py"
+          }
+        ]
+      }
+    ]
+  }
+}

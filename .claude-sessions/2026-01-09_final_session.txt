@@ -1,0 +1,75 @@
+# Session: 2026-01-09 (Final)
+
+## Summary
+Successfully fixed code generation bugs and verified end-to-end customer flow with screenshots.
+
+## Issues Fixed
+
+### 1. FormSection/ReusableForm Undefined Error
+- **Root cause:** `_extract_component_name` was returning internal helper component names instead of exported components
+- **Fix:** Reordered pattern matching to prioritize `export default ComponentName` first
+- **File:** `backend/apps/code_library/modular_composer.py`
+
+### 2. Navigation Not Switching Views
+- **Root cause:** Library Navigation components use static `href` links, not `onNavigate` callbacks
+- **Fix:** Always generate inline navigation with functional buttons for SPA-style view switching
+- **File:** `backend/apps/code_library/modular_composer.py`
+
+### 3. TypeScript Syntax Errors (as TypeName)
+- **Root cause:** Library components use TypeScript type assertions that Babel can't handle
+- **Fix:** Added regex to strip `as TypeName` casts during component cleaning
+- **File:** `backend/apps/code_library/modular_composer.py`
+
+### 4. backgroundImage Not Defined Error
+- **Root cause:** AI adaptation was removing props during component customization
+- **Fix:** Added `_restore_missing_props()` method to validate and restore removed props
+- **File:** `backend/apps/code_library/component_pipeline.py`
+
+### 5. npm Missing in Docker
+- **Root cause:** Backend Dockerfile didn't include Node.js for build validation
+- **Fix:** Added Node.js 20.x installation to Dockerfile
+- **File:** `backend/Dockerfile`
+
+## Verification Results
+
+### Final Deployed URL
+https://appyeugdqed4d.faibric.com
+
+### Screenshots Taken
+- /tmp/latest_1.png - Home page with hero section
+- /tmp/latest_2.png - Services page after navigation click
+
+### Content Verified
+- "Happy Paws Dog Walking" header
+- Navigation: Services, Listings, Contact, Gallery, Home, Settings
+- Hero: "Professional Dog Walking Services in Your Neighborhood"
+- CTA buttons: "Book a Walk", "Learn More"
+- No JavaScript errors
+
+## Files Modified
+
+1. `backend/Dockerfile` - Added Node.js installation
+2. `backend/apps/code_library/modular_composer.py`:
+   - Fixed `_extract_component_name` to prioritize exported components
+   - Fixed inline navigation generation for view switching
+   - Added TypeScript syntax stripping
+   - Added default view preference for 'home'
+   - Added `_get_default_props_for_component` method
+3. `backend/apps/code_library/component_pipeline.py`:
+   - Enhanced adaptation prompt to preserve props
+   - Added `_restore_missing_props` method
+4. `CLAUDE.md`:
+   - Added "Always Test as Customer" instruction (section 7)
+
+## Customer Test Flow Used
+```bash
+POST /api/onboarding/start/ - Create session
+POST /api/onboarding/email/ - Provide email (unique per test)
+POST /api/onboarding/build/ - Trigger build
+GET /api/onboarding/status/{token}/ - Poll until deployed
+```
+
+## Next Steps
+- Monitor for any new component adaptation issues
+- Consider adding more robust TypeScript stripping
+- May need to enhance library components with better defaults

@@ -242,7 +242,7 @@ class LibraryFirstPipeline:
     
     def build(self, user_prompt: str, project) -> str:
         """
-        Main entry point. Returns the final App.tsx code.
+        Main entry point. Returns the final App.jsx code.
         """
         import anthropic
         from apps.code_library.models import AdminDesignRules
@@ -377,7 +377,7 @@ INSTRUCTIONS:
 2. Adapt colors, text, and content to match the user's request
 3. Keep the proven structure and patterns from the library components
 4. Combine multiple components if needed
-5. Return a COMPLETE, WORKING App.tsx
+5. Return a COMPLETE, WORKING App.jsx (plain JavaScript, NO TypeScript)
 
 Return ONLY the code, no markdown, no explanation. Start with import, end with export default."""
 
@@ -421,7 +421,7 @@ CRITICAL RULES:
 6. Make it visually stunning with proper spacing and colors
 7. Use Apple San Francisco font on ALL text
 
-Return the complete App.tsx code. Start with import, end with export default App;"""
+Return the complete App.jsx code (plain JavaScript, NO TypeScript). Start with import, end with export default App;"""
 
         response = client.messages.create(
             model=self.GENERATION_MODEL,  # Opus 4.5 for ALL code generation
@@ -451,7 +451,11 @@ Return the complete App.tsx code. Start with import, end with export default App
         if duplicate_check:
             print(f"[LIBRARY] DUPLICATE BLOCKED: {duplicate_check['similarity']:.0%} similar to {duplicate_check['matching_item_name']}")
             return
-        
+
+        # RULE 3: No TypeScript - strip any TypeScript annotations before saving
+        from apps.code_library.typescript_stripper import strip_typescript_annotations
+        code = strip_typescript_annotations(code)
+
         try:
             import re
             
@@ -505,7 +509,7 @@ import App from './App';
 ''',
                 'documentation': doc,
                 'item_type': 'template',
-                'language': 'tsx',
+                'language': 'jsx',
                 'code': code,
                 'keywords': keywords,
                 'tags': keywords[:constants.MAX_TAGS],

@@ -1,0 +1,8 @@
+#!/bin/bash
+# Faibric Manager/Worker Orchestrator Launcher
+# Runs complex tasks with Manager reviewing Worker output
+
+cd /Users/abram/Code/Faibric
+
+# Run the orchestrator
+exec python3 -m .claude.orchestrator "$@"

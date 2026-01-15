@@ -51,7 +51,7 @@ class CodeLibraryMixin:
             results = service.keyword_search(
                 query=query,
                 item_type='component',
-                language='typescript',
+                language='javascript',
                 limit=limit
             )
             return results
@@ -106,7 +106,7 @@ class CodeLibraryMixin:
             create_kwargs = {
                 'name': name[:200],
                 'item_type': 'component',
-                'language': 'tsx',
+                'language': 'jsx',
                 'code': code,
                 'description': description[:500] if description else 'Auto-generated component',
                 'keywords': kw_list,  # JSONField - pass as list
@@ -288,7 +288,7 @@ class AIGeneratorV2(CodeLibraryMixin):
         return {
             'app_type': app_type,
             'components': {
-                'App.tsx': code
+                'App.jsx': code
             },
             'build_stats': stats
         }

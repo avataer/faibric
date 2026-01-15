@@ -64,23 +64,56 @@ class BuildService:
             # - Reuse found blocks, generate missing ones
             # - Save new blocks to library for future reuse
             # - Compose final app from blocks
-            from apps.code_library.component_pipeline import ComponentGenerationPipeline
-            
-            pipeline = ComponentGenerationPipeline(session)
-            app_code = pipeline.build(
-                prompt=project.user_prompt or project.description,
-                project=project
-            )
-            
-            # OPTION 4 ARCHITECTURE: Validate at Vercel deploy time
-            # 
-            # 1. Deploy to Vercel
-            # 2. If build fails → Vercel returns error
-            # 3. AI fixes code based on error
-            # 4. Retry deploy (up to 3 times)
-            #
-            # Validation happens IN the hybrid deployer, not here.
-            #
+            from apps.code_library.component_pipeline import ComponentGenerationPipeline, JSXValidationError
+
+            # PRE-DEPLOY VALIDATION with AI retry
+            # If generated code fails esbuild validation, ask AI to fix it
+            MAX_VALIDATION_RETRIES = 3
+            app_code = None
+            last_error = None
+
+            for attempt in range(MAX_VALIDATION_RETRIES):
+                try:
+                    pipeline = ComponentGenerationPipeline(session)
+                    app_code = pipeline.build(
+                        prompt=project.user_prompt or project.description,
+                        project=project
+                    )
+                    # If we get here, validation passed
+                    if attempt > 0:
+                        logger.info(f"[Build] Code validation passed after {attempt} AI fix(es)")
+                    break
+
+                except JSXValidationError as e:
+                    last_error = str(e)
+                    logger.warning(f"[Build] Validation failed (attempt {attempt + 1}/{MAX_VALIDATION_RETRIES}): {last_error[:100]}")
+
+                    if attempt < MAX_VALIDATION_RETRIES - 1:
+                        # Try to fix with AI
+                        cls._add_event(session, f"Fixing code issue (attempt {attempt + 1})...")
+                        try:
+                            from apps.code_library.code_fixer import fix_code_with_ai
+                            success, fixed_code = fix_code_with_ai(e.code, last_error, attempt + 1)
+                            if success and fixed_code:
+                                # Validate the fixed code before next iteration
+                                from apps.code_library.jsx_validator import validate_jsx
+                                is_valid, error = validate_jsx(fixed_code)
+                                if is_valid:
+                                    app_code = fixed_code
+                                    logger.info(f"[Build] AI fix succeeded on attempt {attempt + 1}")
+                                    break
+                                else:
+                                    logger.warning(f"[Build] AI fix still has errors: {error}")
+                        except Exception as fix_error:
+                            logger.error(f"[Build] AI fix failed: {fix_error}")
+                    else:
+                        # All retries exhausted
+                        logger.error(f"[Build] Validation failed after {MAX_VALIDATION_RETRIES} attempts")
+                        raise ValueError(f"Code generation failed validation after {MAX_VALIDATION_RETRIES} attempts: {last_error}")
+
+            if not app_code:
+                raise ValueError("Failed to generate valid code")
+
             from apps.code_library.owner_instructions import enforce_instructions
             
             # Step 2.1: Enforce owner instructions (removes emojis, etc.)
@@ -96,12 +129,53 @@ class BuildService:
             stats = pipeline.get_stats()
             logger.info(f"[Build] Component stats: required={stats['components_required']}, "
                        f"reused={stats['components_reused']}, generated={stats['components_generated']}")
-            
+
+            # Get AI-generated images for deployment
+            generated_images = pipeline.get_generated_images()
+            if generated_images:
+                logger.info(f"[Build] AI images to deploy: {list(generated_images.keys())}")
+
             # Check if Connector V2 was used for wiring
             is_connector_v2 = stats.get('wiring_method') == 'connector_v2'
             if is_connector_v2:
                 logger.info(f"[Build] Using Connector V2 code (deterministic, trusted)")
-            
+
+            # Step 2.5: LOCAL PREVIEW VERIFICATION (before deployment)
+            # Run the app locally to catch runtime errors that esbuild misses
+            cls._add_event(session, 'Verifying code locally...')
+            try:
+                from apps.code_library.local_preview import preview_and_fix
+
+                preview_success, app_code, preview_result = preview_and_fix(
+                    app_code,
+                    project_name=project.name or "Preview",
+                    max_retries=2  # Fewer retries since we already did esbuild validation
+                )
+
+                if preview_success:
+                    logger.info(f"[Build] Local preview PASSED")
+                    if preview_result.screenshot_path:
+                        logger.info(f"[Build] Preview screenshot: {preview_result.screenshot_path}")
+                else:
+                    # Preview failed with JS errors - BLOCKING
+                    # Don't deploy broken code
+                    if preview_result.js_errors:
+                        error_msg = f"JavaScript errors detected: {preview_result.js_errors[0][:200]}"
+                        logger.error(f"[Build] Local preview BLOCKED deployment: {error_msg}")
+                        cls._add_event(session, f'Build failed: {error_msg[:100]}')
+                        raise ValueError(f"Code has runtime errors: {error_msg}")
+                    else:
+                        # Other preview failures (blank page, timeout) - warn but continue
+                        logger.warning(f"[Build] Local preview warning: {preview_result.error}")
+                        cls._add_event(session, 'Preview warning - attempting deployment...')
+
+            except ValueError:
+                # Re-raise ValueError (our blocking errors)
+                raise
+            except Exception as preview_error:
+                # Don't block on technical preview errors (Playwright not installed, etc.)
+                logger.warning(f"[Build] Local preview skipped: {preview_error}")
+
             # Step 3: Deploy using HYBRID strategy (Vercel first, Render fallback)
             # Vercel: 30-60 seconds deploy time
             # Render: 5-10 minutes deploy time (fallback)
@@ -123,7 +197,9 @@ class BuildService:
                 project_id=str(project.id),
                 needs_backend=needs_backend,
                 user_prompt=project.user_prompt or session.initial_request or '',
-                is_connector_v2=is_connector_v2
+                is_connector_v2=is_connector_v2,
+                generated_images=generated_images,
+                session_token=session_token
             )
             
             # Update project with URL
@@ -235,12 +311,15 @@ class BuildService:
             session.converted_to_tenant = tenant
             session.save()
         
-        # Create project
-        clean_name = session.initial_request[:50].replace(':', '').replace('/', ' ')
+        # Create project with unique name suffix to avoid duplicates
+        import secrets
+        clean_name = session.initial_request[:40].replace(':', '').replace('/', ' ')
+        unique_suffix = secrets.token_hex(4)
+        project_name = f"{clean_name}_{unique_suffix}"
         project = Project.objects.create(
             tenant=session.converted_to_tenant,
             user=session.converted_to_user,
-            name=clean_name,
+            name=project_name,
             description=session.initial_request,
             user_prompt=session.initial_request,
             status='building',

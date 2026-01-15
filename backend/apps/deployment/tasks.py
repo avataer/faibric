@@ -33,6 +33,54 @@ def use_render_deployer():
     )
 
 
+def verify_deployment(url: str, max_attempts: int = 20, interval: int = 15) -> bool:
+    """
+    Verify that a deployed site is actually working.
+
+    Checks:
+    1. HTML page returns 200
+    2. JS bundle is accessible
+    3. JS bundle is large enough (not an error stub)
+    4. No build errors in content
+    """
+    import requests
+    import time
+    import re
+
+    for attempt in range(max_attempts):
+        try:
+            resp = requests.get(url, timeout=10)
+            if resp.status_code != 200:
+                time.sleep(interval)
+                continue
+
+            html = resp.text
+            js_match = re.search(r"src=[\"']([^\"']+\.js)[\"']", html)
+            if not js_match:
+                time.sleep(interval)
+                continue
+
+            js_path = js_match.group(1)
+            if not js_path.startswith("http"):
+                js_url = url.rstrip("/") + "/" + js_path.lstrip("/")
+            else:
+                js_url = js_path
+
+            js_resp = requests.get(js_url, timeout=10)
+            if js_resp.status_code != 200 or len(js_resp.content) < 10000:
+                time.sleep(interval)
+                continue
+
+            if "Vite build error" in html or "Module not found" in js_resp.text:
+                return False
+
+            return True
+        except Exception:
+            time.sleep(interval)
+            continue
+    return False
+
+
 @shared_task(bind=True, max_retries=2)
 def deploy_app_task(self, project_id, use_v2=True):
     """
@@ -62,11 +110,16 @@ def deploy_app_task(self, project_id, use_v2=True):
             code_dict = validate_frontend_code(project)
             broadcast_deploy_message(project_id, '[OK] Static validation passed')
         except CodeValidationError as e:
-            broadcast_deploy_message(project_id, f'[WARN] Static validation: {str(e)}')
-            code_dict = None
+            broadcast_deploy_message(project_id, f'[ERROR] Static validation failed: {str(e)}')
+            project.status = 'error'
+            project.save()
+            return {
+                'status': 'error',
+                'message': f'Static validation failed: {str(e)}'
+            }
 
         # Step 2: Local build validation (catches errors in ~5s instead of 15min on Render)
-        if code_dict and use_render_deployer():
+        if use_render_deployer():
             broadcast_deploy_message(project_id, '[BUILD] Running local build test...')
             build_result = validate_build_locally(code_dict, project.name or "app")
 
@@ -101,16 +154,29 @@ def deploy_app_task(self, project_id, use_v2=True):
             
             result = deployer.deploy_react_app(project)
             deployment_url = result['url']
-            
-            broadcast_deploy_message(project_id, f'✅ Deployed at {deployment_url}')
-            
+
+            broadcast_deploy_message(project_id, '[VERIFY] Checking deployment...')
+            verified = verify_deployment(deployment_url)
+
+            if not verified:
+                broadcast_deploy_message(project_id, '[ERROR] Deployment verification failed')
+                project.status = 'verification_failed'
+                project.deployment_url = ''
+                project.save()
+                return {
+                    'status': 'error',
+                    'message': 'Deployment verification failed - build may have errors'
+                }
+
+            broadcast_deploy_message(project_id, f'[OK] Verified at {deployment_url}')
+
             # Update project
             project.deployment_url = deployment_url
             project.subdomain = result.get('branch', '')
             project.status = 'deployed'
             project.deployed_at = timezone.now()
             project.save()
-            
+
             return {
                 'status': 'success',
                 'project_id': project_id,

@@ -127,22 +127,23 @@ const LandingFlow = () => {
 
   const handleRequestSubmit = async () => {
     if (!request.trim()) return
-    
+
     setLoading(true)
     setError(null)
-    
+
     try {
-      const timeToType = typingStartRef.current 
+      const timeToType = typingStartRef.current
         ? Math.floor((Date.now() - typingStartRef.current) / 1000)
         : null
-        
-      const res = await api.post('/api/onboarding/start/', {
+
+      // DEV MODE: Skip email verification, go directly to building
+      const res = await api.post('/api/onboarding/start-dev/', {
         request: request.trim(),
         time_to_type_seconds: timeToType,
       })
-      
+
       setSessionToken(res.data.session_token)
-      setStep('email')
+      setStep('building')  // Skip email/verify, go directly to building
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to submit request')
     } finally {
@@ -257,20 +258,7 @@ const LandingFlow = () => {
           </Typography>
         </Box>
 
-        <Stepper activeStep={stepIndex} sx={{ mb: 4 }}>
-          <Step>
-            <StepLabel>Describe Your Idea</StepLabel>
-          </Step>
-          <Step>
-            <StepLabel>Create Account</StepLabel>
-          </Step>
-          <Step>
-            <StepLabel>Build</StepLabel>
-          </Step>
-          <Step>
-            <StepLabel>Deploy</StepLabel>
-          </Step>
-        </Stepper>
+        {/* Stepper hidden in dev mode */}
 
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>

@@ -76,7 +76,7 @@ class LibraryItem(models.Model):
     
     # The actual code
     code = models.TextField(help_text="The React component code")
-    language = models.CharField(max_length=20, default='tsx')
+    language = models.CharField(max_length=20, default='jsx')  # Plain JS per Base44 lessons
     
     # Search & matching
     keywords = models.JSONField(

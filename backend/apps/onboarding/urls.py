@@ -6,6 +6,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     LandingFlowView,
+    DevFlowView,
     EmailFlowView,
     ChangeEmailView,
     VerifyMagicLinkView,
@@ -32,6 +33,7 @@ router.register(r'admin/notifications', AdminNotificationViewSet, basename='admi
 urlpatterns = [
     # Public landing flow
     path('start/', LandingFlowView.as_view(), name='landing-start'),
+    path('start-dev/', DevFlowView.as_view(), name='landing-start-dev'),  # DEV: skip email
     path('email/', EmailFlowView.as_view(), name='landing-email'),
     path('email/change/', ChangeEmailView.as_view(), name='landing-change-email'),
     path('verify/', VerifyMagicLinkView.as_view(), name='verify-magic-link'),

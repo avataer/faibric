@@ -673,7 +673,7 @@ OUTPUT FORMAT (strict JSON only, no markdown):
     "description": "Brief description",
     "api_services": [],
     "components": {{
-        "App": "// Complete App.tsx with imports and export default App;"
+        "App": "// Complete App.jsx with imports and export default App;"
     }}
 }}
 

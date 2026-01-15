@@ -179,7 +179,8 @@ function App() {{
 export default App;
 """
         
-        project.frontend_code = str(frontend_code)
+        import json
+        project.frontend_code = json.dumps(frontend_code)
         project.status = 'ready'
         project.save()
         

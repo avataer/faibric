@@ -644,7 +644,7 @@ def validate_code_quality(code: str) -> ValidationResult:
         (r'const\s+\w+\s*=\s*\[\s*\{[^}]+\}', "Hardcoded array data"),
         (r'useState\(\[\s*\{[^}]+\}\s*,', "Hardcoded initial state array"),
     ]
-    
+
     for pattern, msg in hardcoded_patterns:
         if re.search(pattern, code):
             issues.append(ValidationIssue(
@@ -653,7 +653,37 @@ def validate_code_quality(code: str) -> ValidationResult:
                 message=f"Found pattern: {msg}",
                 suggestion="Replace with API fetch or placeholder",
             ))
-    
+
+    # 5. Check for undefined component references
+    # Find all JSX component usages (PascalCase tags like <ReusableForm />)
+    jsx_components_used = set(re.findall(r'<([A-Z][a-zA-Z0-9]*)[^>]*/?>', code))
+
+    # Find all component definitions
+    defined_components = set()
+    # const ComponentName =
+    defined_components.update(re.findall(r'const\s+([A-Z][a-zA-Z0-9]*)\s*=', code))
+    # function ComponentName(
+    defined_components.update(re.findall(r'function\s+([A-Z][a-zA-Z0-9]*)\s*\(', code))
+
+    # Standard React/HTML components that don't need to be defined
+    builtin_components = {
+        'React', 'Fragment', 'Suspense', 'StrictMode',  # React
+        'Router', 'Route', 'Routes', 'Link', 'NavLink', 'Navigate',  # Router
+        'Provider', 'Consumer',  # Context
+    }
+
+    # Check for undefined components
+    undefined = jsx_components_used - defined_components - builtin_components
+    if undefined:
+        for comp in undefined:
+            issues.append(ValidationIssue(
+                level=ValidationLevel.ERROR,
+                code="UNDEFINED_COMPONENT",
+                message=f"Component '{comp}' is used but never defined",
+                component=comp,
+                suggestion=f"Either define 'const {comp} = ...' or remove <{comp} /> usage",
+            ))
+
     valid = not any(i.level == ValidationLevel.ERROR for i in issues)
     return ValidationResult(valid=valid, issues=issues)
 
