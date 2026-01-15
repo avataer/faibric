@@ -107,6 +107,7 @@ INSTALLED_APPS = [
     'apps.platform_admin',  # Faibric admin dashboard
     'apps.insights',  # Customer insights & quality assurance
     'apps.onboarding',  # Landing page & onboarding flow
+    'apps.external_services',  # External service status
 ]
 
 # LLM API Keys (for platform-wide usage)
@@ -122,6 +123,7 @@ GITHUB_APPS_REPO = os.getenv('GITHUB_APPS_REPO', 'avataer/faibric-apps')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Serve static files in production
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -210,6 +212,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise static files storage - works in both debug and production
+# CompressedManifestStaticFilesStorage compresses and adds cache-busting hashes
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
