@@ -63,6 +63,31 @@ class FunnelAnalyzer:
         """Get drop-off points."""
         return []
 
+    @staticmethod
+    def process_event_for_funnels(event):
+        """
+        Process an event to update funnel progress.
+        Called when a new event is tracked.
+        """
+        from .models import Funnel, FunnelStep
+
+        try:
+            # Find active funnels for this tenant that have a step matching this event
+            funnels = Funnel.objects.filter(
+                tenant=event.tenant,
+                is_active=True
+            ).prefetch_related('steps')
+
+            for funnel in funnels:
+                for step in funnel.steps.all():
+                    if step.event_name == event.event_name:
+                        # Event matches a funnel step - could update progress here
+                        # For now, just log (funnel analysis is done on-demand)
+                        pass
+        except Exception:
+            # Don't fail event tracking if funnel processing fails
+            pass
+
 ADMIN_EMAIL = 'amptiness@icloud.com'
 
 
