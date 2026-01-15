@@ -306,8 +306,9 @@ class SessionStatusView(APIView):
                         # Fallback to raw string
                         generated_code = str(project.frontend_code)
                 
-                # Use project status for final states only
-                if project.status == 'deployed':
+                # Only sync status from project if session is not currently building
+                # This prevents race condition where polling overwrites 'building' status
+                if project.status == 'deployed' and session.status != 'building':
                     build_progress = 100
                     session.status = 'deployed'
                     session.save()
