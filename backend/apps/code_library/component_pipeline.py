@@ -70,13 +70,17 @@ class ComponentGenerationPipeline:
     - Save new components
     - Compose final app
     """
-    
-    def __init__(self, session=None):
+
+    def __init__(self, session=None, model_key: str = None):
         self.session = session
         self.decomposer = ProjectDecomposer()
         self.library = ComponentLibrary()
         self.composer = ComponentComposer()
         self.client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+        # Model selection - use get_model_id to resolve model key
+        from apps.ai_engine.models_config import get_model_id
+        self.model = get_model_id(model_key) if model_key else CODE_MODEL
         
         # ═══ CONNECTOR SYSTEM ═══
         self.validator = ConnectionValidator()
@@ -608,7 +612,7 @@ Return ONLY the component code, nothing else.
         
         try:
             response = self.client.messages.create(
-                model=CODE_MODEL,
+                model=self.model,
                 max_tokens=4096,
                 messages=[{"role": "user", "content": prompt}]
             )
@@ -821,34 +825,46 @@ CONTENT CHANGES (be aggressive):
 4. Section headings and descriptions
 5. Any placeholder text -> replace with {full_prompt} content
 
-STYLING (CRITICAL - use ONLY standard Tailwind colors):
-ONLY use these Tailwind color names (NEVER invent colors like burgundy, gold, cream, rich-brown):
-- slate, gray, zinc, neutral, stone (grays)
-- red, orange, amber, yellow (warm)
-- lime, green, emerald, teal, cyan, sky, blue (cool)
-- indigo, violet, purple, fuchsia, pink, rose (purple/pink)
+STYLING (CRITICAL - respect USER'S color preferences):
+If the user's request mentions specific colors, USE THEM EXCLUSIVELY:
+- For "brown/espresso/coffee" -> use ONLY amber-900, amber-800, amber-700, stone-800, yellow-900
+- For "cream/beige/tan" -> use ONLY amber-50, amber-100, orange-50, yellow-50
+- For "green" -> use green-600, emerald-700, green-800
 
-BEAUTIFUL MODERN STYLING:
-1. Gradients: bg-gradient-to-r from-indigo-600 to-purple-600, bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900
+CRITICAL COLOR RESTRICTIONS:
+If user requests "brown and cream" or "coffee shop" colors:
+- FORBIDDEN: gray, slate, zinc, neutral, blue, indigo, green, emerald, teal, cyan, sky, purple, violet
+- ALLOWED ONLY: amber-*, orange-50, yellow-50, stone-*, white (for text on dark), black (for text on light)
+- Headers/navbars: bg-amber-900 (dark brown)
+- Section backgrounds: bg-amber-50 (cream)
+- Buttons: bg-amber-700 hover:bg-amber-800
+- Text on dark: text-amber-50 or text-white
+- Text on light: text-amber-900 or text-stone-800
+- Borders: border-amber-200 or border-amber-300
+
+BEAUTIFUL MODERN STYLING (for brown/cream theme):
+1. Gradients: bg-gradient-to-r from-amber-900 to-amber-800, bg-gradient-to-br from-stone-900 via-amber-900 to-stone-800
 2. Shadows: shadow-lg, shadow-xl, shadow-2xl
 3. Rounded: rounded-xl, rounded-2xl, rounded-full
 4. Hover: hover:scale-105, hover:shadow-xl, transition-all duration-300
-5. Cards: bg-white shadow-xl rounded-2xl p-6
-6. Buttons: bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg
+5. Cards: bg-amber-50 shadow-xl rounded-2xl p-6 border border-amber-200
+6. Buttons: bg-amber-700 hover:bg-amber-800 text-white font-semibold py-3 px-6 rounded-lg
 
 IMAGES (CRITICAL - use Picsum, NEVER Unsplash):
+- For coffee shops: seed/coffee-latte, seed/espresso-cup, seed/cafe-interior, seed/coffee-beans
 - Hero backgrounds: Use inline style with Picsum: style={{backgroundImage: "url('https://picsum.photos/seed/KEYWORD/1920/1080')"}}
 - Gallery images: <img src="https://picsum.photos/seed/UNIQUE_WORD/800/600" className="..." />
 - Profile photos: https://picsum.photos/seed/person1/400/400
 - NEVER use unsplash.com URLs - they are broken
 - NEVER use local paths like /image.jpg - they don't exist
 - Each image MUST have a UNIQUE seed keyword
+- For coffee shops, use: coffee-latte, espresso-art, cafe-table, barista, coffee-beans, cappuccino
 
-EXAMPLE HERO with image:
-<section className="min-h-screen bg-cover bg-center relative" style={{backgroundImage: "url('https://picsum.photos/seed/restaurant1/1920/1080')"}}>
-  <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent"></div>
+EXAMPLE HERO for coffee shop:
+<section className="min-h-screen bg-cover bg-center relative" style={{backgroundImage: "url('https://picsum.photos/seed/coffee-shop-interior/1920/1080')"}}>
+  <div className="absolute inset-0 bg-gradient-to-r from-amber-900/80 to-amber-800/60"></div>
   <div className="relative z-10 container mx-auto px-6 py-32">
-    <h1 className="text-5xl font-bold text-white mb-4">Business Name</h1>
+    <h1 className="text-5xl font-bold text-amber-50 mb-4">Business Name</h1>
   </div>
 </section>
 
@@ -869,11 +885,9 @@ CRITICAL: Your response must start with "const" or "function" - NO explanatory t
 Do NOT say "Here's..." or explain anything. ONLY output the code starting with the component definition."""
 
         try:
-            # Use Opus 4.5 for ALL code generation (including adaptation)
-            # Haiku was causing JSX syntax errors (missing closing tags)
-            from apps.ai_engine.models_config import CODE_MODEL
+            # Use configured model for code generation
             response = self.client.messages.create(
-                model=CODE_MODEL,  # Claude Opus 4.5
+                model=self.model,
                 max_tokens=4000,
                 messages=[{"role": "user", "content": adaptation_prompt}]
             )
@@ -1300,7 +1314,7 @@ Return ONLY the complete code.
         
         try:
             response = self.client.messages.create(
-                model=CODE_MODEL,
+                model=self.model,
                 max_tokens=16384,  # Increased for larger apps
                 messages=[{"role": "user", "content": compose_prompt}]
             )

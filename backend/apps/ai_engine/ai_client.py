@@ -6,17 +6,58 @@ import json
 import re
 import anthropic
 from django.conf import settings
+from datetime import datetime
+from pathlib import Path
 
 # Import from centralized config - SINGLE SOURCE OF TRUTH
-from .models_config import CODE_MODEL, CHAT_MODEL
+from .models_config import CODE_MODEL, CHAT_MODEL, get_model_id
+
+# Customer Test AI Logging
+AI_LOG_FILE = Path.home() / "Code/Faibric/customer-tests/coffee-shop-menu/ai_calls.jsonl"
+
+def log_ai_call(call_type: str, messages: list, response: str, metadata: dict = None):
+    """Log AI call to file for Customer Test verification"""
+    try:
+        AI_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "call_type": call_type,
+            "messages": messages,
+            "response_preview": response[:500] if response else None,
+            "response_length": len(response) if response else 0,
+            "metadata": metadata or {}
+        }
+        with open(AI_LOG_FILE, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception as e:
+        print(f"[AI_LOG] Error logging: {e}")
 
 
 class AIClient:
     """Wrapper for Anthropic Claude API"""
-    
-    def __init__(self):
+
+    def __init__(self, model_key=None):
+        """
+        Initialize the AI client.
+
+        Args:
+            model_key: Optional model key (e.g., 'claude-opus', 'claude-sonnet', 'claude-haiku').
+                      If not provided, defaults to CODE_MODEL.
+        """
         self.client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        self.model = CODE_MODEL  # From models_config.py - Claude Opus 4.5
+        if model_key:
+            self.model = get_model_id(model_key)
+        else:
+            self.model = CODE_MODEL  # From models_config.py - Claude Opus 4.5
+
+    def set_model(self, model_key):
+        """
+        Dynamically change the model used for API calls.
+
+        Args:
+            model_key: Model key (e.g., 'claude-opus', 'claude-sonnet', 'claude-haiku')
+        """
+        self.model = get_model_id(model_key)
     
     def chat_completion(self, messages, temperature=0.7, response_format=None, project_id=None, step_description="Processing"):
         """
@@ -87,10 +128,20 @@ class AIClient:
         
         response = self.client.messages.create(**kwargs)
         result = response.content[0].text
-        
+
         # Log token usage
+        token_info = {}
         if hasattr(response, 'usage') and response.usage:
+            token_info = {"input": response.usage.input_tokens, "output": response.usage.output_tokens}
             print(f"🔢 Tokens - Input: {response.usage.input_tokens}, Output: {response.usage.output_tokens}")
+
+        # Log AI call for Customer Test verification
+        log_ai_call(
+            call_type="chat_completion",
+            messages=messages,
+            response=result,
+            metadata={"step": step_description, "project_id": project_id, "tokens": token_info, "model": self.model}
+        )
         
         # Strip code block markers if present
         result = self._strip_code_markers(result)

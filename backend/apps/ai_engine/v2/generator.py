@@ -168,14 +168,31 @@ class AIGeneratorV2(CodeLibraryMixin):
     - Opus 4.5 for NEW code generation
     - Haiku for classification, summaries, and reusing existing code
     """
-    
+
     # Model tiers - from centralized config (models_config.py)
     EXPENSIVE_MODEL = CODE_MODEL  # Claude Opus 4.5 - for code generation
     CHEAP_MODEL = CHAT_MODEL       # Claude Haiku 4.5 - for chat/classification
-    
-    def __init__(self, model: str = None):
+
+    def __init__(self, model: str = None, model_key: str = None):
+        """
+        Initialize AIGeneratorV2.
+
+        Args:
+            model: Direct model ID (e.g., "claude-opus-4-5-20251101"). Takes precedence if provided.
+            model_key: Model key from AI_MODELS config (e.g., "claude-opus", "claude-sonnet").
+                       Used to look up the model ID if 'model' is not provided.
+        """
         self.client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        self.model = model or self.EXPENSIVE_MODEL
+
+        # Resolve model: direct model ID takes precedence, then model_key lookup, then default
+        if model:
+            self.model = model
+        elif model_key:
+            from ..models_config import get_model_id
+            self.model = get_model_id(model_key)
+        else:
+            self.model = self.EXPENSIVE_MODEL
+
         self.session_token = None  # Set by caller for cost tracking
     
     def _track_usage(self, model: str, input_tokens: int, output_tokens: int, 

@@ -34,10 +34,15 @@ class BuildService:
     """
     
     @classmethod
-    def build_from_session(cls, session_token: str):
+    def build_from_session(cls, session_token: str, preferred_model: str = None):
         """
         Complete build flow for a session.
         Called from background thread - must handle its own DB connections.
+
+        Args:
+            session_token: The session token to build from.
+            preferred_model: Optional model key (e.g., "claude-opus", "claude-sonnet")
+                             to use for AI generation. If not provided, uses default.
         """
         # Close any stale connections from parent thread
         connection.close()
@@ -75,7 +80,9 @@ class BuildService:
 
             for attempt in range(MAX_VALIDATION_RETRIES):
                 try:
-                    pipeline = ComponentGenerationPipeline(session)
+                    # Pass project's preferred model to the pipeline
+                    model_key = getattr(project, 'preferred_model', None)
+                    pipeline = ComponentGenerationPipeline(session, model_key=model_key)
                     app_code = pipeline.build(
                         prompt=project.user_prompt or project.description,
                         project=project
@@ -221,7 +228,7 @@ class BuildService:
                 f.write(f"[{datetime.now()}] Step 2.9: user_request='{user_request[:200]}'\n")
                 f.write(f"[{datetime.now()}] Code length BEFORE: {len(app_code)}\n")
             from apps.ai_engine.v2.generator import AIGeneratorV2
-            gen = AIGeneratorV2()
+            gen = AIGeneratorV2(model_key=preferred_model)
             app_code = gen._apply_color_enforcement(app_code, user_request)
             with open('/tmp/color_enforcement.log', 'a') as f:
                 f.write(f"[{datetime.now()}] Code length AFTER: {len(app_code)}\n")

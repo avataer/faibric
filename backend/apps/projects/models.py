@@ -28,13 +28,28 @@ class Project(models.Model):
     description = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     template = models.ForeignKey(
-        'templates.Template', 
-        on_delete=models.SET_NULL, 
-        null=True, 
+        'templates.Template',
+        on_delete=models.SET_NULL,
+        null=True,
         blank=True,
         related_name='projects'
     )
-    
+
+    # AI Model preference
+    MODEL_CHOICES = [
+        ("claude-opus", "Claude Opus 4.5 - Most Powerful"),
+        ("claude-sonnet", "Claude Sonnet 4 - Balanced"),
+        ("claude-haiku", "Claude Haiku 3.5 - Fast"),
+        ("gpt-4o", "GPT-4o - OpenAI Flagship"),
+        ("gemini-2.0-flash", "Gemini 2.0 Flash - Google Fast"),
+    ]
+    preferred_model = models.CharField(
+        max_length=50,
+        choices=MODEL_CHOICES,
+        default="claude-opus",
+        help_text="AI model to use for code generation"
+    )
+
     # Generation metadata
     user_prompt = models.TextField(help_text='Original user description')
     ai_analysis = models.JSONField(null=True, blank=True)
@@ -48,6 +63,10 @@ class Project(models.Model):
     subdomain = models.CharField(max_length=100, unique=True, null=True, blank=True)
     deployment_url = models.URLField(blank=True)
     container_id = models.CharField(max_length=200, blank=True)
+
+    # GitHub sync
+    github_repo = models.CharField(max_length=255, blank=True, help_text="GitHub repo URL")
+    last_github_sha = models.CharField(max_length=40, blank=True, help_text="Last synced commit SHA")
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -64,6 +83,11 @@ class Project(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.user.username}"
+
+    def get_model_display_name(self) -> str:
+        """Return the display name for the preferred AI model."""
+        model_dict = dict(self.MODEL_CHOICES)
+        return model_dict.get(self.preferred_model, self.preferred_model)
 
 
 class GeneratedModel(models.Model):
