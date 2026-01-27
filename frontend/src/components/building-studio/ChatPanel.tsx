@@ -10,6 +10,8 @@ import {
 } from '@mui/material'
 import SendIcon from '@mui/icons-material/Send'
 import StopIcon from '@mui/icons-material/Stop'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import { Message } from './types'
 
 interface ChatPanelProps {
@@ -23,6 +25,7 @@ interface ChatPanelProps {
   onSend: () => void
   onStop: () => void
   onNewProject?: () => void
+  onRetry?: () => void
 }
 
 export function ChatPanel({
@@ -36,7 +39,11 @@ export function ChatPanel({
   onSend,
   onStop,
   onNewProject,
+  onRetry,
 }: ChatPanelProps) {
+  // Check if the last message is an error
+  const lastMessage = messages[messages.length - 1]
+  const hasError = lastMessage?.content?.startsWith('Error:') ?? false
   return (
     <Box sx={{
       width: '40%',
@@ -107,36 +114,71 @@ export function ChatPanel({
         flexDirection: 'column',
         gap: 2,
       }}>
-        {messages.map((msg) => (
-          <Box
-            key={msg.id}
-            sx={{
-              display: 'flex',
-              justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-            }}
-          >
-            <Paper
+        {messages.map((msg) => {
+          const isError = msg.content?.startsWith('Error:')
+          const isLastError = isError && msg.id === lastMessage?.id
+
+          return (
+            <Box
+              key={msg.id}
               sx={{
-                p: 2,
-                maxWidth: '80%',
-                backgroundColor:
-                  msg.role === 'user' ? '#3b82f6' :
-                  msg.role === 'system' ? '#f3f4f6' : '#ffffff',
-                color: msg.role === 'user' ? '#ffffff' : '#000000',
-                border: msg.role === 'assistant' ? '1px solid #e5e7eb' : 'none',
+                display: 'flex',
+                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
               }}
-              elevation={msg.role === 'system' ? 0 : 1}
             >
-              {msg.role === 'system' ? (
-                <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#6b7280' }}>
-                  {msg.content}
-                </Typography>
-              ) : (
-                <Typography variant="body1">{msg.content}</Typography>
-              )}
-            </Paper>
-          </Box>
-        ))}
+              <Paper
+                sx={{
+                  p: 2,
+                  maxWidth: '80%',
+                  backgroundColor:
+                    isError ? '#fef2f2' :
+                    msg.role === 'user' ? '#3b82f6' :
+                    msg.role === 'system' ? '#f3f4f6' : '#ffffff',
+                  color: isError ? '#dc2626' : msg.role === 'user' ? '#ffffff' : '#000000',
+                  border: isError ? '1px solid #fca5a5' :
+                    msg.role === 'assistant' ? '1px solid #e5e7eb' : 'none',
+                }}
+                elevation={msg.role === 'system' ? 0 : 1}
+              >
+                {isError ? (
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <ErrorOutlineIcon fontSize="small" />
+                      <Typography variant="body2" fontWeight={600}>
+                        Something went wrong
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ mb: isLastError ? 2 : 0 }}>
+                      {msg.content.replace('Error: ', '')}
+                    </Typography>
+                    {isLastError && onRetry && (
+                      <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="error"
+                          startIcon={<RefreshIcon />}
+                          onClick={onRetry}
+                        >
+                          Try Again
+                        </Button>
+                        <Typography variant="caption" sx={{ color: '#9ca3af', alignSelf: 'center' }}>
+                          or describe a simpler request
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                ) : msg.role === 'system' ? (
+                  <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#6b7280' }}>
+                    {msg.content}
+                  </Typography>
+                ) : (
+                  <Typography variant="body1">{msg.content}</Typography>
+                )}
+              </Paper>
+            </Box>
+          )
+        })}
         <div ref={messagesEndRef} />
       </Box>
 
