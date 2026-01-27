@@ -508,6 +508,120 @@ CRITICAL RULES:
             self._broadcast(project_id, "error", f"[ERROR] Generation failed: {str(e)[:100]}")
             raise
     
+    def _apply_color_enforcement(self, code: str, user_request: str) -> str:
+        """
+        Post-processing: Force color changes when user explicitly requests them.
+        This is an AGGRESSIVE enforcement when AI fails to apply colors correctly.
+
+        For brown/cream color schemes:
+        - ALL gray/white/slate/zinc backgrounds -> cream (bg-amber-50)
+        - ALL blue/green/indigo colors -> brown (bg-amber-700 or text-amber-900)
+        - Header/nav specifically -> dark brown (bg-amber-900)
+        - Images -> coffee-themed seeds
+        """
+        request_lower = user_request.lower()
+
+        # Check if user is requesting brown/cream colors
+        wants_brown = any(w in request_lower for w in ['brown', 'espresso', 'coffee', 'amber-900', 'stone-800'])
+        wants_cream = any(w in request_lower for w in ['cream', 'beige', 'tan', 'amber-50', 'orange-50'])
+
+        with open('/tmp/color_enforcement.log', 'a') as f:
+            f.write(f"[CHECKING] wants_brown={wants_brown}, wants_cream={wants_cream}\n")
+
+        if wants_brown or wants_cream:
+            # Count colors BEFORE replacement
+            gray_count = len(re.findall(r'bg-gray-\d+', code))
+            blue_count = len(re.findall(r'bg-blue-\d+', code))
+            green_count = len(re.findall(r'bg-green-\d+', code))
+            amber_count_before = len(re.findall(r'bg-amber-\d+', code))
+            with open('/tmp/color_enforcement.log', 'a') as f:
+                f.write(f"[BEFORE] gray={gray_count}, blue={blue_count}, green={green_count}, amber={amber_count_before}\n")
+            logger.info(f"[COLOR ENFORCEMENT] BEFORE: gray={gray_count}, blue={blue_count}, green={green_count}")
+            logger.info(f"[COLOR ENFORCEMENT] Starting aggressive color replacement for: {user_request[:200]}")
+            print(f"[COLOR ENFORCEMENT] Starting aggressive color replacement...")
+
+            # ============ REMOVE ALL UNWANTED COLORS ============
+            # Replace ALL gray backgrounds with cream
+            code = re.sub(r'bg-gray-\d{1,3}', 'bg-amber-50', code)
+            code = re.sub(r'bg-slate-\d{1,3}', 'bg-amber-50', code)
+            code = re.sub(r'bg-zinc-\d{1,3}', 'bg-amber-50', code)
+            code = re.sub(r'bg-neutral-\d{1,3}', 'bg-amber-50', code)
+            code = re.sub(r'bg-stone-\d{1,3}', 'bg-amber-100', code)  # stone can stay as light brown
+
+            # Replace ALL blue with brown
+            code = re.sub(r'bg-blue-\d{1,3}', 'bg-amber-700', code)
+            code = re.sub(r'bg-indigo-\d{1,3}', 'bg-amber-800', code)
+            code = re.sub(r'bg-sky-\d{1,3}', 'bg-amber-600', code)
+            code = re.sub(r'bg-cyan-\d{1,3}', 'bg-amber-600', code)
+
+            # Replace ALL green with brown/cream
+            code = re.sub(r'bg-green-\d{1,3}', 'bg-amber-100', code)
+            code = re.sub(r'bg-emerald-\d{1,3}', 'bg-amber-200', code)
+            code = re.sub(r'bg-teal-\d{1,3}', 'bg-amber-300', code)
+
+            # Replace white backgrounds with cream
+            code = re.sub(r'bg-white(?![a-zA-Z0-9-])', 'bg-amber-50', code)
+
+            # ============ TEXT COLORS ============
+            # Replace blue/indigo text with brown
+            code = re.sub(r'text-blue-\d{1,3}', 'text-amber-900', code)
+            code = re.sub(r'text-indigo-\d{1,3}', 'text-amber-800', code)
+
+            # Replace green text with brown
+            code = re.sub(r'text-green-\d{1,3}', 'text-amber-700', code)
+            code = re.sub(r'text-emerald-\d{1,3}', 'text-amber-700', code)
+
+            # ============ BORDER COLORS ============
+            code = re.sub(r'border-gray-\d{1,3}', 'border-amber-200', code)
+            code = re.sub(r'border-blue-\d{1,3}', 'border-amber-600', code)
+            code = re.sub(r'border-green-\d{1,3}', 'border-amber-400', code)
+
+            # ============ RING/FOCUS COLORS ============
+            code = re.sub(r'ring-blue-\d{1,3}', 'ring-amber-500', code)
+            code = re.sub(r'ring-indigo-\d{1,3}', 'ring-amber-500', code)
+            code = re.sub(r'focus:ring-blue-\d{1,3}', 'focus:ring-amber-500', code)
+
+            # ============ HOVER STATES ============
+            code = re.sub(r'hover:bg-blue-\d{1,3}', 'hover:bg-amber-800', code)
+            code = re.sub(r'hover:bg-gray-\d{1,3}', 'hover:bg-amber-100', code)
+            code = re.sub(r'hover:text-blue-\d{1,3}', 'hover:text-amber-700', code)
+            code = re.sub(r'hover:text-indigo-\d{1,3}', 'hover:text-amber-700', code)
+
+            # ============ INLINE STYLES ============
+            # Replace gray hex colors with cream
+            code = re.sub(
+                r"backgroundColor:\s*['\"]#(?:f[0-9a-f]{5}|e[0-9a-f]{5}|d[0-9a-f]{5}|c[0-9a-f]{5})['\"]",
+                "backgroundColor: '#fffbeb'",  # amber-50 hex (cream)
+                code,
+                flags=re.IGNORECASE
+            )
+            # Replace white with cream
+            code = re.sub(
+                r"backgroundColor:\s*['\"](?:white|#fff(?:fff)?)['\"]",
+                "backgroundColor: '#fffbeb'",  # amber-50 hex (cream)
+                code,
+                flags=re.IGNORECASE
+            )
+
+            # ============ FIX IMAGES FOR COFFEE THEME ============
+            # Replace generic/winter seeds with coffee-themed ones
+            code = re.sub(r'seed/[^/"]*/(\d+)/(\d+)', r'seed/coffee-beans/\1/\2', code)
+            code = re.sub(r'picsum\.photos/seed/[^"\']+', 'picsum.photos/seed/coffee-latte', code)
+            # Be more specific
+            code = re.sub(r'seed/(?:snow|winter|forest|nature|landscape)', 'seed/coffee-shop', code)
+
+            # Count colors AFTER replacement
+            gray_count_after = len(re.findall(r'bg-gray-\d+', code))
+            blue_count_after = len(re.findall(r'bg-blue-\d+', code))
+            green_count_after = len(re.findall(r'bg-green-\d+', code))
+            amber_count_after = len(re.findall(r'bg-amber-\d+', code))
+            with open('/tmp/color_enforcement.log', 'a') as f:
+                f.write(f"[AFTER] gray={gray_count_after}, blue={blue_count_after}, green={green_count_after}, amber={amber_count_after}\n")
+            logger.info(f"[COLOR ENFORCEMENT] AFTER: gray={gray_count_after}, blue={blue_count_after}, green={green_count_after}, amber={amber_count_after}")
+            print(f"[COLOR ENFORCEMENT] Completed aggressive color replacement")
+
+        return code
+
     def modify_app(
         self,
         current_code: str,
@@ -518,32 +632,35 @@ CRITICAL RULES:
         Modify existing app code based on user request.
         Returns the modified code.
         """
-        
+
         self._broadcast(project_id, "thinking", f"Applying changes: {user_request[:50]}...")
-        
+
         prompt = MODIFY_PROMPT.format(
             current_code=current_code,
             user_request=user_request
         )
-        
+
         try:
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=4000,
-                system="You are an expert React developer. Return ONLY the modified code.",
+                system="You are an expert React developer. Return ONLY the modified code. If the user asks for color changes (brown, cream, green, etc.), you MUST change the Tailwind CSS classes to match. For brown use bg-amber-900, for cream use bg-amber-50.",
                 messages=[
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.5
             )
-            
+
             result = response.content[0].text
             result = self._strip_code_markers(result)
-            
+
+            # POST-PROCESSING: Force color changes if AI didn't apply them
+            result = self._apply_color_enforcement(result, user_request)
+
             self._broadcast(project_id, "success", "Changes applied")
-            
+
             return result
-            
+
         except Exception as e:
             self._broadcast(project_id, "error", f"[ERROR] Modification failed: {str(e)[:100]}")
             raise
