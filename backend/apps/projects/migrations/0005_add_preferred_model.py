@@ -3,6 +3,21 @@
 from django.db import migrations, models
 
 
+def add_preferred_model_if_not_exists(apps, schema_editor):
+    """Add preferred_model column only if it doesn't exist (idempotent)."""
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'projects_project' AND column_name = 'preferred_model'
+        """)
+        if cursor.fetchone() is None:
+            cursor.execute("""
+                ALTER TABLE projects_project
+                ADD COLUMN preferred_model VARCHAR(50) DEFAULT 'claude-opus'
+            """)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,11 +25,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='project',
-            name='preferred_model',
-            field=models.CharField(choices=[('claude-opus', 'Claude Opus 4.5 - Most Powerful'), ('claude-sonnet', 'Claude Sonnet 4 - Balanced'), ('claude-haiku', 'Claude Haiku 3.5 - Fast')], default='claude-opus', help_text='AI model to use for code generation', max_length=50),
-        ),
+        migrations.RunPython(add_preferred_model_if_not_exists, migrations.RunPython.noop),
         migrations.AlterField(
             model_name='project',
             name='status',
