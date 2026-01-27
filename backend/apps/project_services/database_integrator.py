@@ -218,21 +218,20 @@ def inject_database_code(app_code: str, db_info: Dict, user_prompt: str) -> Tupl
     # Generate client code
     client_code = generate_database_client_code(db_info, user_prompt)
 
-    # Find the right place to inject (after initial comments, before first component)
-    # Look for "// Main App Component" or first component definition
+    # Find the right place to inject - at the beginning, right after the header comment
+    # The Supabase client code should be at the TOP of the file so it's available globally
     inject_patterns = [
-        r'(// Main App Component)',
-        r'(// LIBRARY COMPONENTS)',
-        r'(const \w+Section)',
-        r'(function \w+Section)',
+        r'(// LIBRARY COMPONENTS[^\n]*\n)',  # After the header comment line
+        r'(// Golden Templates[^\n]*\n)',     # Alternate header
     ]
 
     injected = False
     for pattern in inject_patterns:
         match = re.search(pattern, app_code)
         if match:
-            insert_pos = match.start()
-            app_code = app_code[:insert_pos] + client_code + "\n\n" + app_code[insert_pos:]
+            # Insert AFTER the header comment
+            insert_pos = match.end()
+            app_code = app_code[:insert_pos] + "\n" + client_code + "\n" + app_code[insert_pos:]
             injected = True
             break
 

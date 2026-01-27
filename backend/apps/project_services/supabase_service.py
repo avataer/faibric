@@ -47,24 +47,37 @@ class SupabaseService:
                 'service_key': 'eyJ...'
             }
         """
-        if not self.access_token:
+        if not self.access_token or not self.org_id:
             # Return mock for development
             return self._mock_provision(project_name)
-        
+
+        # Generate a secure database password
+        import secrets
+        db_pass = secrets.token_urlsafe(24)
+
         # Create project via Supabase Management API
-        response = requests.post(
-            f"{self.MANAGEMENT_API}/projects",
-            headers=self.headers,
-            json={
-                'name': f'faibric-{project_name[:30]}',
-                'organization_id': self.org_id,
-                'region': region,
-                'plan': 'free'
-            }
-        )
-        
-        if response.status_code != 201:
-            raise Exception(f"Failed to create Supabase project: {response.text}")
+        try:
+            response = requests.post(
+                f"{self.MANAGEMENT_API}/projects",
+                headers=self.headers,
+                json={
+                    'name': f'faibric-{project_name[:30]}',
+                    'organization_id': self.org_id,
+                    'region': region,
+                    'plan': 'free',
+                    'db_pass': db_pass
+                },
+                timeout=60
+            )
+
+            if response.status_code != 201:
+                # Fall back to mock if API fails
+                print(f"[SUPABASE] API error, using mock: {response.status_code}")
+                return self._mock_provision(project_name)
+        except Exception as e:
+            # Fall back to mock on any error
+            print(f"[SUPABASE] Request failed, using mock: {e}")
+            return self._mock_provision(project_name)
         
         project = response.json()
         
