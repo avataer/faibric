@@ -47,6 +47,8 @@ class Project(models.Model):
         max_length=50,
         choices=MODEL_CHOICES,
         default="claude-opus",
+        null=True,
+        blank=True,
         help_text="AI model to use for code generation"
     )
 

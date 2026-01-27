@@ -14,7 +14,7 @@ def add_preferred_model_if_not_exists(apps, schema_editor):
         if cursor.fetchone() is None:
             cursor.execute("""
                 ALTER TABLE projects_project
-                ADD COLUMN preferred_model VARCHAR(50) DEFAULT 'claude-opus'
+                ADD COLUMN preferred_model VARCHAR(50) NULL DEFAULT 'claude-opus'
             """)
 
 
