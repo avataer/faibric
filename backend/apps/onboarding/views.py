@@ -23,6 +23,8 @@ from .serializers import (
 from .services import OnboardingService, DailyReportService
 from .input_tracker import InputTracker, InputAnalytics
 
+from apps.ai_engine.agent_mode import AgentModeService
+
 
 # ============================================
 # Public Endpoints (Landing Page Flow)
@@ -62,6 +64,218 @@ class LandingFlowView(APIView):
             'success': True,
             'session_token': session.session_token,
             'message': 'Please provide your email to continue.',
+        })
+
+
+class PlanningFlowView(APIView):
+    """
+    Planning/Discussion Mode endpoints.
+    For gathering requirements before building.
+    Uses cheaper/faster Haiku model.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Start or continue a planning discussion.
+        Creates session with mode=discussion.
+        Uses PLANNING_PROMPT with Haiku model.
+        Returns AI response (questions/clarifications).
+        """
+        import anthropic
+        from django.conf import settings
+        from apps.ai_engine.v3.prompts import PLANNING_PROMPT
+
+        session_token = request.data.get('session_token')
+        user_message = request.data.get('message', '')
+
+        # If no session token, create a new discussion session
+        if not session_token:
+            initial_request = request.data.get('request', user_message)
+            if not initial_request:
+                return Response({
+                    'success': False,
+                    'error': 'Please provide a request or message to start planning.',
+                }, status=400)
+
+            session = OnboardingService.create_session(
+                initial_request=initial_request,
+                ip_address=request.META.get('REMOTE_ADDR'),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                utm_source=request.data.get('utm_source', ''),
+                utm_medium=request.data.get('utm_medium', ''),
+                utm_campaign=request.data.get('utm_campaign', ''),
+            )
+            # Set mode to discussion
+            session.mode = 'discussion'
+            session.save()
+            session_token = session.session_token
+            # Use initial request as the first message
+            user_message = initial_request
+        else:
+            # Get existing session
+            try:
+                session = LandingSession.objects.get(session_token=session_token)
+            except LandingSession.DoesNotExist:
+                return Response({
+                    'success': False,
+                    'error': 'Session not found.',
+                }, status=404)
+
+            if not user_message:
+                return Response({
+                    'success': False,
+                    'error': 'Please provide a message to continue the discussion.',
+                }, status=400)
+
+        # Build conversation history from session events
+        messages = []
+        planning_events = session.events.filter(
+            event_type='chat_message'
+        ).order_by('timestamp')
+
+        for event in planning_events:
+            event_data = event.event_data or {}
+            role = event_data.get('role', 'user')
+            content = event_data.get('content', event.user_input or '')
+            if content:
+                messages.append({'role': role, 'content': content})
+
+        # Add current user message
+        messages.append({'role': 'user', 'content': user_message})
+
+        # Log user message as event
+        SessionEvent.objects.create(
+            session=session,
+            event_type='chat_message',
+            user_input=user_message,
+            event_data={'role': 'user', 'content': user_message}
+        )
+
+        # Call Haiku model with planning prompt
+        try:
+            client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+            response = client.messages.create(
+                model='claude-3-5-haiku-latest',
+                max_tokens=1024,
+                system=PLANNING_PROMPT,
+                messages=messages
+            )
+            ai_response = response.content[0].text
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': f'AI service error: {str(e)}',
+            }, status=500)
+
+        # Log AI response as event
+        SessionEvent.objects.create(
+            session=session,
+            event_type='chat_message',
+            event_data={'role': 'assistant', 'content': ai_response}
+        )
+
+        # Update session activity
+        session.update_activity()
+
+        return Response({
+            'success': True,
+            'session_token': session_token,
+            'response': ai_response,
+            'mode': 'discussion',
+        })
+
+
+class PlanToBuildView(APIView):
+    """
+    Convert a planning session to a building session.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Convert planning session to building session.
+        Changes session mode from discussion to building.
+        Stores planning summary in requirements_checklist.
+        Triggers normal build flow.
+        """
+        import threading
+
+        session_token = request.data.get('session_token')
+        planning_summary = request.data.get('planning_summary', '')
+
+        if not session_token:
+            return Response({
+                'success': False,
+                'error': 'Session token required.',
+            }, status=400)
+
+        try:
+            session = LandingSession.objects.get(session_token=session_token)
+        except LandingSession.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Session not found.',
+            }, status=404)
+
+        # Verify session is in discussion mode
+        if session.mode != 'discussion':
+            return Response({
+                'success': False,
+                'error': 'Session is not in discussion mode.',
+            }, status=400)
+
+        # Build planning summary from conversation if not provided
+        if not planning_summary:
+            planning_events = session.events.filter(
+                event_type='chat_message'
+            ).order_by('timestamp')
+
+            conversation_parts = []
+            for event in planning_events:
+                event_data = event.event_data or {}
+                role = event_data.get('role', 'user')
+                content = event_data.get('content', event.user_input or '')
+                if content:
+                    prefix = 'User: ' if role == 'user' else 'Assistant: '
+                    conversation_parts.append(f"{prefix}{content}")
+
+            planning_summary = '\n\n'.join(conversation_parts)
+
+        # Update session
+        session.mode = 'building'
+        session.requirements_checklist = planning_summary
+        session.status = 'building'
+        session.save()
+
+        # Log conversion event
+        SessionEvent.objects.create(
+            session=session,
+            event_type='build_started',
+            event_data={
+                'message': 'Converted from planning to building mode',
+                'requirements_length': len(planning_summary)
+            }
+        )
+
+        # Start build in background
+        def run_build():
+            from .build_service import BuildService
+            import logging
+            logger = logging.getLogger(__name__)
+            try:
+                BuildService.build_from_session(session_token)
+            except Exception as e:
+                logger.exception(f"Build from planning failed: {e}")
+
+        thread = threading.Thread(target=run_build, daemon=True)
+        thread.start()
+
+        return Response({
+            'success': True,
+            'session_token': session_token,
+            'mode': 'building',
+            'message': 'Planning complete. Build started.',
         })
 
 
@@ -458,6 +672,13 @@ class ModifyBuildView(APIView):
             # QUICK MODIFICATION - just change the existing code
             session.status = 'building'
             session.build_progress = 50  # Start at 50% since we already have code
+
+            # CRITICAL: Clear the old deployment URL so frontend keeps polling
+            # Otherwise the poll returns old URL immediately and polling stops
+            project = session.converted_to_project
+            if project:
+                project.deployment_url = ''
+                project.save()
             session.save()
             
             SessionEvent.objects.create(
@@ -870,7 +1091,7 @@ class AdminNotificationViewSet(viewsets.ModelViewSet):
     serializer_class = AdminNotificationSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = AdminNotification.objects.all().order_by('-created_at')
-    
+
     @action(detail=True, methods=['post'])
     def mark_read(self, request, pk=None):
         """Mark notification as read."""
@@ -878,10 +1099,157 @@ class AdminNotificationViewSet(viewsets.ModelViewSet):
         notification.is_read = True
         notification.save()
         return Response({'success': True})
-    
+
     @action(detail=False, methods=['post'])
     def mark_all_read(self, request):
         """Mark all notifications as read."""
         AdminNotification.objects.filter(is_read=False).update(is_read=True)
         return Response({'success': True})
+
+
+# ============================================
+# Visual Edit (from deployed previews)
+# ============================================
+
+class VisualEditView(APIView):
+    """
+    Handle visual edits from deployed previews.
+    Users can click elements in the preview and request changes.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Apply a visual edit to the project.
+
+        Accepts:
+        - session_token: Session identifier
+        - selector: CSS selector of the element
+        - element_type: text, button, image, or style
+        - current_value: Current value of the element
+        - new_value: Desired new value
+        """
+        session_token = request.data.get('session_token')
+        selector = request.data.get('selector', '')
+        element_type = request.data.get('element_type', 'text')
+        current_value = request.data.get('current_value', '')
+        new_value = request.data.get('new_value', '')
+
+        if not session_token:
+            return Response({
+                'success': False,
+                'error': 'Session token required.',
+            }, status=400)
+
+        try:
+            session = LandingSession.objects.get(session_token=session_token)
+        except LandingSession.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Session not found.',
+            }, status=404)
+
+        if not session.converted_to_project:
+            return Response({
+                'success': False,
+                'error': 'No project associated with this session.',
+            }, status=404)
+
+        # Build edit prompt from element info
+        edit_prompt = f"Change the {element_type}"
+        if selector:
+            edit_prompt += f" at '{selector}'"
+        if current_value:
+            edit_prompt += f" from '{current_value}'"
+        if new_value:
+            edit_prompt += f" to '{new_value}'"
+
+        # Log the visual edit event
+        SessionEvent.objects.create(
+            session=session,
+            event_type='visual_edit',
+            event_data={
+                'selector': selector,
+                'element_type': element_type,
+                'current_value': current_value,
+                'new_value': new_value,
+                'edit_prompt': edit_prompt,
+            }
+        )
+
+        return Response({
+            'success': True,
+            'message': 'Edit applied',
+            'edit_prompt': edit_prompt,
+        })
+
+
+class AgentModeView(APIView):
+    """
+    Agent Mode - Autonomous development with debugging and iteration.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Run an autonomous agent task.
+
+        Accepts:
+        - session_token: Session identifier
+        - task_description: What the agent should do
+        - current_code: Optional existing code to modify
+        """
+        session_token = request.data.get('session_token')
+        task_description = request.data.get('task_description', '')
+        current_code = request.data.get('current_code')
+
+        if not session_token:
+            return Response({
+                'success': False,
+                'error': 'Session token required.',
+            }, status=400)
+
+        if not task_description:
+            return Response({
+                'success': False,
+                'error': 'Task description required.',
+            }, status=400)
+
+        try:
+            session = LandingSession.objects.get(session_token=session_token)
+        except LandingSession.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Session not found.',
+            }, status=404)
+
+        # Get project ID if exists
+        project_id = None
+        if session.converted_to_project:
+            project_id = str(session.converted_to_project.id)
+
+        # Run agent task
+        agent = AgentModeService(project_id=project_id)
+        result = agent.run_agent_task(
+            task_description=task_description,
+            current_code=current_code
+        )
+
+        # Log the agent run
+        SessionEvent.objects.create(
+            session=session,
+            event_type='agent_mode',
+            event_data={
+                'task': task_description,
+                'status': result.get('status'),
+                'iterations': result.get('iterations'),
+            }
+        )
+
+        return Response({
+            'success': True,
+            'status': result.get('status'),
+            'result': result.get('result'),
+            'iterations': result.get('iterations'),
+        })
 
