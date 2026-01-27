@@ -37,6 +37,99 @@ COMPONENT_KEYWORDS = {
     "footer": ["footer", "copyright"],
 }
 
+# Industry to hero variant mapping for design variety
+INDUSTRY_HERO_VARIANTS = {
+    "restaurant": "photo_overlay",    # Full-width food photo with floating card
+    "cafe": "photo_overlay",
+    "bakery": "photo_overlay",
+    "food": "photo_overlay",
+    "spa": "photo_overlay",
+    "wellness": "photo_overlay",
+    "salon": "photo_overlay",
+    "saas": "split",                  # Text left, image right
+    "software": "split",
+    "tech": "split",
+    "startup": "split",
+    "app": "split",
+    "portfolio": "minimal",           # Clean text-only
+    "artist": "minimal",
+    "designer": "minimal",
+    "photographer": "minimal",
+    "agency": "video",                # Animated zoom background
+    "creative": "video",
+    "studio": "video",
+    "gaming": "video",
+    "ecommerce": "cards",             # Feature cards below headline
+    "shop": "cards",
+    "store": "cards",
+    "retail": "cards",
+    "vinyl": "cards",                 # Record stores use cards for featured albums
+    "music": "cards",
+    "kids": "cards",                  # Feature cards for activities/services
+    "children": "cards",
+    "architecture": "minimal",        # Clean minimalist for architecture
+    "interior": "photo_overlay",
+}
+
+
+def detect_hero_variant(prompt: str) -> str:
+    """
+    Detect the best hero variant based on industry keywords in the prompt.
+
+    Returns a variant name: centered, split, minimal, photo_overlay, cards, video
+    """
+    prompt_lower = prompt.lower()
+
+    # Priority order: Check more specific/longer keywords first
+    # This prevents "tech" in "TechGear" from matching before "ecommerce"
+    priority_keywords = [
+        # Ecommerce/shop variants (high priority - check first)
+        ("ecommerce", "cards"),
+        ("e-commerce", "cards"),
+        ("shop", "cards"),
+        ("store", "cards"),
+        ("retail", "cards"),
+        # Food/hospitality (photo overlay)
+        ("restaurant", "photo_overlay"),
+        ("cafe", "photo_overlay"),
+        ("bakery", "photo_overlay"),
+        ("spa", "photo_overlay"),
+        ("wellness", "photo_overlay"),
+        ("salon", "photo_overlay"),
+        # Creative/agency (video)
+        ("agency", "video"),
+        ("creative", "video"),
+        ("studio", "video"),
+        ("gaming", "video"),
+        # Portfolio/design (minimal)
+        ("portfolio", "minimal"),
+        ("designer", "minimal"),
+        ("photographer", "minimal"),
+        ("artist", "minimal"),
+        ("architecture", "minimal"),
+        # SaaS/tech (split) - check AFTER ecommerce
+        ("saas", "split"),
+        ("software", "split"),
+        ("startup", "split"),
+        ("platform", "split"),
+        # Music/entertainment (cards)
+        ("vinyl", "cards"),
+        ("music", "cards"),
+        ("records", "cards"),
+        ("kids", "cards"),
+        ("children", "cards"),
+    ]
+
+    for keyword, variant in priority_keywords:
+        # Use word boundary matching to avoid partial matches like "tech" in "TechGear"
+        import re
+        if re.search(rf'\b{re.escape(keyword)}\b', prompt_lower):
+            logger.info(f"[COMPOSE] Detected industry '{keyword}' -> hero variant '{variant}'")
+            return variant
+
+    # Default to centered (classic gradient hero)
+    return "centered"
+
 
 def analyze_request(prompt: str) -> List[str]:
     """
@@ -116,8 +209,17 @@ def compose_from_templates(
         "template_system": True,
     }
 
+    # Detect hero variant based on industry
+    hero_variant = detect_hero_variant(prompt)
+    metadata["hero_variant"] = hero_variant
+
     for comp_type in components:
-        template = get_template(comp_type)
+        # Use industry-specific variant for hero, default for others
+        if comp_type == "hero":
+            template = get_template(comp_type, variant=hero_variant)
+            logger.info(f"[COMPOSE] Using hero variant: {hero_variant}")
+        else:
+            template = get_template(comp_type)
         if template:
             data = all_data.get(comp_type, {})
             rendered = template.render(data)

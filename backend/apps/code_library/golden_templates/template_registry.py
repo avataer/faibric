@@ -138,6 +138,219 @@ const HeroSection = ({ onNavigate }) => {
 '''
 )
 
+HERO_MINIMAL = GoldenTemplate(
+    name="hero_minimal",
+    category="hero",
+    variant="minimal",
+    description="Minimal text-only hero with clean typography",
+    schema={
+        "type": "object",
+        "required": ["headline", "subheadline", "cta_text"],
+        "properties": {
+            "headline": {"type": "string"},
+            "subheadline": {"type": "string"},
+            "cta_text": {"type": "string"},
+            "accent_color": {"type": "string", "default": "indigo"},
+        }
+    },
+    code='''
+const HeroSection = ({ onNavigate }) => {
+  return (
+    <section className="min-h-screen flex items-center justify-center bg-white">
+      <div className="max-w-4xl mx-auto px-6 py-24 text-center">
+        <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-8 tracking-tight leading-none">
+          {{headline}}
+        </h1>
+        <p className="text-xl md:text-2xl text-gray-500 mb-12 max-w-2xl mx-auto font-light">
+          {{subheadline}}
+        </p>
+        <button
+          onClick={() => onNavigate && onNavigate("contact")}
+          className="px-10 py-5 bg-gray-900 text-white text-lg font-medium hover:bg-gray-800 transition-colors"
+        >
+          {{cta_text}} →
+        </button>
+      </div>
+    </section>
+  );
+};
+'''
+)
+
+HERO_PHOTO_OVERLAY = GoldenTemplate(
+    name="hero_photo_overlay",
+    category="hero",
+    variant="photo_overlay",
+    description="Full-width photo background with floating text card",
+    schema={
+        "type": "object",
+        "required": ["headline", "subheadline", "cta_text"],
+        "properties": {
+            "headline": {"type": "string"},
+            "subheadline": {"type": "string"},
+            "cta_text": {"type": "string"},
+            "background_seed": {"type": "string"},
+        }
+    },
+    code='''
+const HeroSection = ({ onNavigate }) => {
+  return (
+    <section
+      className="min-h-screen bg-cover bg-center relative flex items-end pb-20"
+      style={{backgroundImage: "url('https://picsum.photos/seed/{{background_seed}}/1920/1080')"}}
+    >
+      <div className="absolute inset-0 bg-black/30"></div>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
+        <div className="bg-white/95 backdrop-blur-sm p-10 md:p-16 rounded-3xl shadow-2xl max-w-2xl">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
+            {{headline}}
+          </h1>
+          <p className="text-lg text-gray-600 mb-8">
+            {{subheadline}}
+          </p>
+          <button
+            onClick={() => onNavigate && onNavigate("contact")}
+            className="px-8 py-4 bg-gray-900 text-white rounded-full font-semibold hover:bg-gray-800 transition-all duration-300"
+          >
+            {{cta_text}}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
+'''
+)
+
+HERO_CARDS = GoldenTemplate(
+    name="hero_cards",
+    category="hero",
+    variant="cards",
+    description="Hero with feature cards below headline",
+    schema={
+        "type": "object",
+        "required": ["headline", "subheadline", "cards"],
+        "properties": {
+            "headline": {"type": "string"},
+            "subheadline": {"type": "string"},
+            "cards": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string"},
+                        "description": {"type": "string"},
+                        "cta": {"type": "string"}
+                    }
+                }
+            }
+        }
+    },
+    code='''
+const HeroSection = ({ onNavigate }) => {
+  const cards = {{@cards}};
+  return (
+    <section className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-20">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-16">
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            {{headline}}
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            {{subheadline}}
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-8">
+          {(cards || []).map((card, index) => (
+            <div
+              key={index}
+              className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2"
+            >
+              <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <span className="text-2xl font-bold text-white">{index + 1}</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">{card.title}</h3>
+              <p className="text-gray-600 mb-6">{card.description}</p>
+              <button
+                onClick={() => onNavigate && onNavigate("contact")}
+                className="text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center"
+              >
+                {card.cta || "Learn more"} →
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+'''
+)
+
+HERO_VIDEO = GoldenTemplate(
+    name="hero_video",
+    category="hero",
+    variant="video",
+    description="Hero with video background placeholder (uses image as fallback)",
+    schema={
+        "type": "object",
+        "required": ["headline", "subheadline", "cta_text"],
+        "properties": {
+            "headline": {"type": "string"},
+            "subheadline": {"type": "string"},
+            "cta_text": {"type": "string"},
+            "video_seed": {"type": "string"},
+        }
+    },
+    code='''
+const HeroSection = ({ onNavigate }) => {
+  return (
+    <section className="min-h-screen relative flex items-center justify-center overflow-hidden">
+      <div
+        className="absolute inset-0 bg-cover bg-center scale-110"
+        style={{
+          backgroundImage: "url('https://picsum.photos/seed/{{video_seed}}/1920/1080')",
+          animation: "slowZoom 20s ease-in-out infinite alternate"
+        }}
+      ></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+      <style>{`
+        @keyframes slowZoom {
+          from { transform: scale(1); }
+          to { transform: scale(1.1); }
+        }
+      `}</style>
+      <div className="relative z-10 text-center text-white px-6 max-w-4xl">
+        <div className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium mb-8 border border-white/20">
+          ✨ Welcome
+        </div>
+        <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+          {{headline}}
+        </h1>
+        <p className="text-xl md:text-2xl mb-10 opacity-90 max-w-2xl mx-auto">
+          {{subheadline}}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <button
+            onClick={() => onNavigate && onNavigate("contact")}
+            className="px-8 py-4 bg-white text-gray-900 rounded-full font-semibold text-lg hover:bg-gray-100 transition-all shadow-xl"
+          >
+            {{cta_text}}
+          </button>
+          <button
+            onClick={() => onNavigate && onNavigate("about")}
+            className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-semibold text-lg hover:bg-white/20 transition-all border border-white/30"
+          >
+            Learn More
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+};
+'''
+)
+
 
 # =============================================================================
 # NAVIGATION TEMPLATES
@@ -657,6 +870,10 @@ TEMPLATE_REGISTRY: Dict[str, Dict[str, GoldenTemplate]] = {
     "hero": {
         "centered": HERO_CENTERED,
         "split": HERO_SPLIT,
+        "minimal": HERO_MINIMAL,
+        "photo_overlay": HERO_PHOTO_OVERLAY,
+        "cards": HERO_CARDS,
+        "video": HERO_VIDEO,
     },
     "navigation": {
         "simple": NAVIGATION_SIMPLE,
