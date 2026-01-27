@@ -35,22 +35,23 @@ class Project(models.Model):
         related_name='projects'
     )
 
-    # AI Model preference
-    MODEL_CHOICES = [
-        ("claude-opus", "Claude Opus 4.5 - Most Powerful"),
-        ("claude-sonnet", "Claude Sonnet 4 - Balanced"),
-        ("claude-haiku", "Claude Haiku 3.5 - Fast"),
-        ("gpt-4o", "GPT-4o - OpenAI Flagship"),
-        ("gemini-2.0-flash", "Gemini 2.0 Flash - Google Fast"),
-    ]
-    preferred_model = models.CharField(
-        max_length=50,
-        choices=MODEL_CHOICES,
-        default="claude-opus",
-        null=True,
-        blank=True,
-        help_text="AI model to use for code generation"
-    )
+    # AI Model preference - kept in models_config.py for API endpoint
+    # The field is commented out until migration runs on production database
+    # MODEL_CHOICES = [
+    #     ("claude-opus", "Claude Opus 4.5 - Most Powerful"),
+    #     ("claude-sonnet", "Claude Sonnet 4 - Balanced"),
+    #     ("claude-haiku", "Claude Haiku 3.5 - Fast"),
+    #     ("gpt-4o", "GPT-4o - OpenAI Flagship"),
+    #     ("gemini-2.0-flash", "Gemini 2.0 Flash - Google Fast"),
+    # ]
+    # preferred_model = models.CharField(
+    #     max_length=50,
+    #     choices=MODEL_CHOICES,
+    #     default="claude-opus",
+    #     null=True,
+    #     blank=True,
+    #     help_text="AI model to use for code generation"
+    # )
 
     # Generation metadata
     user_prompt = models.TextField(help_text='Original user description')
@@ -88,8 +89,8 @@ class Project(models.Model):
 
     def get_model_display_name(self) -> str:
         """Return the display name for the preferred AI model."""
-        model_dict = dict(self.MODEL_CHOICES)
-        return model_dict.get(self.preferred_model, self.preferred_model)
+        # Temporarily return default until preferred_model column is added
+        return "Claude Opus 4.5"
 
 
 class GeneratedModel(models.Model):
