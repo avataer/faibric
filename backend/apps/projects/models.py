@@ -67,9 +67,9 @@ class Project(models.Model):
     deployment_url = models.URLField(blank=True)
     container_id = models.CharField(max_length=200, blank=True)
 
-    # GitHub sync
-    github_repo = models.CharField(max_length=255, blank=True, help_text="GitHub repo URL")
-    last_github_sha = models.CharField(max_length=40, blank=True, help_text="Last synced commit SHA")
+    # GitHub sync - commented out until migration runs
+    # github_repo = models.CharField(max_length=255, blank=True, help_text="GitHub repo URL")
+    # last_github_sha = models.CharField(max_length=40, blank=True, help_text="Last synced commit SHA")
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
