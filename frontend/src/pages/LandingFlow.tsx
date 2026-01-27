@@ -285,9 +285,39 @@ const LandingFlow = () => {
                   if (!typingStartRef.current) typingStartRef.current = Date.now()
                   setRequest(e.target.value)
                 }}
-                sx={{ mb: 3 }}
+                sx={{ mb: 2 }}
               />
-              
+
+              {/* Quick Start Templates */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="caption" sx={{ color: '#6b7280', mb: 1, display: 'block' }}>
+                  Or start with a template:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {[
+                    { label: 'Restaurant', prompt: 'Modern restaurant website with menu, reservations, and photo gallery' },
+                    { label: 'Portfolio', prompt: 'Creative portfolio for a designer with project showcase and contact form' },
+                    { label: 'SaaS Landing', prompt: 'SaaS landing page with pricing tiers, features, and signup form' },
+                    { label: 'Blog', prompt: 'Tech blog with article cards, categories, and newsletter signup' },
+                    { label: 'E-commerce', prompt: 'Fashion store with product grid, cart, and checkout' },
+                  ].map((template) => (
+                    <Button
+                      key={template.label}
+                      variant="outlined"
+                      size="small"
+                      onClick={() => setRequest(template.prompt)}
+                      sx={{
+                        borderColor: '#e5e7eb',
+                        color: '#374151',
+                        '&:hover': { borderColor: '#3b82f6', bgcolor: '#eff6ff' },
+                      }}
+                    >
+                      {template.label}
+                    </Button>
+                  ))}
+                </Box>
+              </Box>
+
               <Button
                 variant="contained"
                 size="large"
