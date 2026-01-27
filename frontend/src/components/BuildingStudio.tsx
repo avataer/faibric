@@ -35,6 +35,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     sessionToken,
     onDeployed: (url) => {
       addDeploymentMessage(url)
+      setIframeKey(prev => prev + 1)  // Auto-refresh preview after modification
       onDeployed?.(url)
     },
     onProgressEvent: (msg, eventId) => addSystemMessage(msg, eventId),
@@ -109,6 +110,24 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
         initialRequest={initialRequest}
         iframeKey={iframeKey}
         onRefresh={handleRefresh}
+        onEditRequest={(editRequest) => {
+          // Use visual edit request as input and send it
+          addUserMessage(editRequest)
+          api.post('/api/onboarding/modify/', {
+            session_token: sessionToken,
+            request: editRequest,
+          }).then((res) => {
+            const mode = res.data.mode
+            addAssistantMessage(
+              mode === 'modify'
+                ? "Got it! Applying your visual edit..."
+                : "Starting fresh with your new request..."
+            )
+            resetForNewBuild(mode)
+          }).catch(() => {
+            addErrorMessage('Failed to apply visual edit. Please try again.')
+          })
+        }}
       />
     </Box>
   )
