@@ -131,7 +131,10 @@ class BuildService:
                 from apps.project_services.database_integrator import DatabaseIntegrator
 
                 user_prompt = project.user_prompt or session.initial_request or ''
+                logger.info(f"[Build] DB check for prompt: {user_prompt[:50]}...")
                 db_integrator = DatabaseIntegrator(project, user_prompt, session_token)
+
+                logger.info(f"[Build] needs_database={db_integrator.needs_database}, category={db_integrator.needs.get('category')}")
 
                 if db_integrator.needs_database:
                     cls._add_event(session, 'Provisioning database...')
@@ -145,9 +148,15 @@ class BuildService:
                         logger.info(f"[Build] Database provisioned: {db_info.get('url', '')}")
                         logger.info(f"[Build] Tables created: {db_info.get('tables', [])}")
                         cls._add_event(session, f"Database ready with {len(db_info.get('tables', []))} tables")
+                    else:
+                        logger.warning(f"[Build] Database provision returned None")
+                else:
+                    logger.info(f"[Build] No database needed for this prompt")
             except Exception as db_error:
                 # Don't fail the build if database provisioning fails
                 logger.warning(f"[Build] Database integration skipped: {db_error}")
+                import traceback
+                logger.warning(f"[Build] Traceback: {traceback.format_exc()}")
 
             # Store the generated code
             result = {'components': {'App.tsx': app_code}}
