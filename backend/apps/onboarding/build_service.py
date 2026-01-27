@@ -3,6 +3,7 @@ BuildService - Runs app generation and deployment in-process.
 No Celery worker needed - faster deploys, simpler architecture.
 """
 import logging
+from datetime import datetime
 from django.db import connection
 
 logger = logging.getLogger(__name__)
@@ -115,12 +116,39 @@ class BuildService:
                 raise ValueError("Failed to generate valid code")
 
             from apps.code_library.owner_instructions import enforce_instructions
-            
+
             # Step 2.1: Enforce owner instructions (removes emojis, etc.)
             app_code, instruction_fixes = enforce_instructions(app_code)
             if instruction_fixes:
                 logger.info(f"[Build] Owner instruction fixes: {instruction_fixes}")
-            
+
+            # Step 2.2: DATABASE INTEGRATION - Auto-provision Supabase if needed
+            # Detects keywords like "todo list", "booking", "user accounts", etc.
+            # and automatically provisions database with appropriate schema
+            db_metadata = {}
+            html_head_additions = []
+            try:
+                from apps.project_services.database_integrator import DatabaseIntegrator
+
+                user_prompt = project.user_prompt or session.initial_request or ''
+                db_integrator = DatabaseIntegrator(project, user_prompt, session_token)
+
+                if db_integrator.needs_database:
+                    cls._add_event(session, 'Provisioning database...')
+                    db_info = db_integrator.provision()
+
+                    if db_info:
+                        # Inject Supabase client code into the app
+                        app_code, db_metadata = db_integrator.inject_code(app_code)
+                        html_head_additions = db_integrator.get_html_head_additions()
+
+                        logger.info(f"[Build] Database provisioned: {db_info.get('url', '')}")
+                        logger.info(f"[Build] Tables created: {db_info.get('tables', [])}")
+                        cls._add_event(session, f"Database ready with {len(db_info.get('tables', []))} tables")
+            except Exception as db_error:
+                # Don't fail the build if database provisioning fails
+                logger.warning(f"[Build] Database integration skipped: {db_error}")
+
             # Store the generated code
             result = {'components': {'App.tsx': app_code}}
             cls._store_generated_code(project, result)
@@ -176,6 +204,21 @@ class BuildService:
                 # Don't block on technical preview errors (Playwright not installed, etc.)
                 logger.warning(f"[Build] Local preview skipped: {preview_error}")
 
+            # Step 2.9: CRITICAL - Re-apply color enforcement after all code fixing
+            # The code fixer might have regenerated code with default gray colors
+            # This ensures user-requested colors are preserved even after fixes
+            user_request = project.user_prompt or session.initial_request or ''
+            with open('/tmp/color_enforcement.log', 'a') as f:
+                f.write(f"[{datetime.now()}] Step 2.9: user_request='{user_request[:200]}'\n")
+                f.write(f"[{datetime.now()}] Code length BEFORE: {len(app_code)}\n")
+            from apps.ai_engine.v2.generator import AIGeneratorV2
+            gen = AIGeneratorV2()
+            app_code = gen._apply_color_enforcement(app_code, user_request)
+            with open('/tmp/color_enforcement.log', 'a') as f:
+                f.write(f"[{datetime.now()}] Code length AFTER: {len(app_code)}\n")
+                f.write(f"[{datetime.now()}] Color enforcement complete\n")
+            logger.info(f"[Build] Applied color enforcement for: {user_request[:50]}")
+
             # Step 3: Deploy using HYBRID strategy (Vercel first, Render fallback)
             # Vercel: 30-60 seconds deploy time
             # Render: 5-10 minutes deploy time (fallback)
@@ -213,7 +256,7 @@ class BuildService:
             deploy_time = deploy_result.deploy_time_seconds
             logger.info(f"[Build] Deployed via {provider} in {deploy_time:.1f}s: {url}")
             
-            # Store deployment metadata in project
+            # Store deployment and database metadata in project
             if not project.ai_analysis:
                 project.ai_analysis = {}
             project.ai_analysis['deployment'] = {
@@ -222,6 +265,10 @@ class BuildService:
                 'deployment_id': deploy_result.deployment_id,
                 'verified': deploy_result.verified
             }
+            # Add database integration metadata if present
+            if db_metadata:
+                project.ai_analysis['database'] = db_metadata
+                logger.info(f"[Build] Database metadata saved: {db_metadata.get('tables', [])}")
             project.save()
             
             # For Vercel, check if deployment was verified

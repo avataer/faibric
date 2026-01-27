@@ -109,7 +109,8 @@ class VercelDeployer:
         app_code: str,
         project_id: str = None,
         generated_images: Dict[str, bytes] = None,
-        session_token: str = None
+        session_token: str = None,
+        user_prompt: str = ""
     ) -> Dict:
         """
         Deploy a static React app to Vercel.
@@ -136,8 +137,8 @@ class VercelDeployer:
 
         try:
             # Step 1: Generate all files for the React app
-            # Pass project_id and session_token to inject builder config
-            files = self._generate_files(app_code, project_name, project_id, generated_images, session_token)
+            # Pass project_id, session_token, and user_prompt for color enforcement
+            files = self._generate_files(app_code, project_name, project_id, generated_images, session_token, user_prompt)
             
             # Step 2: Create deployment via Vercel API
             # Pass project_id for URL generation
@@ -232,7 +233,8 @@ class VercelDeployer:
         project_name: str,
         project_id: str = None,
         generated_images: Dict[str, bytes] = None,
-        session_token: str = None
+        session_token: str = None,
+        user_prompt: str = ""
     ) -> list:
         """
         Generate files for instant static deployment.
@@ -252,10 +254,19 @@ class VercelDeployer:
         # Convert TypeScript-style React to browser-compatible JSX
         # The app_code uses TypeScript syntax, we need to adapt it for browser
         browser_app = self._convert_to_browser_react(app_code)
-        
+
         # Inject Faibric admin panel
         browser_app = self._inject_admin_panel(browser_app)
-        
+
+        # CRITICAL: Apply color enforcement AFTER admin panel injection
+        # The admin panel has default gray/blue colors that must be replaced
+        # if the user requested specific colors (brown/cream, etc.)
+        if user_prompt:
+            from apps.ai_engine.v2.generator import AIGeneratorV2
+            gen = AIGeneratorV2()
+            browser_app = gen._apply_color_enforcement(browser_app, user_prompt)
+            logger.info(f"[VERCEL] Applied color enforcement for: {user_prompt[:50]}")
+
         # Generate project token for builder API (legacy, kept for backward compatibility)
         project_token = ""
         if project_id:
@@ -263,9 +274,14 @@ class VercelDeployer:
                 f"{project_id}faibric_builder_secret".encode()
             ).hexdigest()[:16]
 
+        # Detect if Supabase is used in the code (auto-added by DatabaseIntegrator)
+        needs_supabase = 'supabase' in browser_app.lower() or 'SUPABASE_URL' in browser_app
+
         # index.html with CDN React + Tailwind + TypeScript support
         # INJECT: Project ID, project token, and session_token for the builder to work
         # session_token is the REAL token used by /api/onboarding/modify/ API
+        supabase_script = '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>' if needs_supabase else ''
+
         index_html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -276,6 +292,7 @@ class VercelDeployer:
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    {supabase_script}
     <script>
         // Faibric Builder Configuration
         window.FAIBRIC_PROJECT_ID = "{project_id or ''}";
