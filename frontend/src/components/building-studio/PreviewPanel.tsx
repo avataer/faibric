@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import {
   Box,
   Typography,
@@ -11,12 +11,15 @@ import {
   Button,
   TextField,
   Tooltip,
+  Snackbar,
+  Alert,
 } from '@mui/material'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import EditIcon from '@mui/icons-material/Edit'
 import TouchAppIcon from '@mui/icons-material/TouchApp'
 import ProgressivePreview from '../ProgressivePreview'
+import PropertyPanel from '../builder/PropertyPanel'
 
 interface PreviewPanelProps {
   deploymentUrl: string | null
@@ -26,6 +29,20 @@ interface PreviewPanelProps {
   iframeKey: number
   onRefresh: () => void
   onEditRequest?: (editRequest: string) => void
+}
+
+interface PropertyValue {
+  text?: string
+  src?: string
+  backgroundColor?: string
+  color?: string
+  fontSize?: number
+}
+
+interface SelectedElement {
+  selector: string
+  elementType: string
+  currentValue: PropertyValue
 }
 
 export function PreviewPanel({
@@ -42,8 +59,92 @@ export function PreviewPanel({
   const [editText, setEditText] = useState('')
   const [clickPosition, setClickPosition] = useState<{ x: number; y: number } | null>(null)
 
+  // Advanced visual editing state
+  const [selectedElement, setSelectedElement] = useState<SelectedElement | null>(null)
+  const [showPropertyPanel, setShowPropertyPanel] = useState(false)
+  const [editSuccess, setEditSuccess] = useState<string | null>(null)
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+
+  // Handle messages from iframe (element selection)
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const data = event.data
+      if (!data || !data.type) return
+
+      if (data.type === 'element_click' && editMode) {
+        // Element was clicked - show property panel
+        let parsedValue: PropertyValue = {}
+        if (data.elementType === 'text' || data.elementType === 'button') {
+          parsedValue = { text: data.currentValue || '' }
+        } else if (data.elementType === 'image') {
+          parsedValue = { src: data.currentValue || '' }
+        }
+
+        setSelectedElement({
+          selector: data.selector,
+          elementType: data.elementType,
+          currentValue: parsedValue,
+        })
+        setShowPropertyPanel(true)
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [editMode])
+
+  // Enable/disable visual editing in iframe
+  useEffect(() => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        { type: editMode ? 'enable_visual_editing' : 'disable_visual_editing' },
+        '*'
+      )
+    }
+  }, [editMode, deploymentUrl])
+
+  // Apply edit via PropertyPanel
+  const handlePropertyApply = useCallback(async (newValue: PropertyValue) => {
+    if (!selectedElement || !onEditRequest) return
+
+    // Build edit request from property changes
+    let editRequest = ''
+    if (selectedElement.elementType === 'text' || selectedElement.elementType === 'button') {
+      const oldText = selectedElement.currentValue.text || ''
+      const newText = newValue.text || ''
+      if (oldText !== newText) {
+        editRequest = `Change the text "${oldText.slice(0, 50)}" to "${newText}"`
+      }
+    } else if (selectedElement.elementType === 'image') {
+      editRequest = `Change the image to use URL: ${newValue.src}`
+    }
+
+    if (editRequest) {
+      onEditRequest(editRequest)
+      setEditSuccess('Edit applied! Building changes...')
+    }
+
+    // Reset state
+    setShowPropertyPanel(false)
+    setSelectedElement(null)
+    setEditMode(false)
+  }, [selectedElement, onEditRequest])
+
+  const handlePropertyCancel = useCallback(() => {
+    setShowPropertyPanel(false)
+    setSelectedElement(null)
+    // Clear highlight in iframe
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: 'clear_highlight' }, '*')
+    }
+  }, [])
+
+  // Fallback: click position based editing
   const handlePreviewClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!editMode || !deploymentUrl) return
+
+    // Only use position-based dialog if no element was selected via postMessage
+    if (showPropertyPanel) return
 
     // Get click position relative to the preview area
     const rect = e.currentTarget.getBoundingClientRect()
@@ -160,7 +261,35 @@ export function PreviewPanel({
         }}
         onClick={handlePreviewClick}
       >
-        {/* Edit mode overlay */}
+        {/* Edit mode hint - floating above iframe */}
+        {editMode && deploymentUrl && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 16,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 20,
+              bgcolor: '#2563eb',
+              color: 'white',
+              px: 3,
+              py: 1.5,
+              borderRadius: 2,
+              boxShadow: 3,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              pointerEvents: 'none',
+            }}
+          >
+            <TouchAppIcon />
+            <Typography fontWeight={600}>
+              Click any element to edit it directly
+            </Typography>
+          </Box>
+        )}
+
+        {/* Edit mode border indicator */}
         {editMode && deploymentUrl && (
           <Box
             sx={{
@@ -169,50 +298,32 @@ export function PreviewPanel({
               left: 0,
               right: 0,
               bottom: 0,
-              zIndex: 10,
-              backgroundColor: 'rgba(37, 99, 235, 0.05)',
+              zIndex: 5,
               border: '3px dashed #2563eb',
-              pointerEvents: 'auto',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              pointerEvents: 'none',
             }}
-          >
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 16,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                bgcolor: '#2563eb',
-                color: 'white',
-                px: 3,
-                py: 1.5,
-                borderRadius: 2,
-                boxShadow: 3,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-              }}
-            >
-              <TouchAppIcon />
-              <Typography fontWeight={600}>
-                Click anywhere on the preview to edit that area
-              </Typography>
-            </Box>
-          </Box>
+          />
         )}
 
         {deploymentUrl ? (
           <iframe
+            ref={iframeRef}
             key={`iframe-${deploymentUrl}-${iframeKey}`}
             src={deploymentUrl}
+            onLoad={() => {
+              // Enable visual editing if already in edit mode
+              if (editMode && iframeRef.current?.contentWindow) {
+                iframeRef.current.contentWindow.postMessage(
+                  { type: 'enable_visual_editing' },
+                  '*'
+                )
+              }
+            }}
             style={{
               width: '100%',
               height: '100%',
               border: 'none',
               backgroundColor: '#fff',
-              pointerEvents: editMode ? 'none' : 'auto',
             }}
             title="Your Deployed Website"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
@@ -274,6 +385,28 @@ export function PreviewPanel({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Advanced Property Panel for direct element editing */}
+      {showPropertyPanel && selectedElement && (
+        <PropertyPanel
+          elementType={selectedElement.elementType}
+          currentValue={selectedElement.currentValue}
+          onApply={handlePropertyApply}
+          onCancel={handlePropertyCancel}
+        />
+      )}
+
+      {/* Success notification */}
+      <Snackbar
+        open={!!editSuccess}
+        autoHideDuration={3000}
+        onClose={() => setEditSuccess(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" onClose={() => setEditSuccess(null)}>
+          {editSuccess}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

@@ -282,6 +282,10 @@ class VercelDeployer:
         # session_token is the REAL token used by /api/onboarding/modify/ API
         supabase_script = '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>' if needs_supabase else ''
 
+        # Visual editing script for click-to-edit functionality
+        from .visual_edit_script import get_visual_edit_script
+        visual_edit_script = get_visual_edit_script()
+
         index_html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -312,6 +316,7 @@ class VercelDeployer:
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(App));
     </script>
+    {visual_edit_script}
 </body>
 </html>'''
         
