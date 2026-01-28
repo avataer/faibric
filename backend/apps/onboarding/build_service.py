@@ -80,9 +80,8 @@ class BuildService:
 
             for attempt in range(MAX_VALIDATION_RETRIES):
                 try:
-                    # Pass project's preferred model to the pipeline
-                    model_key = getattr(project, 'preferred_model', None)
-                    pipeline = ComponentGenerationPipeline(session, model_key=model_key)
+                    # Model selection temporarily disabled until migration runs
+                    pipeline = ComponentGenerationPipeline(session, model_key=None)
                     app_code = pipeline.build(
                         prompt=project.user_prompt or project.description,
                         project=project
