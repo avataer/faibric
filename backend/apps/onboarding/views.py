@@ -65,26 +65,33 @@ class LandingFlowView(APIView):
     def post(self, request):
         """
         Step 1: Submit initial request.
-        
+
         User types something in the main input and submits.
         Returns a session token.
         """
+        import traceback
         serializer = SubmitRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
-        session = OnboardingService.create_session(
-            initial_request=serializer.validated_data['request'],
-            ip_address=request.META.get('REMOTE_ADDR'),
-            user_agent=request.META.get('HTTP_USER_AGENT', ''),
-            utm_source=serializer.validated_data.get('utm_source', ''),
-            utm_medium=serializer.validated_data.get('utm_medium', ''),
-            utm_campaign=serializer.validated_data.get('utm_campaign', ''),
-            utm_content=serializer.validated_data.get('utm_content', ''),
-            utm_term=serializer.validated_data.get('utm_term', ''),
-            referrer=serializer.validated_data.get('referrer', ''),
-            landing_page=serializer.validated_data.get('landing_page', ''),
-        )
-        
+
+        try:
+            session = OnboardingService.create_session(
+                initial_request=serializer.validated_data['request'],
+                ip_address=request.META.get('REMOTE_ADDR'),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                utm_source=serializer.validated_data.get('utm_source', ''),
+                utm_medium=serializer.validated_data.get('utm_medium', ''),
+                utm_campaign=serializer.validated_data.get('utm_campaign', ''),
+                utm_content=serializer.validated_data.get('utm_content', ''),
+                utm_term=serializer.validated_data.get('utm_term', ''),
+                referrer=serializer.validated_data.get('referrer', ''),
+                landing_page=serializer.validated_data.get('landing_page', ''),
+            )
+        except Exception as e:
+            return Response({
+                'error': str(e),
+                'traceback': traceback.format_exc(),
+            }, status=500)
+
         return Response({
             'success': True,
             'session_token': session.session_token,
