@@ -44,27 +44,36 @@ class LandingFlowView(APIView):
         User types something in the main input and submits.
         Returns a session token.
         """
-        serializer = SubmitRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        import traceback
 
-        session = OnboardingService.create_session(
-            initial_request=serializer.validated_data['request'],
-            ip_address=request.META.get('REMOTE_ADDR'),
-            user_agent=request.META.get('HTTP_USER_AGENT', ''),
-            utm_source=serializer.validated_data.get('utm_source', ''),
-            utm_medium=serializer.validated_data.get('utm_medium', ''),
-            utm_campaign=serializer.validated_data.get('utm_campaign', ''),
-            utm_content=serializer.validated_data.get('utm_content', ''),
-            utm_term=serializer.validated_data.get('utm_term', ''),
-            referrer=serializer.validated_data.get('referrer', ''),
-            landing_page=serializer.validated_data.get('landing_page', ''),
-        )
+        try:
+            serializer = SubmitRequestSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({
-            'success': True,
-            'session_token': session.session_token,
-            'message': 'Please provide your email to continue.',
-        })
+            session = OnboardingService.create_session(
+                initial_request=serializer.validated_data['request'],
+                ip_address=request.META.get('REMOTE_ADDR'),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                utm_source=serializer.validated_data.get('utm_source', ''),
+                utm_medium=serializer.validated_data.get('utm_medium', ''),
+                utm_campaign=serializer.validated_data.get('utm_campaign', ''),
+                utm_content=serializer.validated_data.get('utm_content', ''),
+                utm_term=serializer.validated_data.get('utm_term', ''),
+                referrer=serializer.validated_data.get('referrer', ''),
+                landing_page=serializer.validated_data.get('landing_page', ''),
+            )
+
+            return Response({
+                'success': True,
+                'session_token': session.session_token,
+                'message': 'Please provide your email to continue.',
+            })
+        except Exception as e:
+            return Response({
+                'error': str(e),
+                'traceback': traceback.format_exc(),
+            }, status=500)
 
 
 class PlanningFlowView(APIView):
