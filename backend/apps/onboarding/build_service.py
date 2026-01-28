@@ -80,9 +80,8 @@ class BuildService:
 
             for attempt in range(MAX_VALIDATION_RETRIES):
                 try:
-                    # Use default model until preferred_model column exists
-                    # TODO: Re-enable when migration runs: model_key = getattr(project, 'preferred_model', None)
-                    model_key = None  # Uses default from models_config
+                    # Pass project's preferred model to the pipeline
+                    model_key = getattr(project, 'preferred_model', None)
                     pipeline = ComponentGenerationPipeline(session, model_key=model_key)
                     app_code = pipeline.build(
                         prompt=project.user_prompt or project.description,

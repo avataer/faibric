@@ -35,23 +35,22 @@ class Project(models.Model):
         related_name='projects'
     )
 
-    # AI Model preference - kept in models_config.py for API endpoint
-    # The field is commented out until migration runs on production database
-    # MODEL_CHOICES = [
-    #     ("claude-opus", "Claude Opus 4.5 - Most Powerful"),
-    #     ("claude-sonnet", "Claude Sonnet 4 - Balanced"),
-    #     ("claude-haiku", "Claude Haiku 3.5 - Fast"),
-    #     ("gpt-4o", "GPT-4o - OpenAI Flagship"),
-    #     ("gemini-2.0-flash", "Gemini 2.0 Flash - Google Fast"),
-    # ]
-    # preferred_model = models.CharField(
-    #     max_length=50,
-    #     choices=MODEL_CHOICES,
-    #     default="claude-opus",
-    #     null=True,
-    #     blank=True,
-    #     help_text="AI model to use for code generation"
-    # )
+    # AI Model preference
+    MODEL_CHOICES = [
+        ("claude-opus", "Claude Opus 4.5 - Most Powerful"),
+        ("claude-sonnet", "Claude Sonnet 4 - Balanced"),
+        ("claude-haiku", "Claude Haiku 3.5 - Fast"),
+        ("gpt-4o", "GPT-4o - OpenAI Flagship"),
+        ("gemini-2-flash", "Gemini 2.0 Flash - Google Fast"),
+    ]
+    preferred_model = models.CharField(
+        max_length=50,
+        choices=MODEL_CHOICES,
+        default="claude-opus",
+        null=True,
+        blank=True,
+        help_text="AI model to use for code generation"
+    )
 
     # Generation metadata
     user_prompt = models.TextField(help_text='Original user description')
@@ -67,9 +66,9 @@ class Project(models.Model):
     deployment_url = models.URLField(blank=True)
     container_id = models.CharField(max_length=200, blank=True)
 
-    # GitHub sync - commented out until migration runs
-    # github_repo = models.CharField(max_length=255, blank=True, help_text="GitHub repo URL")
-    # last_github_sha = models.CharField(max_length=40, blank=True, help_text="Last synced commit SHA")
+    # GitHub sync
+    github_repo = models.CharField(max_length=255, blank=True, default='', help_text="GitHub repo URL")
+    last_github_sha = models.CharField(max_length=40, blank=True, default='', help_text="Last synced commit SHA")
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -89,8 +88,8 @@ class Project(models.Model):
 
     def get_model_display_name(self) -> str:
         """Return the display name for the preferred AI model."""
-        # Temporarily return default until preferred_model column is added
-        return "Claude Opus 4.5"
+        model_dict = dict(self.MODEL_CHOICES)
+        return model_dict.get(self.preferred_model, self.preferred_model or "Claude Opus 4.5")
 
 
 class GeneratedModel(models.Model):
