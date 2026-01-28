@@ -6,6 +6,7 @@ This ensures idempotent schema fixes even when Django's migration state is incon
 """
 import os
 import sys
+import traceback
 
 # Set up Django settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'faibric_backend.settings')
@@ -20,41 +21,64 @@ def fix_onboarding_schema():
     """Add missing columns to onboarding_landingsession table."""
     columns_to_add = [
         ("mode", "VARCHAR(20)", "'building'"),
-        ("requirements_checklist", "TEXT", "NULL"),
+        ("requirements_checklist", "TEXT", None),
     ]
 
     with connection.cursor() as cursor:
         for col_name, col_type, default in columns_to_add:
-            # Check if column exists
-            cursor.execute("""
-                SELECT column_name FROM information_schema.columns
-                WHERE table_name = 'onboarding_landingsession' AND column_name = %s
-            """, [col_name])
-
-            if cursor.fetchone() is None:
-                # Add the column
-                if default == "NULL":
+            try:
+                # Use PostgreSQL-specific syntax for checking column existence
+                # and adding column IF NOT EXISTS
+                if default is None:
                     sql = f"""
-                        ALTER TABLE onboarding_landingsession
-                        ADD COLUMN {col_name} {col_type} NULL
+                        DO $$
+                        BEGIN
+                            IF NOT EXISTS (
+                                SELECT 1 FROM information_schema.columns
+                                WHERE table_name = 'onboarding_landingsession'
+                                AND column_name = '{col_name}'
+                            ) THEN
+                                ALTER TABLE onboarding_landingsession
+                                ADD COLUMN {col_name} {col_type} NULL;
+                                RAISE NOTICE 'Added column: {col_name}';
+                            ELSE
+                                RAISE NOTICE 'Column already exists: {col_name}';
+                            END IF;
+                        END $$;
                     """
                 else:
                     sql = f"""
-                        ALTER TABLE onboarding_landingsession
-                        ADD COLUMN {col_name} {col_type} DEFAULT {default}
+                        DO $$
+                        BEGIN
+                            IF NOT EXISTS (
+                                SELECT 1 FROM information_schema.columns
+                                WHERE table_name = 'onboarding_landingsession'
+                                AND column_name = '{col_name}'
+                            ) THEN
+                                ALTER TABLE onboarding_landingsession
+                                ADD COLUMN {col_name} {col_type} DEFAULT {default};
+                                RAISE NOTICE 'Added column: {col_name}';
+                            ELSE
+                                RAISE NOTICE 'Column already exists: {col_name}';
+                            END IF;
+                        END $$;
                     """
-                print(f"[fix_schema] Adding column: {col_name}")
+                print(f"[fix_schema] Checking/adding column: {col_name}")
                 cursor.execute(sql)
-            else:
-                print(f"[fix_schema] Column already exists: {col_name}")
+                print(f"[fix_schema] Processed column: {col_name}")
+            except Exception as e:
+                print(f"[fix_schema] Error with column {col_name}: {e}")
+                traceback.print_exc()
 
 
 if __name__ == '__main__':
     print("[fix_schema] Running pre-migration schema fixes...")
+    print(f"[fix_schema] DATABASE_URL: {os.environ.get('DATABASE_URL', 'NOT SET')[:50]}...")
     try:
         fix_onboarding_schema()
         print("[fix_schema] Schema fixes complete.")
     except Exception as e:
-        print(f"[fix_schema] Warning: {e}")
+        print(f"[fix_schema] Error: {e}")
+        traceback.print_exc()
         # Don't fail the startup - just warn
         sys.exit(0)

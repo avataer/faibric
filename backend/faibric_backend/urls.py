@@ -19,7 +19,7 @@ def health_check(request):
     return JsonResponse({
         'status': 'healthy',
         'service': 'faibric-api',
-        'version': 'v7-fix-schema-script',  # Run fix_schema.py before migrations
+        'version': 'v8-fix-schema-plpgsql',  # Use PL/pgSQL DO block for schema fix
         'deployment': deploy_status,
     })
 
