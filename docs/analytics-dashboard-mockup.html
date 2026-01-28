@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - Faibric</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            padding: 24px;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .dashboard-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.87);
+        }
+        .time-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .time-selector label {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.6);
+        }
+        .time-selector select {
+            padding: 10px 32px 10px 14px;
+            border: 1px solid rgba(0, 0, 0, 0.23);
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            min-width: 150px;
+        }
+        .time-selector select:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+
+        /* Metric Cards Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .metric-card .label {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.6);
+            margin-bottom: 8px;
+        }
+        .metric-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: rgba(0, 0, 0, 0.87);
+            line-height: 1.2;
+        }
+        .metric-card .subtitle {
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.6);
+            margin-top: 4px;
+        }
+
+        /* Charts Grid */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .chart-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: rgba(0, 0, 0, 0.87);
+        }
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Line Chart SVG */
+        .line-chart {
+            width: 100%;
+            height: 100%;
+        }
+        .grid-line {
+            stroke: #e0e0e0;
+            stroke-dasharray: 3 3;
+        }
+        .axis-line {
+            stroke: #bdbdbd;
+        }
+        .data-line {
+            fill: none;
+            stroke: #1976d2;
+            stroke-width: 2;
+        }
+        .data-point {
+            fill: #1976d2;
+        }
+        .axis-label {
+            font-size: 12px;
+            fill: rgba(0, 0, 0, 0.6);
+        }
+        .legend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: center;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            background: #1976d2;
+            border-radius: 50%;
+        }
+        .legend-text {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        /* Bar Chart */
+        .bar-chart {
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .bar-label {
+            width: 100px;
+            font-size: 11px;
+            color: rgba(0, 0, 0, 0.87);
+            text-align: right;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .bar-container {
+            flex: 1;
+            height: 24px;
+            background: #f5f5f5;
+            border-radius: 0 4px 4px 0;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            background: #1976d2;
+            border-radius: 0 4px 4px 0;
+            transition: width 0.3s ease;
+        }
+        .bar-value {
+            width: 50px;
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        /* Bottom Row */
+        .bottom-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        /* Funnel Section */
+        .funnel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .funnel-select {
+            padding: 8px 12px;
+            border: 1px solid rgba(0, 0, 0, 0.23);
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        .funnel-overall {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.6);
+            margin-bottom: 16px;
+        }
+        .funnel-step {
+            margin-bottom: 16px;
+        }
+        .funnel-step-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .funnel-step-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.87);
+        }
+        .funnel-step-stats {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.6);
+        }
+        .funnel-bar {
+            height: 32px;
+            background: #1976d2;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .funnel-dropoff {
+            font-size: 12px;
+            color: #d32f2f;
+            margin-top: 4px;
+        }
+
+        /* Top Pages Section */
+        .top-pages-list {
+            display: flex;
+            flex-direction: column;
+        }
+        .page-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .page-row:last-child {
+            border-bottom: none;
+        }
+        .page-path {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.87);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 70%;
+        }
+        .page-views {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.6);
+            font-weight: 500;
+        }
+
+        hr.divider {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 0 0 16px 0;
+        }
+
+        @media (max-width: 1200px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .charts-row, .bottom-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>Analytics</h1>
+        <div class="time-selector">
+            <label>Time Range</label>
+            <select>
+                <option value="24h">Last 24 hours</option>
+                <option value="7d" selected>Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="90d">Last 90 days</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 4 Metric Cards -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="label">Total Events</div>
+            <div class="value">24,847</div>
+            <div class="subtitle">1,523 today</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Unique Users</div>
+            <div class="value">3,156</div>
+            <div class="subtitle">247 today</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Conversion Rate</div>
+            <div class="value">12.4%</div>
+            <div class="subtitle">Funnel completion</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Avg Events/Day</div>
+            <div class="value">3,549</div>
+            <div class="subtitle">Over 7d</div>
+        </div>
+    </div>
+
+    <!-- Charts Row: Line Chart (Events Over Time) + Bar Chart (Event Breakdown) -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <h3>Events Over Time</h3>
+            <div class="chart-container">
+                <svg class="line-chart" viewBox="0 0 600 280">
+                    <!-- Grid lines -->
+                    <line x1="60" y1="40" x2="580" y2="40" class="grid-line"/>
+                    <line x1="60" y1="90" x2="580" y2="90" class="grid-line"/>
+                    <line x1="60" y1="140" x2="580" y2="140" class="grid-line"/>
+                    <line x1="60" y1="190" x2="580" y2="190" class="grid-line"/>
+                    <line x1="60" y1="240" x2="580" y2="240" class="grid-line"/>
+
+                    <!-- Axes -->
+                    <line x1="60" y1="40" x2="60" y2="240" class="axis-line"/>
+                    <line x1="60" y1="240" x2="580" y2="240" class="axis-line"/>
+
+                    <!-- Y-axis labels -->
+                    <text x="50" y="44" class="axis-label" text-anchor="end">5k</text>
+                    <text x="50" y="94" class="axis-label" text-anchor="end">4k</text>
+                    <text x="50" y="144" class="axis-label" text-anchor="end">3k</text>
+                    <text x="50" y="194" class="axis-label" text-anchor="end">2k</text>
+                    <text x="50" y="244" class="axis-label" text-anchor="end">1k</text>
+
+                    <!-- X-axis labels -->
+                    <text x="100" y="260" class="axis-label" text-anchor="middle">Jan 9</text>
+                    <text x="180" y="260" class="axis-label" text-anchor="middle">Jan 10</text>
+                    <text x="260" y="260" class="axis-label" text-anchor="middle">Jan 11</text>
+                    <text x="340" y="260" class="axis-label" text-anchor="middle">Jan 12</text>
+                    <text x="420" y="260" class="axis-label" text-anchor="middle">Jan 13</text>
+                    <text x="500" y="260" class="axis-label" text-anchor="middle">Jan 14</text>
+                    <text x="560" y="260" class="axis-label" text-anchor="middle">Jan 15</text>
+
+                    <!-- Data line -->
+                    <polyline class="data-line" points="100,160 180,120 260,180 340,100 420,80 500,110 560,90"/>
+
+                    <!-- Data points -->
+                    <circle cx="100" cy="160" r="5" class="data-point"/>
+                    <circle cx="180" cy="120" r="5" class="data-point"/>
+                    <circle cx="260" cy="180" r="5" class="data-point"/>
+                    <circle cx="340" cy="100" r="5" class="data-point"/>
+                    <circle cx="420" cy="80" r="5" class="data-point"/>
+                    <circle cx="500" cy="110" r="5" class="data-point"/>
+                    <circle cx="560" cy="90" r="5" class="data-point"/>
+                </svg>
+            </div>
+            <div class="legend">
+                <div class="legend-dot"></div>
+                <span class="legend-text">events</span>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Event Breakdown</h3>
+            <div class="bar-chart">
+                <div class="bar-row">
+                    <span class="bar-label">page_view</span>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: 100%"></div>
+                    </div>
+                    <span class="bar-value">8,542</span>
+                </div>
+                <div class="bar-row">
+                    <span class="bar-label">button_click</span>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: 72%"></div>
+                    </div>
+                    <span class="bar-value">6,150</span>
+                </div>
+                <div class="bar-row">
+                    <span class="bar-label">form_submit</span>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: 45%"></div>
+                    </div>
+                    <span class="bar-value">3,847</span>
+                </div>
+                <div class="bar-row">
+                    <span class="bar-label">user_signup</span>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: 28%"></div>
+                    </div>
+                    <span class="bar-value">2,392</span>
+                </div>
+                <div class="bar-row">
+                    <span class="bar-label">checkout_start</span>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: 20%"></div>
+                    </div>
+                    <span class="bar-value">1,708</span>
+                </div>
+                <div class="bar-row">
+                    <span class="bar-label">purchase_comp...</span>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: 12%"></div>
+                    </div>
+                    <span class="bar-value">1,024</span>
+                </div>
+                <div class="bar-row">
+                    <span class="bar-label">api_call</span>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: 9%"></div>
+                    </div>
+                    <span class="bar-value">768</span>
+                </div>
+                <div class="bar-row">
+                    <span class="bar-label">error_shown</span>
+                    <div class="bar-container">
+                        <div class="bar-fill" style="width: 5%"></div>
+                    </div>
+                    <span class="bar-value">416</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Row: Funnel Analysis + Top Pages -->
+    <div class="bottom-row">
+        <div class="chart-card">
+            <div class="funnel-header">
+                <h3>Funnel Analysis</h3>
+                <select class="funnel-select">
+                    <option>User Signup Flow</option>
+                    <option>Purchase Funnel</option>
+                    <option>Onboarding Steps</option>
+                </select>
+            </div>
+            <hr class="divider">
+            <div class="funnel-overall">Overall Conversion: 12.4%</div>
+
+            <div class="funnel-step">
+                <div class="funnel-step-header">
+                    <span class="funnel-step-name">Landing Page View</span>
+                    <span class="funnel-step-stats">3,156 users (100.0%)</span>
+                </div>
+                <div class="funnel-bar" style="width: 100%"></div>
+                <div class="funnel-dropoff">Drop-off: 45.2%</div>
+            </div>
+
+            <div class="funnel-step">
+                <div class="funnel-step-header">
+                    <span class="funnel-step-name">Sign Up Started</span>
+                    <span class="funnel-step-stats">1,729 users (54.8%)</span>
+                </div>
+                <div class="funnel-bar" style="width: 54.8%"></div>
+                <div class="funnel-dropoff">Drop-off: 32.1%</div>
+            </div>
+
+            <div class="funnel-step">
+                <div class="funnel-step-header">
+                    <span class="funnel-step-name">Email Verified</span>
+                    <span class="funnel-step-stats">1,174 users (37.2%)</span>
+                </div>
+                <div class="funnel-bar" style="width: 37.2%"></div>
+                <div class="funnel-dropoff">Drop-off: 66.6%</div>
+            </div>
+
+            <div class="funnel-step">
+                <div class="funnel-step-header">
+                    <span class="funnel-step-name">Profile Completed</span>
+                    <span class="funnel-step-stats">392 users (12.4%)</span>
+                </div>
+                <div class="funnel-bar" style="width: 12.4%"></div>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Top Pages</h3>
+            <div class="top-pages-list">
+                <div class="page-row">
+                    <span class="page-path">/dashboard</span>
+                    <span class="page-views">4,521</span>
+                </div>
+                <div class="page-row">
+                    <span class="page-path">/projects</span>
+                    <span class="page-views">3,847</span>
+                </div>
+                <div class="page-row">
+                    <span class="page-path">/settings/profile</span>
+                    <span class="page-views">2,156</span>
+                </div>
+                <div class="page-row">
+                    <span class="page-path">/analytics</span>
+                    <span class="page-views">1,892</span>
+                </div>
+                <div class="page-row">
+                    <span class="page-path">/projects/new</span>
+                    <span class="page-views">1,456</span>
+                </div>
+                <div class="page-row">
+                    <span class="page-path">/auth/login</span>
+                    <span class="page-views">1,234</span>
+                </div>
+                <div class="page-row">
+                    <span class="page-path">/billing</span>
+                    <span class="page-views">987</span>
+                </div>
+                <div class="page-row">
+                    <span class="page-path">/help/docs</span>
+                    <span class="page-views">654</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

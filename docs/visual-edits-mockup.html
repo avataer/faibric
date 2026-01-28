@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Editor - Faibric</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: #1a1a2e;
+      color: #333;
+      line-height: 1.5;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .editor-container {
+      display: flex;
+      height: 100vh;
+    }
+    .preview-panel {
+      flex: 1;
+      background: #2d2d44;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: #252538;
+      border-radius: 8px 8px 0 0;
+      border-bottom: 1px solid #3d3d5c;
+    }
+    .preview-title {
+      color: #a0a0b0;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .preview-mode-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #4a90d9;
+      border-radius: 4px;
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .preview-mode-dot {
+      width: 8px;
+      height: 8px;
+      background: #6eff6e;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .preview-iframe-container {
+      flex: 1;
+      background: white;
+      border-radius: 0 0 8px 8px;
+      overflow: hidden;
+      position: relative;
+    }
+    .preview-content {
+      width: 100%;
+      height: 100%;
+      background: #faf7f2;
+    }
+    /* Sample Bakery Page Content */
+    .bakery-header {
+      background: linear-gradient(135deg, #8b5a2b 0%, #d2691e 100%);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .bakery-logo {
+      color: white;
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'Georgia', serif;
+    }
+    .bakery-nav {
+      display: flex;
+      gap: 24px;
+    }
+    .bakery-nav-item {
+      color: rgba(255,255,255,0.9);
+      font-size: 14px;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .bakery-nav-item:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .bakery-hero {
+      padding: 60px 40px;
+      text-align: center;
+      background: linear-gradient(180deg, #faf7f2 0%, #f5ebe0 100%);
+    }
+    .bakery-hero-title {
+      font-size: 48px;
+      font-weight: 700;
+      color: #3d2914;
+      font-family: 'Georgia', serif;
+      margin-bottom: 16px;
+    }
+    .bakery-hero-subtitle {
+      font-size: 18px;
+      color: #6b5344;
+      margin-bottom: 32px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .bakery-cta-button {
+      display: inline-block;
+      padding: 16px 40px;
+      background: #d2691e;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .bakery-cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(210,105,30,0.4);
+    }
+    .bakery-products {
+      padding: 40px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .bakery-product-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .bakery-product-image {
+      height: 140px;
+      background: linear-gradient(135deg, #f5deb3 0%, #daa520 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #8b4513;
+      font-size: 40px;
+    }
+    .bakery-product-info {
+      padding: 16px;
+    }
+    .bakery-product-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #3d2914;
+      margin-bottom: 4px;
+    }
+    .bakery-product-price {
+      font-size: 14px;
+      color: #d2691e;
+      font-weight: 500;
+    }
+    /* Selected Element Highlight */
+    .selected-element {
+      position: relative;
+    }
+    .selected-element::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      border: 3px solid #4a90d9;
+      border-radius: 4px;
+      pointer-events: none;
+      animation: selection-pulse 1.5s infinite;
+    }
+    @keyframes selection-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(74,144,217,0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(74,144,217,0); }
+    }
+    .selection-handles {
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      pointer-events: none;
+    }
+    .selection-handle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #4a90d9;
+      border: 2px solid white;
+      border-radius: 2px;
+    }
+    .selection-handle.top-left { top: -5px; left: -5px; }
+    .selection-handle.top-right { top: -5px; right: -5px; }
+    .selection-handle.bottom-left { bottom: -5px; left: -5px; }
+    .selection-handle.bottom-right { bottom: -5px; right: -5px; }
+    /* Hover indicator for other elements */
+    .hover-indicator {
+      position: absolute;
+      border: 2px dashed #4a90d9;
+      border-radius: 4px;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+    /* Property Panel */
+    .property-panel {
+      width: 340px;
+      background: #252538;
+      border-left: 1px solid #3d3d5c;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      background: #1e1e30;
+      border-bottom: 1px solid #3d3d5c;
+    }
+    .panel-title {
+      color: white;
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .panel-subtitle {
+      color: #888;
+      font-size: 12px;
+    }
+    .element-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #4a90d9;
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 4px;
+      margin-top: 12px;
+    }
+    .element-type-icon {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .panel-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .property-section {
+      margin-bottom: 24px;
+    }
+    .property-section-title {
+      color: #888;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .property-group {
+      margin-bottom: 16px;
+    }
+    .property-label {
+      color: #a0a0b0;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .property-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: #1e1e30;
+      border: 1px solid #3d3d5c;
+      border-radius: 4px;
+      color: white;
+      font-size: 14px;
+    }
+    .property-input:focus {
+      outline: none;
+      border-color: #4a90d9;
+    }
+    .property-input::placeholder {
+      color: #666;
+    }
+    .property-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    .color-property {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .color-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      border: 2px solid #3d3d5c;
+      cursor: pointer;
+    }
+    .color-hex-input {
+      flex: 1;
+      padding: 10px 12px;
+      background: #1e1e30;
+      border: 1px solid #3d3d5c;
+      border-radius: 4px;
+      color: white;
+      font-size: 13px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      text-transform: uppercase;
+    }
+    .number-input-row {
+      display: flex;
+      gap: 12px;
+    }
+    .number-input-group {
+      flex: 1;
+    }
+    .number-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: #1e1e30;
+      border: 1px solid #3d3d5c;
+      border-radius: 4px;
+      color: white;
+      font-size: 14px;
+      text-align: center;
+    }
+    .number-input-label {
+      color: #666;
+      font-size: 10px;
+      text-transform: uppercase;
+      text-align: center;
+      margin-top: 4px;
+    }
+    .panel-footer {
+      padding: 16px 20px;
+      background: #1e1e30;
+      border-top: 1px solid #3d3d5c;
+      display: flex;
+      gap: 12px;
+    }
+    .btn {
+      flex: 1;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #4a90d9;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #3a7fc8;
+    }
+    .btn-secondary {
+      background: #3d3d5c;
+      color: #ccc;
+    }
+    .btn-secondary:hover {
+      background: #4d4d6c;
+    }
+    /* Instructions tooltip */
+    .instructions-tooltip {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.85);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      max-width: 280px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .instructions-tooltip::before {
+      content: '[i]';
+      margin-right: 8px;
+      color: #4a90d9;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="editor-container">
+    <!-- Preview Panel (Left Side) -->
+    <div class="preview-panel">
+      <div class="preview-header">
+        <span class="preview-title">Preview - Sunny Side Bakery</span>
+        <div class="preview-mode-indicator">
+          <span class="preview-mode-dot"></span>
+          Visual Edit Mode
+        </div>
+      </div>
+      <div class="preview-iframe-container">
+        <div class="preview-content">
+          <!-- Sample Bakery Landing Page -->
+          <div class="bakery-header">
+            <div class="bakery-logo">Sunny Side Bakery</div>
+            <nav class="bakery-nav">
+              <a class="bakery-nav-item">Menu</a>
+              <a class="bakery-nav-item">About</a>
+              <a class="bakery-nav-item">Locations</a>
+              <a class="bakery-nav-item">Contact</a>
+            </nav>
+          </div>
+          <div class="bakery-hero">
+            <h1 class="bakery-hero-title selected-element" style="position: relative;">
+              Fresh Baked Daily
+              <div class="selection-handles">
+                <div class="selection-handle top-left"></div>
+                <div class="selection-handle top-right"></div>
+                <div class="selection-handle bottom-left"></div>
+                <div class="selection-handle bottom-right"></div>
+              </div>
+            </h1>
+            <p class="bakery-hero-subtitle">Artisan breads, pastries, and cakes made with love using time-honored recipes and the finest ingredients.</p>
+            <a class="bakery-cta-button">Order Online</a>
+          </div>
+          <div class="bakery-products">
+            <div class="bakery-product-card">
+              <div class="bakery-product-image">[Bread]</div>
+              <div class="bakery-product-info">
+                <div class="bakery-product-name">Sourdough Loaf</div>
+                <div class="bakery-product-price">$8.99</div>
+              </div>
+            </div>
+            <div class="bakery-product-card">
+              <div class="bakery-product-image">[Pastry]</div>
+              <div class="bakery-product-info">
+                <div class="bakery-product-name">Croissant</div>
+                <div class="bakery-product-price">$4.50</div>
+              </div>
+            </div>
+            <div class="bakery-product-card">
+              <div class="bakery-product-image">[Cake]</div>
+              <div class="bakery-product-info">
+                <div class="bakery-product-name">Chocolate Cake</div>
+                <div class="bakery-product-price">$32.00</div>
+              </div>
+            </div>
+          </div>
+          <!-- Hover indicator on subtitle -->
+          <div class="hover-indicator" style="position: absolute; top: 218px; left: 172px; width: 456px; height: 52px;"></div>
+        </div>
+        <div class="instructions-tooltip">Click any element to select it and edit its properties in the panel.</div>
+      </div>
+    </div>
+
+    <!-- Property Panel (Right Side) -->
+    <div class="property-panel">
+      <div class="panel-header">
+        <div class="panel-title">Element Properties</div>
+        <div class="panel-subtitle">Edit the selected element</div>
+        <div class="element-type-badge">
+          <span class="element-type-icon">[T]</span>
+          Text Element
+        </div>
+      </div>
+      <div class="panel-content">
+        <!-- Text Content Section -->
+        <div class="property-section">
+          <div class="property-section-title">Content</div>
+          <div class="property-group">
+            <div class="property-label">Text Content</div>
+            <textarea class="property-input property-textarea" placeholder="Enter text content">Fresh Baked Daily</textarea>
+          </div>
+        </div>
+
+        <!-- Colors Section -->
+        <div class="property-section">
+          <div class="property-section-title">Colors</div>
+          <div class="property-group">
+            <div class="property-label">Text Color</div>
+            <div class="color-property">
+              <div class="color-swatch" style="background: #3d2914;"></div>
+              <input type="text" class="color-hex-input" value="#3D2914">
+            </div>
+          </div>
+          <div class="property-group">
+            <div class="property-label">Background Color</div>
+            <div class="color-property">
+              <div class="color-swatch" style="background: transparent; border-style: dashed;"></div>
+              <input type="text" class="color-hex-input" value="transparent" style="text-transform: none;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Typography Section -->
+        <div class="property-section">
+          <div class="property-section-title">Typography</div>
+          <div class="number-input-row">
+            <div class="number-input-group">
+              <input type="text" class="number-input" value="48">
+              <div class="number-input-label">Font Size (px)</div>
+            </div>
+            <div class="number-input-group">
+              <input type="text" class="number-input" value="700">
+              <div class="number-input-label">Font Weight</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spacing Section -->
+        <div class="property-section">
+          <div class="property-section-title">Spacing</div>
+          <div class="number-input-row">
+            <div class="number-input-group">
+              <input type="text" class="number-input" value="0">
+              <div class="number-input-label">Padding (px)</div>
+            </div>
+            <div class="number-input-group">
+              <input type="text" class="number-input" value="16">
+              <div class="number-input-label">Margin (px)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <button class="btn btn-secondary">Cancel</button>
+        <button class="btn btn-primary">Apply Changes</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

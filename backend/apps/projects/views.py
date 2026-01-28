@@ -3,13 +3,16 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 from .models import Project, ProjectVersion, CustomerAPIKey
+from .github_sync import GitHubSyncService
 from .serializers import (
     ProjectSerializer, ProjectListSerializer,
     ProjectCreateSerializer, ProjectVersionSerializer
 )
 from apps.ai_engine.v3.tasks import generate_app_v3_task, quick_modify_v3_task
 from apps.tenants.permissions import TenantPermission
+from apps.project_services.version_service import VersionService
 
 # Progress calculation constants
 PROGRESS_PER_MESSAGE = 5
@@ -354,6 +357,68 @@ class ProjectViewSet(viewsets.ModelViewSet):
             'connected_count': sum(1 for s in sources if s['status'] == 'connected'),
             'total_count': len(sources),
         })
+
+    @action(detail=True, methods=['post'], url_path='rollback/(?P<version_id>[^/.]+)')
+    def rollback(self, request, pk=None, version_id=None):
+        """Rollback project to a specific version"""
+        project = self.get_object()
+        version = ProjectVersion.objects.filter(project=project, id=version_id).first()
+        if not version:
+            return Response({'error': 'Version not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        snapshot = version.snapshot
+        project.frontend_code = snapshot.get('frontend_code', project.frontend_code)
+        project.api_code = snapshot.get('api_code', project.api_code)
+        project.database_schema = snapshot.get('database_schema', project.database_schema)
+        project.save()
+
+        # Create new version for the rollback
+        new_version_num = f"{float(project.versions.order_by('-version').first().version) + 0.1:.1f}" if project.versions.exists() else "1.0"
+        ProjectVersion.objects.create(
+            project=project,
+            version=new_version_num,
+            snapshot=snapshot,
+            notes=f"Rollback to version {version.version}"
+        )
+
+        return Response({'success': True, 'message': f'Rolled back to version {version.version}'})
+
+    @action(detail=True, methods=["get"])
+    def github_status(self, request, pk=None):
+        """Check GitHub sync status."""
+        project = self.get_object()
+        if not project.github_repo:
+            return Response({"connected": False})
+        # Parse owner/repo from URL
+        parts = project.github_repo.rstrip("/").split("/")
+        owner, repo = parts[-2], parts[-1]
+        token = getattr(settings, "GITHUB_TOKEN", "")
+        if not token:
+            return Response({"error": "GitHub token not configured"}, status=500)
+        svc = GitHubSyncService(token, owner, repo)
+        status_data = svc.check_for_updates(project)
+        return Response({"connected": True, "last_sha": project.last_github_sha, **status_data})
+
+    @action(detail=True, methods=["post"])
+    def github_pull(self, request, pk=None):
+        """Pull changes from GitHub."""
+        project = self.get_object()
+        if not project.github_repo:
+            return Response({"error": "No GitHub repo connected"}, status=400)
+        parts = project.github_repo.rstrip("/").split("/")
+        owner, repo = parts[-2], parts[-1]
+        token = getattr(settings, "GITHUB_TOKEN", "")
+        if not token:
+            return Response({"error": "GitHub token not configured"}, status=500)
+        svc = GitHubSyncService(token, owner, repo)
+        success = svc.pull_changes(project)
+        if success:
+            latest = svc.get_latest_commit()
+            if latest:
+                project.last_github_sha = latest
+                project.save(update_fields=["last_github_sha"])
+            return Response({"success": True, "message": "Changes pulled"})
+        return Response({"error": "Failed to pull changes"}, status=500)
 
 
 from rest_framework.views import APIView

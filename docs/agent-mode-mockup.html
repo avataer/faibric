@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Mode - Faibric</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 24px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 500;
+      color: #1a1a2e;
+    }
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .toggle-label {
+      font-size: 14px;
+      color: #666;
+    }
+    .toggle {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      background: #7c3aed;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .status-complete {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4caf50;
+    }
+    .section {
+      margin-bottom: 24px;
+    }
+    .section-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 14px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.5;
+      resize: vertical;
+      background: #fafafa;
+    }
+    .textarea:focus {
+      outline: none;
+      border-color: #7c3aed;
+    }
+    .button-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .btn {
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: 0.2s;
+    }
+    .btn-primary {
+      background: #7c3aed;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #6d28d9;
+    }
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+    .activity-log {
+      background: #1a1a2e;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      color: #a3e635;
+    }
+    .log-entry.info {
+      color: #60a5fa;
+    }
+    .log-entry.success {
+      color: #4ade80;
+    }
+    .log-entry.complete {
+      color: #fbbf24;
+      font-weight: 500;
+    }
+    .log-timestamp {
+      color: #6b7280;
+      min-width: 70px;
+    }
+    .log-icon {
+      min-width: 16px;
+    }
+    .progress-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e0e0e0;
+    }
+    .progress-bar-container {
+      flex: 1;
+      margin-right: 24px;
+    }
+    .progress-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+    .progress-bar {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 40%;
+      background: linear-gradient(90deg, #7c3aed, #a78bfa);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    .iteration-counter {
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      background: #f3f4f6;
+      padding: 8px 16px;
+      border-radius: 6px;
+    }
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+      padding: 16px;
+      background: #fafafa;
+      border-radius: 8px;
+    }
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #4b5563;
+    }
+    .feature-check {
+      width: 18px;
+      height: 18px;
+      background: #7c3aed;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <h1 class="title">Agent Mode</h1>
+        <div style="display: flex; align-items: center; gap: 24px;">
+          <div class="toggle-container">
+            <span class="toggle-label">Enable Agent Mode</span>
+            <div class="toggle"></div>
+          </div>
+          <div class="status-badge status-complete">
+            <span class="status-dot"></span>
+            Complete
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Task Description</div>
+        <textarea class="textarea" readonly>Add a contact form with validation and send email on submit. Include fields for name, email, phone, and message. Style with the site's existing color scheme. Add success/error feedback messages.</textarea>
+        <div class="button-row">
+          <button class="btn btn-primary">Run Agent</button>
+          <button class="btn btn-secondary">Stop</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Activity Log</div>
+        <div class="activity-log">
+          <div class="log-entry info">
+            <span class="log-timestamp">[14:23:01]</span>
+            <span class="log-icon">></span>
+            <span>Starting task analysis...</span>
+          </div>
+          <div class="log-entry">
+            <span class="log-timestamp">[14:23:03]</span>
+            <span class="log-icon">></span>
+            <span>Analyzing existing codebase structure...</span>
+          </div>
+          <div class="log-entry">
+            <span class="log-timestamp">[14:23:08]</span>
+            <span class="log-icon">></span>
+            <span>Generating contact form component...</span>
+          </div>
+          <div class="log-entry">
+            <span class="log-timestamp">[14:23:15]</span>
+            <span class="log-icon">></span>
+            <span>Adding form validation (name, email, phone, message)...</span>
+          </div>
+          <div class="log-entry">
+            <span class="log-timestamp">[14:23:22]</span>
+            <span class="log-icon">></span>
+            <span>Integrating email API for form submission...</span>
+          </div>
+          <div class="log-entry">
+            <span class="log-timestamp">[14:23:30]</span>
+            <span class="log-icon">></span>
+            <span>Testing and debugging form behavior...</span>
+          </div>
+          <div class="log-entry success">
+            <span class="log-timestamp">[14:23:38]</span>
+            <span class="log-icon">></span>
+            <span>All validation tests passed</span>
+          </div>
+          <div class="log-entry complete">
+            <span class="log-timestamp">[14:23:42]</span>
+            <span class="log-icon">></span>
+            <span>TASK_COMPLETE - Contact form implemented successfully</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-bar-container">
+          <div class="progress-label">Agent Progress</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 40%;"></div>
+          </div>
+        </div>
+        <div class="iteration-counter">Iteration 4/10</div>
+      </div>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <span class="feature-check">&#10003;</span>
+          <span>Autonomous development</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-check">&#10003;</span>
+          <span>Multiple iterations</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-check">&#10003;</span>
+          <span>Auto debugging</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-check">&#10003;</span>
+          <span>Real-time activity log</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-check">&#10003;</span>
+          <span>Error handling</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-check">&#10003;</span>
+          <span>Iteration limits (max 10)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

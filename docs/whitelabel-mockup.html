@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>White-label Settings - Faibric</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .page-header {
+      margin-bottom: 24px;
+    }
+    .page-title {
+      font-size: 28px;
+      font-weight: 500;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+    }
+    .page-subtitle {
+      font-size: 14px;
+      color: #666;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06);
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #1a1a2e;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: #fff;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: #6c5ce7;
+      box-shadow: 0 0 0 3px rgba(108,92,231,0.1);
+    }
+    .form-input::placeholder {
+      color: #aaa;
+    }
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .color-picker-wrapper {
+      flex: 1;
+    }
+    .color-input-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .color-picker {
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 0;
+    }
+    .color-picker::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    .color-picker::-webkit-color-swatch {
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+    }
+    .hex-input {
+      width: 100px;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .domain-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .domain-input-wrapper {
+      flex: 1;
+    }
+    .btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn-primary {
+      background: #6c5ce7;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #5b4cdb;
+    }
+    .btn-outline {
+      background: white;
+      color: #6c5ce7;
+      border: 1px solid #6c5ce7;
+    }
+    .btn-outline:hover {
+      background: #f8f7ff;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 16px;
+      margin-top: 8px;
+    }
+    .status-pending {
+      background: #fff3e0;
+      color: #e65100;
+    }
+    .status-verified {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .preview-section {
+      grid-column: span 2;
+    }
+    .preview-container {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fafafa;
+    }
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+    }
+    .preview-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .preview-logo-placeholder {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      border: 2px dashed rgba(255,255,255,0.5);
+    }
+    .preview-company-name {
+      color: white;
+      font-size: 20px;
+      font-weight: 500;
+    }
+    .preview-nav {
+      display: flex;
+      gap: 16px;
+    }
+    .preview-nav-item {
+      color: rgba(255,255,255,0.9);
+      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .preview-nav-item:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .preview-content {
+      padding: 32px 24px;
+    }
+    .preview-content-title {
+      font-size: 24px;
+      font-weight: 500;
+      color: #1a1a2e;
+      margin-bottom: 16px;
+    }
+    .preview-content-text {
+      color: #666;
+      margin-bottom: 24px;
+      max-width: 600px;
+    }
+    .preview-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    .preview-btn {
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .preview-btn-primary {
+      background: #6c5ce7;
+      color: white;
+    }
+    .preview-btn-secondary {
+      background: #636e72;
+      color: white;
+    }
+    .preview-btn-accent {
+      background: #00b894;
+      color: white;
+    }
+    .save-section {
+      grid-column: span 2;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding-top: 8px;
+    }
+    .btn-save {
+      padding: 12px 32px;
+      font-size: 15px;
+    }
+    .helper-text {
+      font-size: 12px;
+      color: #888;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">White-label Settings</h1>
+      <p class="page-subtitle">Customize your platform's branding, colors, and domain to match your company identity.</p>
+    </div>
+
+    <div class="grid">
+      <!-- Company Branding Card -->
+      <div class="card">
+        <h2 class="card-title">Company Branding</h2>
+
+        <div class="form-group">
+          <label class="form-label">Company Name</label>
+          <input type="text" class="form-input" value="Acme Corporation" placeholder="Enter your company name">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Logo URL</label>
+          <input type="text" class="form-input" value="https://cdn.acme.com/logo.png" placeholder="https://example.com/logo.png">
+          <p class="helper-text">Recommended size: 200x50px, PNG or SVG format</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Favicon URL</label>
+          <input type="text" class="form-input" value="https://cdn.acme.com/favicon.ico" placeholder="https://example.com/favicon.ico">
+          <p class="helper-text">Recommended size: 32x32px, ICO or PNG format</p>
+        </div>
+      </div>
+
+      <!-- Brand Colors Card -->
+      <div class="card">
+        <h2 class="card-title">Brand Colors</h2>
+
+        <div class="color-row">
+          <div class="color-picker-wrapper">
+            <label class="form-label">Primary Color</label>
+            <div class="color-input-group">
+              <input type="color" class="color-picker" value="#6c5ce7">
+              <input type="text" class="hex-input" value="#6C5CE7">
+            </div>
+          </div>
+        </div>
+
+        <div class="color-row">
+          <div class="color-picker-wrapper">
+            <label class="form-label">Secondary Color</label>
+            <div class="color-input-group">
+              <input type="color" class="color-picker" value="#636e72">
+              <input type="text" class="hex-input" value="#636E72">
+            </div>
+          </div>
+        </div>
+
+        <div class="color-row">
+          <div class="color-picker-wrapper">
+            <label class="form-label">Accent Color</label>
+            <div class="color-input-group">
+              <input type="color" class="color-picker" value="#00b894">
+              <input type="text" class="hex-input" value="#00B894">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Domain Card -->
+      <div class="card" style="grid-column: span 2;">
+        <h2 class="card-title">Custom Domain</h2>
+
+        <div class="domain-row">
+          <div class="domain-input-wrapper">
+            <label class="form-label">Custom Domain</label>
+            <input type="text" class="form-input" value="app.acmecorp.com" placeholder="app.yourdomain.com">
+            <p class="helper-text">Point your domain's CNAME record to: custom.faibric.io</p>
+          </div>
+          <div style="padding-top: 24px;">
+            <button class="btn btn-outline">Verify Domain</button>
+          </div>
+        </div>
+
+        <div class="status-badge status-pending">
+          <span class="status-dot"></span>
+          Pending DNS Verification
+        </div>
+      </div>
+
+      <!-- Live Preview Card -->
+      <div class="card preview-section">
+        <h2 class="card-title">Live Preview</h2>
+
+        <div class="preview-container">
+          <div class="preview-header">
+            <div class="preview-logo">
+              <div class="preview-logo-placeholder">
+                A
+              </div>
+              <span class="preview-company-name">Acme Corporation</span>
+            </div>
+            <nav class="preview-nav">
+              <span class="preview-nav-item">Dashboard</span>
+              <span class="preview-nav-item">Projects</span>
+              <span class="preview-nav-item">Settings</span>
+            </nav>
+          </div>
+          <div class="preview-content">
+            <h3 class="preview-content-title">Welcome to Your Dashboard</h3>
+            <p class="preview-content-text">This is a preview of how your branded platform will appear to users. The header uses your primary color, and buttons demonstrate all three brand colors.</p>
+            <div class="preview-buttons">
+              <button class="preview-btn preview-btn-primary">Primary Button</button>
+              <button class="preview-btn preview-btn-secondary">Secondary</button>
+              <button class="preview-btn preview-btn-accent">Accent</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Section -->
+      <div class="save-section">
+        <button class="btn btn-outline">Reset to Default</button>
+        <button class="btn btn-primary btn-save">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

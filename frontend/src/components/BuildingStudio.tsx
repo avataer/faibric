@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Box } from '@mui/material'
 import { api } from '../services/api'
 import { useBuildStatus } from '../hooks/useBuildStatus'
@@ -6,11 +6,43 @@ import { useBuildProgress } from '../hooks/useBuildProgress'
 import { useMessages } from '../hooks/useMessages'
 import { ChatPanel, PreviewPanel, BuildingStudioProps } from './building-studio'
 
+interface ModelConfig {
+  key: string
+  name: string
+  credits_per_request: number
+}
+
 const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject }: BuildingStudioProps) => {
   // Local UI state
   const [input, setInput] = useState('')
   const [isStopping, setIsStopping] = useState(false)
   const [iframeKey, setIframeKey] = useState(0)
+
+  // Model selection state
+  const [models, setModels] = useState<ModelConfig[]>([])
+  const [selectedModel, setSelectedModel] = useState<string>('')
+  const [modelsLoading, setModelsLoading] = useState(true)
+
+  // Fetch available models on mount
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const response = await api.get('/api/ai/models/')
+        if (response.data.models) {
+          setModels(response.data.models)
+          // Set default model to the first one
+          if (response.data.models.length > 0 && !selectedModel) {
+            setSelectedModel(response.data.models[0].key)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load models:', err)
+      } finally {
+        setModelsLoading(false)
+      }
+    }
+    fetchModels()
+  }, [])
 
   // Message management
   const {
@@ -57,6 +89,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
       const res = await api.post('/api/onboarding/modify/', {
         session_token: sessionToken,
         request: newRequest,
+        model: selectedModel || undefined,
       })
 
       const mode = res.data.mode
@@ -70,7 +103,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     } catch {
       addErrorMessage('Failed to apply changes. Please try again.')
     }
-  }, [input, sessionToken, addUserMessage, addAssistantMessage, addErrorMessage, resetForNewBuild])
+  }, [input, sessionToken, selectedModel, addUserMessage, addAssistantMessage, addErrorMessage, resetForNewBuild])
 
   // Stop build handler
   const handleStop = useCallback(async () => {
@@ -103,6 +136,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
       const res = await api.post('/api/onboarding/modify/', {
         session_token: sessionToken,
         request: lastUserMessage.content,
+        model: selectedModel || undefined,
       })
 
       const mode = res.data.mode
@@ -116,7 +150,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     } catch {
       addErrorMessage('Still having trouble. Try simplifying your request or start a new project.')
     }
-  }, [messages, sessionToken, addAssistantMessage, addErrorMessage, resetForNewBuild])
+  }, [messages, sessionToken, selectedModel, addAssistantMessage, addErrorMessage, resetForNewBuild])
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
@@ -132,6 +166,10 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
         onStop={handleStop}
         onNewProject={onNewProject}
         onRetry={handleRetry}
+        models={models}
+        selectedModel={selectedModel}
+        onModelChange={setSelectedModel}
+        modelsLoading={modelsLoading}
       />
       <PreviewPanel
         deploymentUrl={deploymentUrl}
@@ -146,6 +184,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
           api.post('/api/onboarding/modify/', {
             session_token: sessionToken,
             request: editRequest,
+            model: selectedModel || undefined,
           }).then((res) => {
             const mode = res.data.mode
             addAssistantMessage(

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discussion/Planning Mode - Faibric</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .header {
+            margin-bottom: 24px;
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.87);
+            margin-bottom: 16px;
+        }
+
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            background: #e0e0e0;
+            border-radius: 8px;
+            padding: 4px;
+            width: fit-content;
+        }
+        .mode-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .mode-btn.active {
+            background: #1976d2;
+            color: white;
+            box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+        }
+        .mode-btn.inactive {
+            background: transparent;
+            color: rgba(0, 0, 0, 0.6);
+        }
+        .mode-btn.inactive:hover {
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        /* Chat Container */
+        .chat-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+            min-height: 500px;
+        }
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Message Bubbles */
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+        }
+        .message.user {
+            align-self: flex-end;
+        }
+        .message.assistant {
+            align-self: flex-start;
+        }
+        .message-bubble {
+            padding: 14px 18px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .message.user .message-bubble {
+            background: #1976d2;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .message.assistant .message-bubble {
+            background: #f0f0f0;
+            color: rgba(0, 0, 0, 0.87);
+            border-bottom-left-radius: 4px;
+        }
+        .message-label {
+            font-size: 11px;
+            color: rgba(0, 0, 0, 0.5);
+            margin-bottom: 4px;
+            padding: 0 8px;
+        }
+        .message.user .message-label {
+            text-align: right;
+        }
+
+        /* Checklist */
+        .checklist {
+            margin-top: 8px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+        .checklist-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #1976d2;
+            cursor: pointer;
+        }
+        .checklist-item label {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.87);
+            cursor: pointer;
+        }
+
+        /* Ready to Build Button */
+        .action-section {
+            display: flex;
+            justify-content: center;
+        }
+        .build-btn {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 16px 48px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+            transition: all 0.2s ease;
+        }
+        .build-btn:hover {
+            background: #1b5e20;
+            box-shadow: 0 6px 16px rgba(46, 125, 50, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Status indicator */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #e3f2fd;
+            border-radius: 16px;
+            font-size: 12px;
+            color: #1976d2;
+            margin-left: 12px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #1976d2;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>New Project<span class="status-badge"><span class="status-dot"></span>Planning Mode</span></h1>
+        </div>
+
+        <!-- Mode Toggle -->
+        <div class="mode-toggle">
+            <button class="mode-btn active">Discuss First</button>
+            <button class="mode-btn inactive">Build Now</button>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <div class="chat-messages">
+                <!-- User Message 1 -->
+                <div class="message user">
+                    <span class="message-label">You</span>
+                    <div class="message-bubble">
+                        I want to build a client portal for my law firm
+                    </div>
+                </div>
+
+                <!-- Assistant Message 1 -->
+                <div class="message assistant">
+                    <span class="message-label">Faibric AI</span>
+                    <div class="message-bubble">
+                        Great! Let me help you plan this out. Before we start building, I have a few questions to make sure we create exactly what you need...
+                    </div>
+                </div>
+
+                <!-- Assistant Message 2 -->
+                <div class="message assistant">
+                    <span class="message-label">Faibric AI</span>
+                    <div class="message-bubble">
+                        Who will be using this portal? (Your clients, your staff, or both?)
+                    </div>
+                </div>
+
+                <!-- User Message 2 -->
+                <div class="message user">
+                    <span class="message-label">You</span>
+                    <div class="message-bubble">
+                        Both - clients need to view their case documents and staff needs to upload them
+                    </div>
+                </div>
+
+                <!-- Assistant Message 3 -->
+                <div class="message assistant">
+                    <span class="message-label">Faibric AI</span>
+                    <div class="message-bubble">
+                        What key features do you need? Check all that apply:
+                        <div class="checklist">
+                            <div class="checklist-item">
+                                <input type="checkbox" id="feat1" checked>
+                                <label for="feat1">Document upload/download</label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="feat2" checked>
+                                <label for="feat2">Secure messaging</label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="feat3" checked>
+                                <label for="feat3">Case status tracking</label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="feat4">
+                                <label for="feat4">Invoice viewing</label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="feat5">
+                                <label for="feat5">Appointment scheduling</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assistant Message 4 -->
+                <div class="message assistant">
+                    <span class="message-label">Faibric AI</span>
+                    <div class="message-bubble">
+                        Any design preferences? (Colors, style, branding)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ready to Build Button -->
+        <div class="action-section">
+            <button class="build-btn">Ready to Build</button>
+        </div>
+    </div>
+</body>
+</html>

@@ -9,6 +9,7 @@ from django.core.cache import cache
 from .generator import UniversalGenerator
 from apps.projects.models import Project
 from apps.deployment.tasks import deploy_app_task
+from apps.project_services.version_service import VersionService
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,18 @@ def generate_app_v3_task(self, project_id: int):
         project.frontend_code = json.dumps(frontend_code)
         project.status = 'ready'
         project.save()
+
+        # Create version snapshot
+        try:
+            version_service = VersionService()
+            version_service.create_version(
+                project_id=project.id,
+                code=frontend_code.get("App.jsx", ""),
+                config=project.database_schema or {},
+                description=f"Initial generation: {project.user_prompt[:100] if project.user_prompt else 'App created'}"
+            )
+        except Exception as e:
+            logger.warning(f"Failed to create version snapshot: {e}")
 
         send_progress(project_id, f"✅ Generated {len(components)} component(s)")
         
@@ -143,6 +156,18 @@ def quick_modify_v3_task(project_id: int, user_request: str):
         project.frontend_code = json.dumps(frontend_code)
         project.status = 'ready'
         project.save()
+
+        # Create version snapshot for modification
+        try:
+            version_service = VersionService()
+            version_service.create_version(
+                project_id=project.id,
+                code=new_code,
+                config=project.database_schema or {},
+                description=f"Modified: {user_request[:100] if user_request else 'Code updated'}"
+            )
+        except Exception as e:
+            logger.warning(f"Failed to create version snapshot: {e}")
 
         send_progress(project_id, "✅ Code updated!")
         

@@ -6,6 +6,8 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     LandingFlowView,
+    PlanningFlowView,
+    PlanToBuildView,
     DevFlowView,
     EmailFlowView,
     ChangeEmailView,
@@ -23,6 +25,8 @@ from .views import (
     SessionDetailView,
     InputAnalyticsView,
     AllInputsView,
+    VisualEditView,
+    AgentModeView,
 )
 
 router = DefaultRouter()
@@ -34,6 +38,10 @@ urlpatterns = [
     # Public landing flow
     path('start/', LandingFlowView.as_view(), name='landing-start'),
     path('start-dev/', DevFlowView.as_view(), name='landing-start-dev'),  # DEV: skip email
+
+    # Planning/Discussion mode
+    path('plan/', PlanningFlowView.as_view(), name='planning-flow'),
+    path('plan-to-build/', PlanToBuildView.as_view(), name='plan-to-build'),
     path('email/', EmailFlowView.as_view(), name='landing-email'),
     path('email/change/', ChangeEmailView.as_view(), name='landing-change-email'),
     path('verify/', VerifyMagicLinkView.as_view(), name='verify-magic-link'),
@@ -47,7 +55,9 @@ urlpatterns = [
     path('build/', TriggerBuildView.as_view(), name='trigger-build'),
     path('stop/', StopBuildView.as_view(), name='stop-build'),
     path('modify/', ModifyBuildView.as_view(), name='modify-build'),
-    
+    path('visual-edit/', VisualEditView.as_view(), name='visual-edit'),
+    path('agent-mode/', AgentModeView.as_view(), name='agent-mode'),
+
     # Visual dashboard
     path('admin/funnel/', FunnelDashboardView.as_view(), name='funnel-dashboard'),
     

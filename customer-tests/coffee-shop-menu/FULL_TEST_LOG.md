@@ -1,0 +1,1277 @@
+# Coffee Shop Menu - Customer Test Log
+
+**Started:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+**Customer Profile:** Small coffee shop owner
+**Color Requirement:** Coffee brown and cream
+
+---
+
+## Test Execution Log
+
+- [2026-01-27T02:10:12.948Z] 
+=== ATTEMPT 1 ===
+
+- [2026-01-27T02:10:12.949Z] ========================================
+- [2026-01-27T02:10:12.949Z] COFFEE SHOP MENU - CUSTOMER TEST
+- [2026-01-27T02:10:12.949Z] ========================================
+- [2026-01-27T02:10:12.949Z] Color Requirement: Coffee brown and cream
+- [2026-01-27T02:10:13.150Z] STEP 1: Navigating to Faibric...
+- [2026-01-27T02:10:15.747Z] STEP 2: Submitting coffee shop menu request...
+- [2026-01-27T02:10:15.782Z] Filled initial request
+- [2026-01-27T02:10:16.324Z] Clicked Start Building
+- [2026-01-27T02:10:16.325Z] STEP 3: Waiting for initial build to complete...
+- [2026-01-27T02:10:16.325Z] Waiting for build to complete...
+- [2026-01-27T02:10:19.356Z] Still building... 3s elapsed
+- [2026-01-27T02:10:22.364Z] Still building... 6s elapsed
+- [2026-01-27T02:10:25.369Z] Still building... 9s elapsed
+- [2026-01-27T02:10:28.374Z] Still building... 12s elapsed
+- [2026-01-27T02:10:31.379Z] Still building... 15s elapsed
+- [2026-01-27T02:10:34.383Z] Still building... 18s elapsed
+- [2026-01-27T02:10:37.386Z] Still building... 21s elapsed
+- [2026-01-27T02:10:40.391Z] Still building... 24s elapsed
+- [2026-01-27T02:10:43.396Z] Still building... 27s elapsed
+- [2026-01-27T02:10:46.399Z] Still building... 30s elapsed
+- [2026-01-27T02:10:49.403Z] Still building... 33s elapsed
+- [2026-01-27T02:10:52.408Z] Still building... 36s elapsed
+- [2026-01-27T02:10:55.413Z] Still building... 39s elapsed
+- [2026-01-27T02:10:58.416Z] Still building... 42s elapsed
+- [2026-01-27T02:11:01.420Z] Still building... 45s elapsed
+- [2026-01-27T02:11:04.425Z] Still building... 48s elapsed
+- [2026-01-27T02:11:07.431Z] Still building... 51s elapsed
+- [2026-01-27T02:11:10.436Z] Still building... 54s elapsed
+- [2026-01-27T02:11:13.439Z] Still building... 57s elapsed
+- [2026-01-27T02:11:13.441Z] Build complete - Deployed badge visible
+- [2026-01-27T02:11:16.586Z] Screenshot: Initial build captured
+- [2026-01-27T02:11:16.586Z] STEP 4: Sending chat amendment for darker brown header...
+- [2026-01-27T02:11:18.599Z] Filled amendment request
+- [2026-01-27T02:11:18.609Z] Sent amendment via Enter key
+- [2026-01-27T02:11:18.609Z] STEP 5: Waiting for rebuild after amendment...
+- [2026-01-27T02:11:23.610Z] Waiting for build to complete...
+- [2026-01-27T02:11:23.612Z] Build complete - Deployed badge visible
+- [2026-01-27T02:11:28.753Z] CRITICAL SCREENSHOT: Chat amendment with brown/cream preview captured
+- [2026-01-27T02:11:28.754Z] STEP 6: Getting deployment URL...
+- [2026-01-27T02:11:28.761Z] Deployment URL found: Your app is live at https://appotu8v7wqsc-87hwbgycd-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T02:11:28.894Z] Screenshot: Final builder state captured
+- [2026-01-27T02:11:28.894Z] ========================================
+- [2026-01-27T02:11:28.895Z] BUILDER PHASE COMPLETE
+- [2026-01-27T02:11:28.895Z] ========================================
+- [2026-01-27T02:11:28.912Z] STEP 7: Capturing deployed site screenshot...
+- [2026-01-27T02:11:34.104Z] ERROR capturing deployed site: page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL
+Call log:
+[2m  - navigating to "Your app is live at https://appotu8v7wqsc-87hwbgycd-antons-projects-f1d70cf2.vercel.app", waiting until "networkidle"[22m
+
+- [2026-01-27T02:11:34.117Z] ========================================
+- [2026-01-27T02:11:34.117Z] TEST COMPLETED SUCCESSFULLY
+- [2026-01-27T02:11:34.117Z] ========================================
+- [2026-01-27T02:11:34.117Z] SUCCESS! All verification passed.
+- [2026-01-27T02:11:34.117Z] Test finished successfully
+- [2026-01-27T02:12:52.779Z] ========================================
+- [2026-01-27T02:12:52.780Z] COFFEE SHOP MENU v2 - STRONGER COLORS
+- [2026-01-27T02:12:52.780Z] ========================================
+- [2026-01-27T02:12:52.978Z] STEP 1: Navigating to Faibric...
+- [2026-01-27T02:12:55.591Z] STEP 2: Submitting request with STRONG color requirement...
+- [2026-01-27T02:12:55.613Z] Filled request with strong color requirements
+- [2026-01-27T02:12:56.158Z] Clicked Start Building
+- [2026-01-27T02:12:56.158Z] STEP 3: Waiting for initial build...
+- [2026-01-27T02:12:56.159Z] Waiting for build to complete...
+- [2026-01-27T02:12:59.183Z] Still building... 3s elapsed
+- [2026-01-27T02:13:02.186Z] Still building... 6s elapsed
+- [2026-01-27T02:13:05.188Z] Still building... 9s elapsed
+- [2026-01-27T02:13:08.196Z] Still building... 12s elapsed
+- [2026-01-27T02:13:11.201Z] Still building... 15s elapsed
+- [2026-01-27T02:13:14.205Z] Still building... 18s elapsed
+- [2026-01-27T02:13:17.211Z] Still building... 21s elapsed
+- [2026-01-27T02:13:20.214Z] Still building... 24s elapsed
+- [2026-01-27T02:13:23.219Z] Still building... 27s elapsed
+- [2026-01-27T02:13:26.222Z] Still building... 30s elapsed
+- [2026-01-27T02:13:29.227Z] Still building... 33s elapsed
+- [2026-01-27T02:13:32.232Z] Still building... 36s elapsed
+- [2026-01-27T02:13:35.234Z] Still building... 39s elapsed
+- [2026-01-27T02:13:38.239Z] Still building... 42s elapsed
+- [2026-01-27T02:13:41.243Z] Still building... 45s elapsed
+- [2026-01-27T02:13:44.248Z] Still building... 48s elapsed
+- [2026-01-27T02:13:47.253Z] Still building... 51s elapsed
+- [2026-01-27T02:13:47.255Z] Build complete - Deployed badge visible
+- [2026-01-27T02:13:52.403Z] Screenshot: Initial build
+- [2026-01-27T02:13:52.404Z] STEP 4: Sending color amendment...
+- [2026-01-27T02:13:54.417Z] Filled color amendment
+- [2026-01-27T02:13:54.428Z] Sent amendment
+- [2026-01-27T02:13:54.429Z] STEP 5: Waiting for rebuild with colors...
+- [2026-01-27T02:13:54.429Z] Waiting for rebuild with color changes...
+- [2026-01-27T02:14:00.435Z] Rebuild in progress... 6s elapsed
+- [2026-01-27T02:14:03.439Z] Rebuild in progress... 9s elapsed
+- [2026-01-27T02:14:06.444Z] Rebuild in progress... 12s elapsed
+- [2026-01-27T02:14:09.457Z] Rebuild in progress... 15s elapsed
+- [2026-01-27T02:14:12.459Z] Rebuild in progress... 18s elapsed
+- [2026-01-27T02:14:15.464Z] Rebuild in progress... 21s elapsed
+- [2026-01-27T02:14:18.467Z] Rebuild in progress... 24s elapsed
+- [2026-01-27T02:14:21.472Z] Rebuild in progress... 27s elapsed
+- [2026-01-27T02:14:24.475Z] Rebuild in progress... 30s elapsed
+- [2026-01-27T02:14:27.481Z] Rebuild in progress... 33s elapsed
+- [2026-01-27T02:14:30.486Z] Rebuild in progress... 36s elapsed
+- [2026-01-27T02:14:33.490Z] Rebuild in progress... 39s elapsed
+- [2026-01-27T02:14:36.495Z] Rebuild in progress... 42s elapsed
+- [2026-01-27T02:14:39.502Z] Rebuild in progress... 45s elapsed
+- [2026-01-27T02:14:42.505Z] Rebuild in progress... 48s elapsed
+- [2026-01-27T02:14:45.510Z] Rebuild in progress... 51s elapsed
+- [2026-01-27T02:14:48.516Z] Rebuild in progress... 54s elapsed
+- [2026-01-27T02:14:51.526Z] Rebuild in progress... 57s elapsed
+- [2026-01-27T02:14:54.530Z] Rebuild in progress... 60s elapsed
+- [2026-01-27T02:14:57.534Z] Rebuild in progress... 63s elapsed
+- [2026-01-27T02:15:00.536Z] Rebuild in progress... 66s elapsed
+- [2026-01-27T02:15:03.538Z] Rebuild in progress... 69s elapsed
+- [2026-01-27T02:15:06.540Z] Rebuild in progress... 72s elapsed
+- [2026-01-27T02:15:09.546Z] Rebuild in progress... 75s elapsed
+- [2026-01-27T02:15:12.550Z] Rebuild in progress... 78s elapsed
+- [2026-01-27T02:15:15.554Z] Rebuild in progress... 81s elapsed
+- [2026-01-27T02:15:18.559Z] Rebuild in progress... 84s elapsed
+- [2026-01-27T02:15:21.563Z] Rebuild in progress... 87s elapsed
+- [2026-01-27T02:15:24.566Z] Rebuild in progress... 90s elapsed
+- [2026-01-27T02:15:27.570Z] Rebuild in progress... 93s elapsed
+- [2026-01-27T02:15:30.574Z] Rebuild in progress... 96s elapsed
+- [2026-01-27T02:15:33.577Z] Rebuild in progress... 99s elapsed
+- [2026-01-27T02:15:36.581Z] Rebuild in progress... 102s elapsed
+- [2026-01-27T02:15:39.586Z] Rebuild in progress... 105s elapsed
+- [2026-01-27T02:15:42.590Z] Rebuild in progress... 108s elapsed
+- [2026-01-27T02:15:45.593Z] Rebuild in progress... 111s elapsed
+- [2026-01-27T02:15:48.597Z] Rebuild in progress... 114s elapsed
+- [2026-01-27T02:15:51.600Z] Rebuild in progress... 117s elapsed
+- [2026-01-27T02:15:54.611Z] Rebuild in progress... 120s elapsed
+- [2026-01-27T02:16:04.753Z] CRITICAL SCREENSHOT: Chat with color amendment + preview
+- [2026-01-27T02:16:04.755Z] Deployment URL: https://apprbcnou3lri-islhrf05r-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T02:16:04.772Z] STEP 6: Capturing deployed site...
+- [2026-01-27T02:16:14.947Z] Screenshot: Deployed site
+- [2026-01-27T02:16:14.963Z] ========================================
+- [2026-01-27T02:16:14.964Z] TEST v2 COMPLETED
+- [2026-01-27T02:16:14.964Z] ========================================
+- [2026-01-27T02:16:14.964Z] Test finished
+- [2026-01-27T02:18:24.341Z] === COFFEE SHOP v3 - WITH FIXED PROMPTS ===
+- [2026-01-27T02:18:25.148Z] Submitting with BROWN/CREAM color requirement...
+- [2026-01-27T02:18:25.230Z] Build started
+- [2026-01-27T02:18:28.241Z] Building... 3s
+- [2026-01-27T02:18:31.242Z] Building... 6s
+- [2026-01-27T02:18:34.248Z] Building... 9s
+- [2026-01-27T02:18:37.252Z] Building... 12s
+- [2026-01-27T02:18:40.256Z] Building... 15s
+- [2026-01-27T02:18:43.260Z] Building... 18s
+- [2026-01-27T02:18:46.262Z] Building... 21s
+- [2026-01-27T02:18:49.268Z] Building... 24s
+- [2026-01-27T02:18:52.271Z] Building... 27s
+- [2026-01-27T02:18:55.276Z] Building... 30s
+- [2026-01-27T02:18:58.279Z] Building... 33s
+- [2026-01-27T02:19:01.283Z] Building... 36s
+- [2026-01-27T02:19:04.287Z] Building... 39s
+- [2026-01-27T02:19:07.290Z] Building... 42s
+- [2026-01-27T02:19:10.295Z] Building... 45s
+- [2026-01-27T02:19:13.299Z] Building... 48s
+- [2026-01-27T02:19:16.302Z] Building... 51s
+- [2026-01-27T02:19:19.307Z] Building... 54s
+- [2026-01-27T02:19:22.309Z] Building... 57s
+- [2026-01-27T02:19:25.311Z] Building... 60s
+- [2026-01-27T02:19:28.314Z] Building... 63s
+- [2026-01-27T02:19:31.318Z] Building... 66s
+- [2026-01-27T02:19:34.322Z] Building... 69s
+- [2026-01-27T02:19:37.325Z] Building... 72s
+- [2026-01-27T02:19:40.329Z] Building... 75s
+- [2026-01-27T02:19:43.331Z] Building... 78s
+- [2026-01-27T02:19:46.335Z] Building... 81s
+- [2026-01-27T02:19:49.339Z] Building... 84s
+- [2026-01-27T02:19:52.342Z] Building... 87s
+- [2026-01-27T02:19:55.345Z] Building... 90s
+- [2026-01-27T02:19:58.349Z] Building... 93s
+- [2026-01-27T02:20:01.351Z] Building... 96s
+- [2026-01-27T02:20:04.355Z] Building... 99s
+- [2026-01-27T02:20:07.358Z] Building... 102s
+- [2026-01-27T02:20:10.362Z] Building... 105s
+- [2026-01-27T02:20:13.365Z] Building... 108s
+- [2026-01-27T02:20:16.369Z] Building... 111s
+- [2026-01-27T02:20:19.373Z] Building... 114s
+- [2026-01-27T02:20:22.377Z] Building... 117s
+- [2026-01-27T02:20:25.381Z] Building... 120s
+- [2026-01-27T02:20:28.385Z] Building... 123s
+- [2026-01-27T02:20:31.388Z] Building... 126s
+- [2026-01-27T02:20:34.392Z] Building... 129s
+- [2026-01-27T02:20:37.397Z] Building... 132s
+- [2026-01-27T02:20:40.400Z] Building... 135s
+- [2026-01-27T02:20:43.402Z] Building... 138s
+- [2026-01-27T02:20:46.406Z] Building... 141s
+- [2026-01-27T02:20:49.407Z] Building... 144s
+- [2026-01-27T02:20:52.411Z] Building... 147s
+- [2026-01-27T02:20:55.412Z] Building... 150s
+- [2026-01-27T02:20:58.416Z] Building... 153s
+- [2026-01-27T02:21:01.420Z] Building... 156s
+- [2026-01-27T02:21:04.425Z] Building... 159s
+- [2026-01-27T02:21:07.429Z] Building... 162s
+- [2026-01-27T02:21:10.433Z] Building... 165s
+- [2026-01-27T02:21:13.437Z] Building... 168s
+- [2026-01-27T02:21:16.441Z] Building... 171s
+- [2026-01-27T02:21:19.445Z] Building... 174s
+- [2026-01-27T02:21:22.449Z] Building... 177s
+- [2026-01-27T02:21:25.453Z] Building... 180s
+- [2026-01-27T02:21:30.601Z] Screenshot: Initial build
+- [2026-01-27T02:21:30.601Z] Sending color amendment...
+- [2026-01-27T02:22:30.765Z] Screenshot: After amendment
+- [2026-01-27T02:22:30.782Z] Deployment URL: https://appclbfaka2x5-nubybpu5p-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T02:22:40.946Z] Screenshot: Deployed site
+- [2026-01-27T02:22:40.960Z] === TEST v3 COMPLETE ===
+- [2026-01-27T02:24:29.173Z] === COFFEE SHOP v3 - WITH FIXED PROMPTS ===
+- [2026-01-27T02:24:29.982Z] Submitting with BROWN/CREAM color requirement...
+- [2026-01-27T02:24:30.047Z] Build started
+- [2026-01-27T02:24:33.069Z] Building... 3s
+- [2026-01-27T02:24:36.072Z] Building... 6s
+- [2026-01-27T02:24:39.074Z] Building... 9s
+- [2026-01-27T02:24:42.076Z] Building... 12s
+- [2026-01-27T02:24:45.080Z] Building... 15s
+- [2026-01-27T02:24:48.082Z] Building... 18s
+- [2026-01-27T02:24:51.085Z] Building... 21s
+- [2026-01-27T02:24:54.088Z] Building... 24s
+- [2026-01-27T02:24:57.092Z] Building... 27s
+- [2026-01-27T02:25:00.095Z] Building... 30s
+- [2026-01-27T02:25:03.096Z] Building... 33s
+- [2026-01-27T02:25:06.100Z] Building... 36s
+- [2026-01-27T02:25:09.104Z] Building... 39s
+- [2026-01-27T02:25:12.107Z] Building... 42s
+- [2026-01-27T02:25:15.111Z] Building... 45s
+- [2026-01-27T02:25:18.114Z] Building... 48s
+- [2026-01-27T02:25:21.117Z] Building... 51s
+- [2026-01-27T02:25:24.120Z] Building... 54s
+- [2026-01-27T02:25:27.123Z] Building... 57s
+- [2026-01-27T02:25:30.125Z] Building... 60s
+- [2026-01-27T02:25:33.128Z] Building... 63s
+- [2026-01-27T02:25:36.136Z] Building... 66s
+- [2026-01-27T02:25:39.139Z] Building... 69s
+- [2026-01-27T02:25:42.145Z] Building... 72s
+- [2026-01-27T02:25:45.150Z] Building... 75s
+- [2026-01-27T02:25:48.154Z] Building... 78s
+- [2026-01-27T02:25:51.157Z] Building... 81s
+- [2026-01-27T02:25:54.160Z] Building... 84s
+- [2026-01-27T02:25:57.163Z] Building... 87s
+- [2026-01-27T02:26:00.171Z] Building... 90s
+- [2026-01-27T02:26:03.174Z] Building... 93s
+- [2026-01-27T02:26:06.176Z] Building... 96s
+- [2026-01-27T02:26:09.178Z] Building... 99s
+- [2026-01-27T02:26:12.181Z] Building... 102s
+- [2026-01-27T02:26:15.183Z] Building... 105s
+- [2026-01-27T02:26:18.186Z] Building... 108s
+- [2026-01-27T02:26:21.188Z] Building... 111s
+- [2026-01-27T02:26:24.191Z] Building... 114s
+- [2026-01-27T02:26:27.194Z] Building... 117s
+- [2026-01-27T02:26:30.196Z] Building... 120s
+- [2026-01-27T02:26:33.198Z] Building... 123s
+- [2026-01-27T02:26:36.201Z] Building... 126s
+- [2026-01-27T02:26:39.203Z] Building... 129s
+- [2026-01-27T02:26:42.206Z] Building... 132s
+- [2026-01-27T02:26:45.209Z] Building... 135s
+- [2026-01-27T02:26:48.212Z] Building... 138s
+- [2026-01-27T02:26:51.214Z] Building... 141s
+- [2026-01-27T02:26:54.217Z] Building... 144s
+- [2026-01-27T02:26:57.220Z] Building... 147s
+- [2026-01-27T02:27:00.221Z] Building... 150s
+- [2026-01-27T02:27:03.224Z] Building... 153s
+- [2026-01-27T02:27:06.226Z] Building... 156s
+- [2026-01-27T02:27:09.229Z] Building... 159s
+- [2026-01-27T02:27:12.232Z] Building... 162s
+- [2026-01-27T02:27:15.235Z] Building... 165s
+- [2026-01-27T02:27:18.238Z] Building... 168s
+- [2026-01-27T02:27:21.240Z] Building... 171s
+- [2026-01-27T02:27:24.242Z] Building... 174s
+- [2026-01-27T02:27:27.245Z] Building... 177s
+- [2026-01-27T02:27:30.248Z] Building... 180s
+- [2026-01-27T02:27:35.389Z] Screenshot: Initial build
+- [2026-01-27T02:27:35.390Z] Sending color amendment...
+- [2026-01-27T02:28:35.561Z] Screenshot: After amendment
+- [2026-01-27T02:28:35.578Z] Deployment URL: https://appiqru3m4i21-gy83mmvzm-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T02:28:46.121Z] Screenshot: Deployed site
+- [2026-01-27T02:28:46.138Z] === TEST v3 COMPLETE ===
+- [2026-01-27T02:30:06.271Z] === COFFEE SHOP v3 - WITH FIXED PROMPTS ===
+- [2026-01-27T02:30:07.067Z] Submitting with BROWN/CREAM color requirement...
+- [2026-01-27T02:30:07.127Z] Build started
+- [2026-01-27T02:30:10.150Z] Building... 3s
+- [2026-01-27T02:30:13.153Z] Building... 6s
+- [2026-01-27T02:30:16.155Z] Building... 9s
+- [2026-01-27T02:30:19.161Z] Building... 12s
+- [2026-01-27T02:30:22.163Z] Building... 15s
+- [2026-01-27T02:30:25.166Z] Building... 18s
+- [2026-01-27T02:30:28.167Z] Building... 21s
+- [2026-01-27T02:30:31.170Z] Building... 24s
+- [2026-01-27T02:30:34.172Z] Building... 27s
+- [2026-01-27T02:30:37.174Z] Building... 30s
+- [2026-01-27T02:30:40.178Z] Building... 33s
+- [2026-01-27T02:30:43.181Z] Building... 36s
+- [2026-01-27T02:30:46.184Z] Building... 39s
+- [2026-01-27T02:30:49.187Z] Building... 42s
+- [2026-01-27T02:30:52.191Z] Building... 45s
+- [2026-01-27T02:30:55.194Z] Building... 48s
+- [2026-01-27T02:30:58.197Z] Building... 51s
+- [2026-01-27T02:31:01.201Z] Building... 54s
+- [2026-01-27T02:31:04.205Z] Building... 57s
+- [2026-01-27T02:31:07.208Z] Building... 60s
+- [2026-01-27T02:31:10.211Z] Building... 63s
+- [2026-01-27T02:31:13.214Z] Building... 66s
+- [2026-01-27T02:31:16.218Z] Building... 69s
+- [2026-01-27T02:31:19.219Z] Building... 72s
+- [2026-01-27T02:31:22.222Z] Building... 75s
+- [2026-01-27T02:31:25.225Z] Building... 78s
+- [2026-01-27T02:31:28.226Z] Building... 81s
+- [2026-01-27T02:31:31.229Z] Building... 84s
+- [2026-01-27T02:31:34.231Z] Building... 87s
+- [2026-01-27T02:31:37.235Z] Building... 90s
+- [2026-01-27T02:31:40.238Z] Building... 93s
+- [2026-01-27T02:31:43.240Z] Building... 96s
+- [2026-01-27T02:31:46.243Z] Building... 99s
+- [2026-01-27T02:31:49.247Z] Building... 102s
+- [2026-01-27T02:31:52.250Z] Building... 105s
+- [2026-01-27T02:31:55.254Z] Building... 108s
+- [2026-01-27T02:31:58.256Z] Building... 111s
+- [2026-01-27T02:32:01.260Z] Building... 114s
+- [2026-01-27T02:32:04.263Z] Building... 117s
+- [2026-01-27T02:32:07.267Z] Building... 120s
+- [2026-01-27T02:32:10.270Z] Building... 123s
+- [2026-01-27T02:32:13.274Z] Building... 126s
+- [2026-01-27T02:32:16.277Z] Building... 129s
+- [2026-01-27T02:32:19.281Z] Building... 132s
+- [2026-01-27T02:32:22.285Z] Building... 135s
+- [2026-01-27T02:32:25.288Z] Building... 138s
+- [2026-01-27T02:32:28.291Z] Building... 141s
+- [2026-01-27T02:32:31.296Z] Building... 144s
+- [2026-01-27T02:32:34.299Z] Building... 147s
+- [2026-01-27T02:32:37.302Z] Building... 150s
+- [2026-01-27T02:32:40.305Z] Building... 153s
+- [2026-01-27T02:32:43.310Z] Building... 156s
+- [2026-01-27T02:32:46.311Z] Building... 159s
+- [2026-01-27T02:32:49.314Z] Building... 162s
+- [2026-01-27T02:32:52.316Z] Building... 165s
+- [2026-01-27T02:32:55.319Z] Building... 168s
+- [2026-01-27T02:32:58.320Z] Building... 171s
+- [2026-01-27T02:33:01.322Z] Building... 174s
+- [2026-01-27T02:33:04.326Z] Building... 177s
+- [2026-01-27T02:33:07.330Z] Building... 180s
+- [2026-01-27T02:33:12.473Z] Screenshot: Initial build
+- [2026-01-27T02:33:12.473Z] Sending color amendment...
+- [2026-01-27T02:34:12.643Z] Screenshot: After amendment
+- [2026-01-27T02:34:12.660Z] Deployment URL: https://app80n9odoxud-88bx0z5fp-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T02:34:23.235Z] Screenshot: Deployed site
+- [2026-01-27T02:34:23.250Z] === TEST v3 COMPLETE ===
+- [2026-01-27T02:36:14.973Z] === COFFEE SHOP v3 - WITH FIXED PROMPTS ===
+- [2026-01-27T02:36:15.769Z] Submitting with BROWN/CREAM color requirement...
+- [2026-01-27T02:36:15.830Z] Build started
+- [2026-01-27T02:36:18.854Z] Building... 3s
+- [2026-01-27T02:36:21.857Z] Building... 6s
+- [2026-01-27T02:36:24.858Z] Building... 9s
+- [2026-01-27T02:36:27.864Z] Building... 12s
+- [2026-01-27T02:36:30.865Z] Building... 15s
+- [2026-01-27T02:36:33.878Z] Building... 18s
+- [2026-01-27T02:36:36.880Z] Building... 21s
+- [2026-01-27T02:36:39.882Z] Building... 24s
+- [2026-01-27T02:36:42.886Z] Building... 27s
+- [2026-01-27T02:36:45.890Z] Building... 30s
+- [2026-01-27T02:36:48.893Z] Building... 33s
+- [2026-01-27T02:36:51.896Z] Building... 36s
+- [2026-01-27T02:36:54.899Z] Building... 39s
+- [2026-01-27T02:36:57.903Z] Building... 42s
+- [2026-01-27T02:37:00.905Z] Building... 45s
+- [2026-01-27T02:37:03.908Z] Building... 48s
+- [2026-01-27T02:37:06.911Z] Building... 51s
+- [2026-01-27T02:37:09.915Z] Building... 54s
+- [2026-01-27T02:37:12.917Z] Building... 57s
+- [2026-01-27T02:37:15.920Z] Building... 60s
+- [2026-01-27T02:37:18.924Z] Building... 63s
+- [2026-01-27T02:37:21.928Z] Building... 66s
+- [2026-01-27T02:37:24.931Z] Building... 69s
+- [2026-01-27T02:37:27.934Z] Building... 72s
+- [2026-01-27T02:37:30.937Z] Building... 75s
+- [2026-01-27T02:37:33.941Z] Building... 78s
+- [2026-01-27T02:37:36.945Z] Building... 81s
+- [2026-01-27T02:37:39.949Z] Building... 84s
+- [2026-01-27T02:37:42.952Z] Building... 87s
+- [2026-01-27T02:37:45.955Z] Building... 90s
+- [2026-01-27T02:37:48.958Z] Building... 93s
+- [2026-01-27T02:37:51.962Z] Building... 96s
+- [2026-01-27T02:37:54.966Z] Building... 99s
+- [2026-01-27T02:37:57.969Z] Building... 102s
+- [2026-01-27T02:38:00.972Z] Building... 105s
+- [2026-01-27T02:38:03.976Z] Building... 108s
+- [2026-01-27T02:38:06.980Z] Building... 111s
+- [2026-01-27T02:38:09.984Z] Building... 114s
+- [2026-01-27T02:38:12.988Z] Building... 117s
+- [2026-01-27T02:38:15.991Z] Building... 120s
+- [2026-01-27T02:38:18.992Z] Building... 123s
+- [2026-01-27T02:38:21.994Z] Building... 126s
+- [2026-01-27T02:38:24.998Z] Building... 129s
+- [2026-01-27T02:38:28.000Z] Building... 132s
+- [2026-01-27T02:38:31.001Z] Building... 135s
+- [2026-01-27T02:38:34.005Z] Building... 138s
+- [2026-01-27T02:38:37.007Z] Building... 141s
+- [2026-01-27T02:38:40.011Z] Building... 144s
+- [2026-01-27T02:38:43.015Z] Building... 147s
+- [2026-01-27T02:38:46.017Z] Building... 150s
+- [2026-01-27T02:38:49.019Z] Building... 153s
+- [2026-01-27T02:38:52.022Z] Building... 156s
+- [2026-01-27T02:38:55.025Z] Building... 159s
+- [2026-01-27T02:38:58.029Z] Building... 162s
+- [2026-01-27T02:39:01.033Z] Building... 165s
+- [2026-01-27T02:39:04.034Z] Building... 168s
+- [2026-01-27T02:39:07.038Z] Building... 171s
+- [2026-01-27T02:39:10.041Z] Building... 174s
+- [2026-01-27T02:39:13.043Z] Building... 177s
+- [2026-01-27T02:39:16.047Z] Building... 180s
+- [2026-01-27T02:39:21.190Z] Screenshot: Initial build
+- [2026-01-27T02:39:21.190Z] Sending color amendment...
+- [2026-01-27T02:40:21.357Z] Screenshot: After amendment
+- [2026-01-27T02:40:21.377Z] Deployment URL: https://app7du2x90eww-m89wn0asm-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T02:40:31.865Z] Screenshot: Deployed site
+- [2026-01-27T02:40:31.881Z] === TEST v3 COMPLETE ===
+- [2026-01-27T02:46:40.788Z] === COFFEE SHOP v4 - WITH COLOR ENFORCEMENT FIX ===
+- [2026-01-27T02:46:41.622Z] Submitting with BROWN/CREAM color requirement...
+- [2026-01-27T02:46:41.713Z] Build started
+- [2026-01-27T02:46:44.725Z] Building... 3s
+- [2026-01-27T02:46:47.733Z] Building... 6s
+- [2026-01-27T02:46:50.742Z] Building... 9s
+- [2026-01-27T02:46:53.745Z] Building... 12s
+- [2026-01-27T02:46:56.747Z] Building... 15s
+- [2026-01-27T02:46:59.752Z] Building... 18s
+- [2026-01-27T02:47:02.755Z] Building... 21s
+- [2026-01-27T02:47:05.758Z] Building... 24s
+- [2026-01-27T02:47:08.767Z] Building... 27s
+- [2026-01-27T02:47:11.782Z] Building... 30s
+- [2026-01-27T02:47:14.787Z] Building... 33s
+- [2026-01-27T02:47:17.798Z] Building... 36s
+- [2026-01-27T02:47:20.812Z] Building... 39s
+- [2026-01-27T02:47:23.814Z] Building... 42s
+- [2026-01-27T02:47:26.818Z] Building... 45s
+- [2026-01-27T02:47:29.828Z] Building... 48s
+- [2026-01-27T02:47:32.837Z] Building... 51s
+- [2026-01-27T02:47:35.841Z] Building... 54s
+- [2026-01-27T02:47:38.847Z] Building... 57s
+- [2026-01-27T02:47:41.856Z] Building... 60s
+- [2026-01-27T02:47:44.864Z] Building... 63s
+- [2026-01-27T02:47:47.872Z] Building... 66s
+- [2026-01-27T02:47:50.882Z] Building... 69s
+- [2026-01-27T02:47:53.891Z] Building... 72s
+- [2026-01-27T02:47:56.899Z] Building... 75s
+- [2026-01-27T02:47:59.906Z] Building... 78s
+- [2026-01-27T02:48:02.913Z] Building... 81s
+- [2026-01-27T02:48:05.921Z] Building... 84s
+- [2026-01-27T02:48:08.926Z] Building... 87s
+- [2026-01-27T02:48:11.947Z] Building... 90s
+- [2026-01-27T02:48:14.954Z] Building... 93s
+- [2026-01-27T02:48:17.966Z] Building... 96s
+- [2026-01-27T02:48:20.970Z] Building... 99s
+- [2026-01-27T02:48:23.976Z] Building... 102s
+- [2026-01-27T02:48:26.984Z] Building... 105s
+- [2026-01-27T02:48:29.987Z] Building... 108s
+- [2026-01-27T02:48:33.000Z] Building... 111s
+- [2026-01-27T02:48:36.009Z] Building... 114s
+- [2026-01-27T02:48:39.019Z] Building... 117s
+- [2026-01-27T02:48:42.025Z] Building... 120s
+- [2026-01-27T02:48:45.030Z] Building... 123s
+- [2026-01-27T02:48:48.039Z] Building... 126s
+- [2026-01-27T02:48:51.047Z] Building... 129s
+- [2026-01-27T02:48:54.058Z] Building... 132s
+- [2026-01-27T02:48:57.070Z] Building... 135s
+- [2026-01-27T02:49:00.079Z] Building... 138s
+- [2026-01-27T02:49:03.088Z] Building... 141s
+- [2026-01-27T02:49:06.098Z] Building... 144s
+- [2026-01-27T02:49:09.102Z] Building... 147s
+- [2026-01-27T02:49:12.109Z] Building... 150s
+- [2026-01-27T02:49:15.113Z] Building... 153s
+- [2026-01-27T02:49:18.121Z] Building... 156s
+- [2026-01-27T02:49:21.131Z] Building... 159s
+- [2026-01-27T02:49:24.141Z] Building... 162s
+- [2026-01-27T02:49:27.151Z] Building... 165s
+- [2026-01-27T02:49:30.158Z] Building... 168s
+- [2026-01-27T02:49:33.163Z] Building... 171s
+- [2026-01-27T02:49:36.167Z] Building... 174s
+- [2026-01-27T02:49:39.177Z] Building... 177s
+- [2026-01-27T02:49:42.187Z] Building... 180s
+- [2026-01-27T02:49:47.344Z] Screenshot: Initial build
+- [2026-01-27T02:49:47.345Z] Sending color amendment...
+- [2026-01-27T02:49:47.366Z] Waiting for rebuild...
+- [2026-01-27T02:51:17.528Z] Screenshot: After amendment
+- [2026-01-27T02:51:17.545Z] Deployment URL: https://appgz2hsnhe65-836ng2r5v-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T02:51:17.545Z] Capturing deployed site...
+- [2026-01-27T02:51:27.960Z] Screenshot: Deployed site
+- [2026-01-27T02:51:27.979Z] === TEST v4 COMPLETE ===
+- [2026-01-27T03:26:33.210Z] === COFFEE SHOP v5 - STRICT COLOR ENFORCEMENT ===
+- [2026-01-27T03:26:34.010Z] Submitting with STRICT BROWN/CREAM requirement...
+- [2026-01-27T03:26:34.069Z] Build started
+- [2026-01-27T03:26:37.093Z] Building... 3s
+- [2026-01-27T03:26:40.096Z] Building... 6s
+- [2026-01-27T03:26:43.114Z] Building... 9s
+- [2026-01-27T03:26:46.117Z] Building... 12s
+- [2026-01-27T03:26:49.120Z] Building... 15s
+- [2026-01-27T03:26:52.121Z] Building... 18s
+- [2026-01-27T03:26:55.124Z] Building... 21s
+- [2026-01-27T03:26:58.126Z] Building... 24s
+- [2026-01-27T03:27:01.128Z] Building... 27s
+- [2026-01-27T03:27:04.133Z] Building... 30s
+- [2026-01-27T03:27:07.140Z] Building... 33s
+- [2026-01-27T03:27:10.151Z] Building... 36s
+- [2026-01-27T03:27:13.162Z] Building... 39s
+- [2026-01-27T03:27:16.167Z] Building... 42s
+- [2026-01-27T03:27:19.174Z] Building... 45s
+- [2026-01-27T03:27:22.181Z] Building... 48s
+- [2026-01-27T03:27:25.183Z] Building... 51s
+- [2026-01-27T03:27:28.186Z] Building... 54s
+- [2026-01-27T03:27:31.196Z] Building... 57s
+- [2026-01-27T03:27:34.199Z] Building... 60s
+- [2026-01-27T03:27:37.204Z] Building... 63s
+- [2026-01-27T03:27:40.207Z] Building... 66s
+- [2026-01-27T03:27:43.210Z] Building... 69s
+- [2026-01-27T03:27:46.212Z] Building... 72s
+- [2026-01-27T03:27:49.215Z] Building... 75s
+- [2026-01-27T03:27:52.217Z] Building... 78s
+- [2026-01-27T03:27:55.225Z] Building... 81s
+- [2026-01-27T03:27:58.228Z] Building... 84s
+- [2026-01-27T03:28:01.237Z] Building... 87s
+- [2026-01-27T03:28:04.243Z] Building... 90s
+- [2026-01-27T03:28:07.246Z] Building... 93s
+- [2026-01-27T03:28:10.249Z] Building... 96s
+- [2026-01-27T03:28:13.251Z] Building... 99s
+- [2026-01-27T03:28:16.254Z] Building... 102s
+- [2026-01-27T03:28:19.257Z] Building... 105s
+- [2026-01-27T03:28:22.263Z] Building... 108s
+- [2026-01-27T03:28:25.270Z] Building... 111s
+- [2026-01-27T03:28:28.273Z] Building... 114s
+- [2026-01-27T03:28:31.277Z] Building... 117s
+- [2026-01-27T03:28:34.283Z] Building... 120s
+- [2026-01-27T03:28:37.289Z] Building... 123s
+- [2026-01-27T03:28:40.294Z] Building... 126s
+- [2026-01-27T03:28:43.298Z] Building... 129s
+- [2026-01-27T03:28:46.300Z] Building... 132s
+- [2026-01-27T03:28:49.302Z] Building... 135s
+- [2026-01-27T03:28:52.305Z] Building... 138s
+- [2026-01-27T03:28:55.308Z] Building... 141s
+- [2026-01-27T03:28:58.311Z] Building... 144s
+- [2026-01-27T03:29:01.314Z] Building... 147s
+- [2026-01-27T03:29:04.320Z] Building... 150s
+- [2026-01-27T03:29:07.322Z] Building... 153s
+- [2026-01-27T03:29:10.325Z] Building... 156s
+- [2026-01-27T03:29:13.328Z] Building... 159s
+- [2026-01-27T03:29:16.337Z] Building... 162s
+- [2026-01-27T03:29:19.342Z] Building... 165s
+- [2026-01-27T03:29:22.344Z] Building... 168s
+- [2026-01-27T03:29:25.351Z] Building... 171s
+- [2026-01-27T03:29:28.356Z] Building... 174s
+- [2026-01-27T03:29:31.358Z] Building... 177s
+- [2026-01-27T03:29:34.364Z] Building... 180s
+- [2026-01-27T03:29:39.499Z] Screenshot: Initial build
+- [2026-01-27T03:29:39.500Z] Sending explicit color amendment...
+- [2026-01-27T03:29:39.521Z] Waiting for rebuild...
+- [2026-01-27T03:31:09.653Z] Screenshot: After amendment
+- [2026-01-27T03:31:09.671Z] Deployment URL: https://app40o8gqeh33-pd5up40uq-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T03:31:09.671Z] Capturing deployed site...
+- [2026-01-27T03:31:19.668Z] Screenshot: Deployed site
+- [2026-01-27T03:31:19.682Z] === TEST v5 COMPLETE ===
+- [2026-01-27T03:36:36.014Z] === COFFEE SHOP v6 - DEBUG COLOR ENFORCEMENT ===
+- [2026-01-27T03:36:36.813Z] Submitting with explicit COFFEE BROWN CREAM keywords...
+- [2026-01-27T03:36:36.880Z] Build started
+- [2026-01-27T03:36:39.903Z] Building... 3s
+- [2026-01-27T03:36:42.904Z] Building... 6s
+- [2026-01-27T03:36:45.906Z] Building... 9s
+- [2026-01-27T03:36:48.911Z] Building... 12s
+- [2026-01-27T03:36:51.916Z] Building... 15s
+- [2026-01-27T03:36:54.918Z] Building... 18s
+- [2026-01-27T03:36:57.921Z] Building... 21s
+- [2026-01-27T03:37:00.924Z] Building... 24s
+- [2026-01-27T03:37:03.926Z] Building... 27s
+- [2026-01-27T03:37:06.929Z] Building... 30s
+- [2026-01-27T03:37:09.936Z] Building... 33s
+- [2026-01-27T03:37:12.945Z] Building... 36s
+- [2026-01-27T03:37:15.948Z] Building... 39s
+- [2026-01-27T03:37:18.954Z] Building... 42s
+- [2026-01-27T03:37:21.957Z] Building... 45s
+- [2026-01-27T03:37:24.962Z] Building... 48s
+- [2026-01-27T03:37:27.965Z] Building... 51s
+- [2026-01-27T03:37:30.973Z] Building... 54s
+- [2026-01-27T03:37:33.976Z] Building... 57s
+- [2026-01-27T03:37:36.981Z] Building... 60s
+- [2026-01-27T03:37:39.982Z] Building... 63s
+- [2026-01-27T03:37:42.984Z] Building... 66s
+- [2026-01-27T03:37:45.990Z] Building... 69s
+- [2026-01-27T03:37:48.997Z] Building... 72s
+- [2026-01-27T03:37:52.001Z] Building... 75s
+- [2026-01-27T03:37:55.003Z] Building... 78s
+- [2026-01-27T03:37:58.007Z] Building... 81s
+- [2026-01-27T03:38:01.012Z] Building... 84s
+- [2026-01-27T03:38:04.016Z] Building... 87s
+- [2026-01-27T03:38:07.019Z] Building... 90s
+- [2026-01-27T03:38:10.024Z] Building... 93s
+- [2026-01-27T03:38:13.027Z] Building... 96s
+- [2026-01-27T03:38:16.048Z] Building... 99s
+- [2026-01-27T03:38:19.052Z] Building... 102s
+- [2026-01-27T03:38:22.055Z] Building... 105s
+- [2026-01-27T03:38:25.059Z] Building... 108s
+- [2026-01-27T03:38:28.062Z] Building... 111s
+- [2026-01-27T03:38:31.066Z] Building... 114s
+- [2026-01-27T03:38:34.067Z] Building... 117s
+- [2026-01-27T03:38:37.070Z] Building... 120s
+- [2026-01-27T03:38:40.073Z] Building... 123s
+- [2026-01-27T03:38:43.075Z] Building... 126s
+- [2026-01-27T03:38:46.078Z] Building... 129s
+- [2026-01-27T03:38:49.081Z] Building... 132s
+- [2026-01-27T03:38:52.085Z] Building... 135s
+- [2026-01-27T03:38:55.089Z] Building... 138s
+- [2026-01-27T03:38:58.092Z] Building... 141s
+- [2026-01-27T03:39:01.094Z] Building... 144s
+- [2026-01-27T03:39:04.096Z] Building... 147s
+- [2026-01-27T03:39:07.100Z] Building... 150s
+- [2026-01-27T03:39:10.107Z] Building... 153s
+- [2026-01-27T03:39:13.111Z] Building... 156s
+- [2026-01-27T03:39:16.115Z] Building... 159s
+- [2026-01-27T03:39:19.121Z] Building... 162s
+- [2026-01-27T03:39:22.125Z] Building... 165s
+- [2026-01-27T03:39:25.130Z] Building... 168s
+- [2026-01-27T03:39:28.134Z] Building... 171s
+- [2026-01-27T03:39:31.138Z] Building... 174s
+- [2026-01-27T03:39:34.141Z] Building... 177s
+- [2026-01-27T03:39:37.144Z] Building... 180s
+- [2026-01-27T03:39:42.284Z] Screenshot: Initial build
+- [2026-01-27T03:39:42.301Z] Deployment URL: https://appnpj8grhp69-f7u1ir1s7-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T03:39:42.302Z] Capturing deployed site...
+- [2026-01-27T03:39:52.360Z] Screenshot: Deployed site
+- [2026-01-27T03:39:52.374Z] === TEST v6 COMPLETE ===
+- [2026-01-27T03:43:37.446Z] === COFFEE SHOP v6 - DEBUG COLOR ENFORCEMENT ===
+- [2026-01-27T03:43:38.245Z] Submitting with explicit COFFEE BROWN CREAM keywords...
+- [2026-01-27T03:43:38.311Z] Build started
+- [2026-01-27T03:43:41.335Z] Building... 3s
+- [2026-01-27T03:43:44.337Z] Building... 6s
+- [2026-01-27T03:43:47.339Z] Building... 9s
+- [2026-01-27T03:43:50.347Z] Building... 12s
+- [2026-01-27T03:43:53.352Z] Building... 15s
+- [2026-01-27T03:43:56.354Z] Building... 18s
+- [2026-01-27T03:43:59.359Z] Building... 21s
+- [2026-01-27T03:44:02.363Z] Building... 24s
+- [2026-01-27T03:44:05.370Z] Building... 27s
+- [2026-01-27T03:44:08.379Z] Building... 30s
+- [2026-01-27T03:44:11.384Z] Building... 33s
+- [2026-01-27T03:44:14.386Z] Building... 36s
+- [2026-01-27T03:44:17.395Z] Building... 39s
+- [2026-01-27T03:44:20.398Z] Building... 42s
+- [2026-01-27T03:44:23.401Z] Building... 45s
+- [2026-01-27T03:44:26.405Z] Building... 48s
+- [2026-01-27T03:44:29.409Z] Building... 51s
+- [2026-01-27T03:44:32.412Z] Building... 54s
+- [2026-01-27T03:44:35.416Z] Building... 57s
+- [2026-01-27T03:44:38.418Z] Building... 60s
+- [2026-01-27T03:44:41.420Z] Building... 63s
+- [2026-01-27T03:44:44.421Z] Building... 66s
+- [2026-01-27T03:44:47.425Z] Building... 69s
+- [2026-01-27T03:44:50.429Z] Building... 72s
+- [2026-01-27T03:44:53.432Z] Building... 75s
+- [2026-01-27T03:44:56.434Z] Building... 78s
+- [2026-01-27T03:44:59.435Z] Building... 81s
+- [2026-01-27T03:45:02.437Z] Building... 84s
+- [2026-01-27T03:45:05.440Z] Building... 87s
+- [2026-01-27T03:45:08.443Z] Building... 90s
+- [2026-01-27T03:45:11.455Z] Building... 93s
+- [2026-01-27T03:45:14.458Z] Building... 96s
+- [2026-01-27T03:45:17.460Z] Building... 99s
+- [2026-01-27T03:45:20.468Z] Building... 102s
+- [2026-01-27T03:45:23.471Z] Building... 105s
+- [2026-01-27T03:45:26.474Z] Building... 108s
+- [2026-01-27T03:45:29.477Z] Building... 111s
+- [2026-01-27T03:45:32.482Z] Building... 114s
+- [2026-01-27T03:45:35.486Z] Building... 117s
+- [2026-01-27T03:45:38.491Z] Building... 120s
+- [2026-01-27T03:45:41.495Z] Building... 123s
+- [2026-01-27T03:45:44.498Z] Building... 126s
+- [2026-01-27T03:45:47.501Z] Building... 129s
+- [2026-01-27T03:45:49.963Z] === COFFEE SHOP v6 - DEBUG COLOR ENFORCEMENT ===
+- [2026-01-27T03:45:50.508Z] Building... 132s
+- [2026-01-27T03:45:50.759Z] Submitting with explicit COFFEE BROWN CREAM keywords...
+- [2026-01-27T03:45:50.829Z] Build started
+- [2026-01-27T03:45:53.510Z] Building... 135s
+- [2026-01-27T03:45:53.852Z] Building... 3s
+- [2026-01-27T03:45:56.511Z] Building... 138s
+- [2026-01-27T03:45:56.854Z] Building... 6s
+- [2026-01-27T03:45:59.513Z] Building... 141s
+- [2026-01-27T03:45:59.857Z] Building... 9s
+- [2026-01-27T03:46:02.514Z] Building... 144s
+- [2026-01-27T03:46:02.864Z] Building... 12s
+- [2026-01-27T03:46:05.516Z] Building... 147s
+- [2026-01-27T03:46:05.867Z] Building... 15s
+- [2026-01-27T03:46:08.518Z] Building... 150s
+- [2026-01-27T03:46:08.869Z] Building... 18s
+- [2026-01-27T03:46:11.521Z] Building... 153s
+- [2026-01-27T03:46:11.876Z] Building... 21s
+- [2026-01-27T03:46:14.522Z] Building... 156s
+- [2026-01-27T03:46:14.878Z] Building... 24s
+- [2026-01-27T03:46:17.525Z] Building... 159s
+- [2026-01-27T03:46:17.880Z] Building... 27s
+- [2026-01-27T03:46:20.527Z] Building... 162s
+- [2026-01-27T03:46:20.883Z] Building... 30s
+- [2026-01-27T03:46:23.529Z] Building... 165s
+- [2026-01-27T03:46:23.893Z] Building... 33s
+- [2026-01-27T03:46:26.531Z] Building... 168s
+- [2026-01-27T03:46:26.894Z] Building... 36s
+- [2026-01-27T03:46:29.532Z] Building... 171s
+- [2026-01-27T03:46:29.897Z] Building... 39s
+- [2026-01-27T03:46:32.534Z] Building... 174s
+- [2026-01-27T03:46:32.900Z] Building... 42s
+- [2026-01-27T03:46:35.536Z] Building... 177s
+- [2026-01-27T03:46:35.905Z] Building... 45s
+- [2026-01-27T03:46:38.538Z] Building... 180s
+- [2026-01-27T03:46:38.908Z] Building... 48s
+- [2026-01-27T03:46:41.911Z] Building... 51s
+- [2026-01-27T03:46:43.670Z] Screenshot: Initial build
+- [2026-01-27T03:46:43.690Z] Deployment URL: https://appz71qx26j6p-pfcftwzo5-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T03:46:43.690Z] Capturing deployed site...
+- [2026-01-27T03:46:44.914Z] Building... 54s
+- [2026-01-27T03:46:47.916Z] Building... 57s
+- [2026-01-27T03:46:50.925Z] Building... 60s
+- [2026-01-27T03:46:53.650Z] Screenshot: Deployed site
+- [2026-01-27T03:46:53.663Z] === TEST v6 COMPLETE ===
+- [2026-01-27T03:46:53.927Z] Building... 63s
+- [2026-01-27T03:46:56.930Z] Building... 66s
+- [2026-01-27T03:46:59.932Z] Building... 69s
+- [2026-01-27T03:47:02.934Z] Building... 72s
+- [2026-01-27T03:47:05.936Z] Building... 75s
+- [2026-01-27T03:47:08.939Z] Building... 78s
+- [2026-01-27T03:47:11.940Z] Building... 81s
+- [2026-01-27T03:47:14.948Z] Building... 84s
+- [2026-01-27T03:47:17.950Z] Building... 87s
+- [2026-01-27T03:47:20.957Z] Building... 90s
+- [2026-01-27T03:47:23.959Z] Building... 93s
+- [2026-01-27T03:47:26.963Z] Building... 96s
+- [2026-01-27T03:47:29.965Z] Building... 99s
+- [2026-01-27T03:47:32.968Z] Building... 102s
+- [2026-01-27T03:47:35.970Z] Building... 105s
+- [2026-01-27T03:47:38.972Z] Building... 108s
+- [2026-01-27T03:47:41.976Z] Building... 111s
+- [2026-01-27T03:47:44.978Z] Building... 114s
+- [2026-01-27T03:47:47.981Z] Building... 117s
+- [2026-01-27T03:47:50.984Z] Building... 120s
+- [2026-01-27T03:47:53.987Z] Building... 123s
+- [2026-01-27T03:47:56.990Z] Building... 126s
+- [2026-01-27T03:47:59.994Z] Building... 129s
+- [2026-01-27T03:48:02.996Z] Building... 132s
+- [2026-01-27T03:48:05.999Z] Building... 135s
+- [2026-01-27T03:48:09.002Z] Building... 138s
+- [2026-01-27T03:48:12.005Z] Building... 141s
+- [2026-01-27T03:48:15.008Z] Building... 144s
+- [2026-01-27T03:48:18.010Z] Building... 147s
+- [2026-01-27T03:48:21.012Z] Building... 150s
+- [2026-01-27T03:48:24.014Z] Building... 153s
+- [2026-01-27T03:48:27.020Z] Building... 156s
+- [2026-01-27T03:48:30.022Z] Building... 159s
+- [2026-01-27T03:48:33.027Z] Building... 162s
+- [2026-01-27T03:48:36.030Z] Building... 165s
+- [2026-01-27T03:48:39.032Z] Building... 168s
+- [2026-01-27T03:48:42.035Z] Building... 171s
+- [2026-01-27T03:48:45.037Z] Building... 174s
+- [2026-01-27T03:48:48.039Z] Building... 177s
+- [2026-01-27T03:48:51.041Z] Building... 180s
+- [2026-01-27T03:48:56.170Z] Screenshot: Initial build
+- [2026-01-27T03:48:56.186Z] Deployment URL: https://app53zhy4n6yb-nhwa6atvu-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T03:48:56.186Z] Capturing deployed site...
+- [2026-01-27T03:49:06.075Z] Screenshot: Deployed site
+- [2026-01-27T03:49:06.088Z] === TEST v6 COMPLETE ===
+- [2026-01-27T03:49:35.269Z] === COFFEE SHOP v6 - DEBUG COLOR ENFORCEMENT ===
+- [2026-01-27T03:49:36.068Z] Submitting with explicit COFFEE BROWN CREAM keywords...
+- [2026-01-27T03:49:36.131Z] Build started
+- [2026-01-27T03:49:39.155Z] Building... 3s
+- [2026-01-27T03:49:42.156Z] Building... 6s
+- [2026-01-27T03:49:45.158Z] Building... 9s
+- [2026-01-27T03:49:48.160Z] Building... 12s
+- [2026-01-27T03:49:51.168Z] Building... 15s
+- [2026-01-27T03:49:54.170Z] Building... 18s
+- [2026-01-27T03:49:57.181Z] Building... 21s
+- [2026-01-27T03:50:00.183Z] Building... 24s
+- [2026-01-27T03:50:03.188Z] Building... 27s
+- [2026-01-27T03:50:06.191Z] Building... 30s
+- [2026-01-27T03:50:09.197Z] Building... 33s
+- [2026-01-27T03:50:12.199Z] Building... 36s
+- [2026-01-27T03:50:15.202Z] Building... 39s
+- [2026-01-27T03:50:18.204Z] Building... 42s
+- [2026-01-27T03:50:21.207Z] Building... 45s
+- [2026-01-27T03:50:24.209Z] Building... 48s
+- [2026-01-27T03:50:27.218Z] Building... 51s
+- [2026-01-27T03:50:30.221Z] Building... 54s
+- [2026-01-27T03:50:33.224Z] Building... 57s
+- [2026-01-27T03:50:36.226Z] Building... 60s
+- [2026-01-27T03:50:39.229Z] Building... 63s
+- [2026-01-27T03:50:42.235Z] Building... 66s
+- [2026-01-27T03:50:45.237Z] Building... 69s
+- [2026-01-27T03:50:48.239Z] Building... 72s
+- [2026-01-27T03:50:51.242Z] Building... 75s
+- [2026-01-27T03:50:54.244Z] Building... 78s
+- [2026-01-27T03:50:57.247Z] Building... 81s
+- [2026-01-27T03:51:00.250Z] Building... 84s
+- [2026-01-27T03:51:03.253Z] Building... 87s
+- [2026-01-27T03:51:06.255Z] Building... 90s
+- [2026-01-27T03:51:09.258Z] Building... 93s
+- [2026-01-27T03:51:12.269Z] Building... 96s
+- [2026-01-27T03:51:15.271Z] Building... 99s
+- [2026-01-27T03:51:18.275Z] Building... 102s
+- [2026-01-27T03:51:21.277Z] Building... 105s
+- [2026-01-27T03:51:24.280Z] Building... 108s
+- [2026-01-27T03:51:27.282Z] Building... 111s
+- [2026-01-27T03:51:30.285Z] Building... 114s
+- [2026-01-27T03:51:33.289Z] Building... 117s
+- [2026-01-27T03:51:36.291Z] Building... 120s
+- [2026-01-27T03:51:39.294Z] Building... 123s
+- [2026-01-27T03:51:42.296Z] Building... 126s
+- [2026-01-27T03:51:45.297Z] Building... 129s
+- [2026-01-27T03:51:48.300Z] Building... 132s
+- [2026-01-27T03:51:51.302Z] Building... 135s
+- [2026-01-27T03:51:54.303Z] Building... 138s
+- [2026-01-27T03:51:57.305Z] Building... 141s
+- [2026-01-27T03:52:00.308Z] Building... 144s
+- [2026-01-27T03:52:03.310Z] Building... 147s
+- [2026-01-27T03:52:06.313Z] Building... 150s
+- [2026-01-27T03:52:09.315Z] Building... 153s
+- [2026-01-27T03:52:12.318Z] Building... 156s
+- [2026-01-27T03:52:15.321Z] Building... 159s
+- [2026-01-27T03:52:18.323Z] Building... 162s
+- [2026-01-27T03:52:21.329Z] Building... 165s
+- [2026-01-27T03:52:24.332Z] Building... 168s
+- [2026-01-27T03:52:27.334Z] Building... 171s
+- [2026-01-27T03:52:30.336Z] Building... 174s
+- [2026-01-27T03:52:33.338Z] Building... 177s
+- [2026-01-27T03:52:36.341Z] Building... 180s
+- [2026-01-27T03:52:41.477Z] Screenshot: Initial build
+- [2026-01-27T03:52:41.494Z] Deployment URL: https://appuugovkjmop-lhoa5mgph-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T03:52:41.494Z] Capturing deployed site...
+- [2026-01-27T03:52:51.495Z] Screenshot: Deployed site
+- [2026-01-27T03:52:51.508Z] === TEST v6 COMPLETE ===
+- [2026-01-27T03:56:33.986Z] === COFFEE SHOP v7 - VERCEL COLOR ENFORCEMENT FIX ===
+- [2026-01-27T03:56:34.784Z] Submitting with COFFEE BROWN CREAM requirement...
+- [2026-01-27T03:56:34.867Z] Build started
+- [2026-01-27T03:56:37.878Z] Building... 3s
+- [2026-01-27T03:56:40.880Z] Building... 6s
+- [2026-01-27T03:56:43.885Z] Building... 9s
+- [2026-01-27T03:56:46.886Z] Building... 12s
+- [2026-01-27T03:56:49.889Z] Building... 15s
+- [2026-01-27T03:56:52.891Z] Building... 18s
+- [2026-01-27T03:56:55.894Z] Building... 21s
+- [2026-01-27T03:56:58.898Z] Building... 24s
+- [2026-01-27T03:57:01.900Z] Building... 27s
+- [2026-01-27T03:57:04.903Z] Building... 30s
+- [2026-01-27T03:57:07.910Z] Building... 33s
+- [2026-01-27T03:57:10.913Z] Building... 36s
+- [2026-01-27T03:57:13.916Z] Building... 39s
+- [2026-01-27T03:57:16.918Z] Building... 42s
+- [2026-01-27T03:57:19.921Z] Building... 45s
+- [2026-01-27T03:57:22.926Z] Building... 48s
+- [2026-01-27T03:57:25.929Z] Building... 51s
+- [2026-01-27T03:57:28.932Z] Building... 54s
+- [2026-01-27T03:57:31.934Z] Building... 57s
+- [2026-01-27T03:57:34.937Z] Building... 60s
+- [2026-01-27T03:57:37.940Z] Building... 63s
+- [2026-01-27T03:57:40.944Z] Building... 66s
+- [2026-01-27T03:57:43.948Z] Building... 69s
+- [2026-01-27T03:57:46.952Z] Building... 72s
+- [2026-01-27T03:57:49.956Z] Building... 75s
+- [2026-01-27T03:57:52.959Z] Building... 78s
+- [2026-01-27T03:57:55.963Z] Building... 81s
+- [2026-01-27T03:57:58.965Z] Building... 84s
+- [2026-01-27T03:58:01.969Z] Building... 87s
+- [2026-01-27T03:58:04.973Z] Building... 90s
+- [2026-01-27T03:58:07.976Z] Building... 93s
+- [2026-01-27T03:58:10.979Z] Building... 96s
+- [2026-01-27T03:58:13.981Z] Building... 99s
+- [2026-01-27T03:58:16.982Z] Building... 102s
+- [2026-01-27T03:58:19.985Z] Building... 105s
+- [2026-01-27T03:58:22.989Z] Building... 108s
+- [2026-01-27T03:58:25.993Z] Building... 111s
+- [2026-01-27T03:58:28.995Z] Building... 114s
+- [2026-01-27T03:58:31.999Z] Building... 117s
+- [2026-01-27T03:58:35.002Z] Building... 120s
+- [2026-01-27T03:58:38.006Z] Building... 123s
+- [2026-01-27T03:58:41.008Z] Building... 126s
+- [2026-01-27T03:58:44.012Z] Building... 129s
+- [2026-01-27T03:58:47.014Z] Building... 132s
+- [2026-01-27T03:58:50.017Z] Building... 135s
+- [2026-01-27T03:58:53.020Z] Building... 138s
+- [2026-01-27T03:58:56.023Z] Building... 141s
+- [2026-01-27T03:58:59.027Z] Building... 144s
+- [2026-01-27T03:59:02.028Z] Building... 147s
+- [2026-01-27T03:59:05.031Z] Building... 150s
+- [2026-01-27T03:59:08.035Z] Building... 153s
+- [2026-01-27T03:59:11.039Z] Building... 156s
+- [2026-01-27T03:59:14.042Z] Building... 159s
+- [2026-01-27T03:59:17.046Z] Building... 162s
+- [2026-01-27T03:59:20.050Z] Building... 165s
+- [2026-01-27T03:59:23.053Z] Building... 168s
+- [2026-01-27T03:59:26.056Z] Building... 171s
+- [2026-01-27T03:59:29.059Z] Building... 174s
+- [2026-01-27T03:59:32.062Z] Building... 177s
+- [2026-01-27T03:59:35.066Z] Building... 180s
+- [2026-01-27T03:59:40.193Z] Screenshot: Initial build
+- [2026-01-27T03:59:40.211Z] Deployment URL: https://appwc760z3cbm-1812rym69-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T03:59:40.211Z] Capturing deployed site...
+- [2026-01-27T03:59:50.350Z] Screenshot: Deployed site
+- [2026-01-27T03:59:50.368Z] === TEST v7 COMPLETE ===
+- [2026-01-27T04:09:07.943Z] === COFFEE SHOP v8 - COMPLETE TEST WITH CHAT ITERATION ===
+- [2026-01-27T04:09:08.765Z] STEP 1: Submitting initial request...
+- [2026-01-27T04:09:08.829Z] Build started
+- [2026-01-27T04:09:11.833Z] Building... 3s
+- [2026-01-27T04:09:14.840Z] Building... 6s
+- [2026-01-27T04:09:17.842Z] Building... 9s
+- [2026-01-27T04:09:20.846Z] Building... 12s
+- [2026-01-27T04:09:23.850Z] Building... 15s
+- [2026-01-27T04:09:26.856Z] Building... 18s
+- [2026-01-27T04:09:29.862Z] Building... 21s
+- [2026-01-27T04:09:32.869Z] Building... 24s
+- [2026-01-27T04:09:35.876Z] Building... 27s
+- [2026-01-27T04:09:38.883Z] Building... 30s
+- [2026-01-27T04:09:41.896Z] Building... 33s
+- [2026-01-27T04:09:44.904Z] Building... 36s
+- [2026-01-27T04:09:47.908Z] Building... 39s
+- [2026-01-27T04:09:50.911Z] Building... 42s
+- [2026-01-27T04:09:53.920Z] Building... 45s
+- [2026-01-27T04:09:56.929Z] Building... 48s
+- [2026-01-27T04:09:59.937Z] Building... 51s
+- [2026-01-27T04:10:02.945Z] Building... 54s
+- [2026-01-27T04:10:05.953Z] Building... 57s
+- [2026-01-27T04:10:08.963Z] Building... 60s
+- [2026-01-27T04:10:11.968Z] Building... 63s
+- [2026-01-27T04:10:14.977Z] Building... 66s
+- [2026-01-27T04:10:17.983Z] Building... 69s
+- [2026-01-27T04:10:20.989Z] Building... 72s
+- [2026-01-27T04:10:23.996Z] Building... 75s
+- [2026-01-27T04:10:27.003Z] Building... 78s
+- [2026-01-27T04:10:30.013Z] Building... 81s
+- [2026-01-27T04:10:33.022Z] Building... 84s
+- [2026-01-27T04:10:36.031Z] Building... 87s
+- [2026-01-27T04:10:39.036Z] Building... 90s
+- [2026-01-27T04:10:42.043Z] Building... 93s
+- [2026-01-27T04:10:45.048Z] Building... 96s
+- [2026-01-27T04:10:48.053Z] Building... 99s
+- [2026-01-27T04:10:51.062Z] Building... 102s
+- [2026-01-27T04:10:54.070Z] Building... 105s
+- [2026-01-27T04:10:57.079Z] Building... 108s
+- [2026-01-27T04:11:00.085Z] Building... 111s
+- [2026-01-27T04:11:03.089Z] Building... 114s
+- [2026-01-27T04:11:06.097Z] Building... 117s
+- [2026-01-27T04:11:09.106Z] Building... 120s
+- [2026-01-27T04:11:12.113Z] Building... 123s
+- [2026-01-27T04:11:15.120Z] Building... 126s
+- [2026-01-27T04:11:18.125Z] Building... 129s
+- [2026-01-27T04:11:21.133Z] Building... 132s
+- [2026-01-27T04:11:24.142Z] Building... 135s
+- [2026-01-27T04:11:27.148Z] Building... 138s
+- [2026-01-27T04:11:30.156Z] Building... 141s
+- [2026-01-27T04:11:33.164Z] Building... 144s
+- [2026-01-27T04:11:36.172Z] Building... 147s
+- [2026-01-27T04:11:39.178Z] Building... 150s
+- [2026-01-27T04:11:42.186Z] Building... 153s
+- [2026-01-27T04:11:45.196Z] Building... 156s
+- [2026-01-27T04:11:48.202Z] Building... 159s
+- [2026-01-27T04:11:51.208Z] Building... 162s
+- [2026-01-27T04:11:54.216Z] Building... 165s
+- [2026-01-27T04:11:57.224Z] Building... 168s
+- [2026-01-27T04:12:00.233Z] Building... 171s
+- [2026-01-27T04:12:03.242Z] Building... 174s
+- [2026-01-27T04:12:06.248Z] Building... 177s
+- [2026-01-27T04:12:09.256Z] Building... 180s
+- [2026-01-27T04:12:14.403Z] Screenshot: v8-01-initial.png - Initial build
+- [2026-01-27T04:12:14.403Z] STEP 2: Sending chat amendment for color changes...
+- [2026-01-27T04:12:44.407Z] ERROR: locator.fill: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('textarea').first()
+
+- [2026-01-27T04:13:40.881Z] === COFFEE SHOP v9 - COMPLETE TEST WITH CHAT ITERATION ===
+- [2026-01-27T04:13:41.704Z] STEP 1: Submitting initial request...
+- [2026-01-27T04:13:41.770Z] Build started
+- [2026-01-27T04:13:44.774Z] Building... 3s
+- [2026-01-27T04:13:47.778Z] Building... 6s
+- [2026-01-27T04:13:50.785Z] Building... 9s
+- [2026-01-27T04:13:53.790Z] Building... 12s
+- [2026-01-27T04:13:56.793Z] Building... 15s
+- [2026-01-27T04:13:59.797Z] Building... 18s
+- [2026-01-27T04:14:02.799Z] Building... 21s
+- [2026-01-27T04:14:05.807Z] Building... 24s
+- [2026-01-27T04:14:08.816Z] Building... 27s
+- [2026-01-27T04:14:11.824Z] Building... 30s
+- [2026-01-27T04:14:14.829Z] Building... 33s
+- [2026-01-27T04:14:17.837Z] Building... 36s
+- [2026-01-27T04:14:20.844Z] Building... 39s
+- [2026-01-27T04:14:23.849Z] Building... 42s
+- [2026-01-27T04:14:26.858Z] Building... 45s
+- [2026-01-27T04:14:29.864Z] Building... 48s
+- [2026-01-27T04:14:32.872Z] Building... 51s
+- [2026-01-27T04:14:35.879Z] Building... 54s
+- [2026-01-27T04:14:38.887Z] Building... 57s
+- [2026-01-27T04:14:41.892Z] Building... 60s
+- [2026-01-27T04:14:44.897Z] Building... 63s
+- [2026-01-27T04:14:47.902Z] Building... 66s
+- [2026-01-27T04:14:50.911Z] Building... 69s
+- [2026-01-27T04:14:53.919Z] Building... 72s
+- [2026-01-27T04:14:56.927Z] Building... 75s
+- [2026-01-27T04:14:59.936Z] Building... 78s
+- [2026-01-27T04:15:02.944Z] Building... 81s
+- [2026-01-27T04:15:05.952Z] Building... 84s
+- [2026-01-27T04:15:08.959Z] Building... 87s
+- [2026-01-27T04:15:11.965Z] Building... 90s
+- [2026-01-27T04:15:14.971Z] Building... 93s
+- [2026-01-27T04:15:17.979Z] Building... 96s
+- [2026-01-27T04:15:20.987Z] Building... 99s
+- [2026-01-27T04:15:23.994Z] Building... 102s
+- [2026-01-27T04:15:27.004Z] Building... 105s
+- [2026-01-27T04:15:30.011Z] Building... 108s
+- [2026-01-27T04:15:33.018Z] Building... 111s
+- [2026-01-27T04:15:36.026Z] Building... 114s
+- [2026-01-27T04:15:39.036Z] Building... 117s
+- [2026-01-27T04:15:42.043Z] Building... 120s
+- [2026-01-27T04:15:45.051Z] Building... 123s
+- [2026-01-27T04:15:48.057Z] Building... 126s
+- [2026-01-27T04:15:51.062Z] Building... 129s
+- [2026-01-27T04:15:54.069Z] Building... 132s
+- [2026-01-27T04:15:57.077Z] Building... 135s
+- [2026-01-27T04:16:00.084Z] Building... 138s
+- [2026-01-27T04:16:03.090Z] Building... 141s
+- [2026-01-27T04:16:06.097Z] Building... 144s
+- [2026-01-27T04:16:09.107Z] Building... 147s
+- [2026-01-27T04:16:12.114Z] Building... 150s
+- [2026-01-27T04:16:15.122Z] Building... 153s
+- [2026-01-27T04:16:18.129Z] Building... 156s
+- [2026-01-27T04:16:21.137Z] Building... 159s
+- [2026-01-27T04:16:24.144Z] Building... 162s
+- [2026-01-27T04:16:27.151Z] Building... 165s
+- [2026-01-27T04:16:30.158Z] Building... 168s
+- [2026-01-27T04:16:33.165Z] Building... 171s
+- [2026-01-27T04:16:36.171Z] Building... 174s
+- [2026-01-27T04:16:39.178Z] Building... 177s
+- [2026-01-27T04:16:42.185Z] Building... 180s
+- [2026-01-27T04:16:47.319Z] Screenshot: v9-01-initial.png - Initial build
+- [2026-01-27T04:16:47.319Z] STEP 2: Sending chat amendment for color changes...
+- [2026-01-27T04:16:47.341Z] Amendment sent via chat input
+- [2026-01-27T04:16:47.341Z] STEP 3: Waiting for rebuild after amendment...
+- [2026-01-27T04:18:17.487Z] CRITICAL Screenshot: v9-02-chat-amendment-with-preview.png - Chat panel with amendment + preview
+- [2026-01-27T04:18:17.489Z] Deployment URL: https://appiywabcjz3c-2r0jgmynk-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T04:18:17.506Z] STEP 6: Capturing deployed site...
+- [2026-01-27T04:18:27.388Z] Screenshot: v9-03-deployed.png - Deployed site
+- [2026-01-27T04:18:27.406Z] === TEST v9 COMPLETE ===
+- [2026-01-27T04:33:27.557Z] === CHAT AMENDMENT TEST - VISIBLE CHANGE ===
+- [2026-01-27T04:33:31.410Z] Screenshot: amendment-01-before.png - Current state
+- [2026-01-27T04:33:31.410Z] Sending chat amendment: Add phone number to footer...
+- [2026-01-27T04:34:01.414Z] ERROR: locator.fill: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('input[type="text"]:not([disabled])').first()
+
+- [2026-01-27T04:38:01.813Z] === CHAT AMENDMENT TEST v2 ===
+- [2026-01-27T04:38:07.684Z] Screenshot: before.png
+- [2026-01-27T04:38:07.689Z] ERROR: No input found
+- [2026-01-27T04:39:09.004Z] === CHAT AMENDMENT TEST - EXISTING PROJECT #19 ===
+- [2026-01-27T04:39:09.220Z] Navigating to: http://localhost:5173/builder/19
+- [2026-01-27T04:39:14.866Z] Screenshot: before.png
+- [2026-01-27T04:39:14.866Z] Current URL: http://localhost:5173/
+- [2026-01-27T04:39:14.868Z] Page HTML saved to builder_page.html
+- [2026-01-27T04:39:14.871Z] Found 2 input/textarea elements
+- [2026-01-27T04:39:14.873Z] No visible text input found
+- [2026-01-27T04:39:14.873Z] === TEST COMPLETE ===
+- [2026-01-27T04:39:58.256Z] === VISIBLE AMENDMENT TEST - Phone Number Addition ===
+- [2026-01-27T04:39:59.081Z] Step 1: Building initial page (no phone number)...
+- [2026-01-27T04:39:59.146Z] Build started
+- [2026-01-27T04:40:02.150Z] Building... 3s
+- [2026-01-27T04:40:05.158Z] Building... 6s
+- [2026-01-27T04:40:08.162Z] Building... 9s
+- [2026-01-27T04:40:11.166Z] Building... 12s
+- [2026-01-27T04:40:14.170Z] Building... 15s
+- [2026-01-27T04:40:17.173Z] Building... 18s
+- [2026-01-27T04:40:20.176Z] Building... 21s
+- [2026-01-27T04:40:23.183Z] Building... 24s
+- [2026-01-27T04:40:26.193Z] Building... 27s
+- [2026-01-27T04:40:29.201Z] Building... 30s
+- [2026-01-27T04:40:32.204Z] Building... 33s
+- [2026-01-27T04:40:35.214Z] Building... 36s
+- [2026-01-27T04:40:38.219Z] Building... 39s
+- [2026-01-27T04:40:41.225Z] Building... 42s
+- [2026-01-27T04:40:44.230Z] Building... 45s
+- [2026-01-27T04:40:47.237Z] Building... 48s
+- [2026-01-27T04:40:50.245Z] Building... 51s
+- [2026-01-27T04:40:53.253Z] Building... 54s
+- [2026-01-27T04:40:56.260Z] Building... 57s
+- [2026-01-27T04:40:59.268Z] Building... 60s
+- [2026-01-27T04:41:02.275Z] Building... 63s
+- [2026-01-27T04:41:05.283Z] Building... 66s
+- [2026-01-27T04:41:08.291Z] Building... 69s
+- [2026-01-27T04:41:11.297Z] Building... 72s
+- [2026-01-27T04:41:14.302Z] Building... 75s
+- [2026-01-27T04:41:17.312Z] Building... 78s
+- [2026-01-27T04:41:20.320Z] Building... 81s
+- [2026-01-27T04:41:23.330Z] Building... 84s
+- [2026-01-27T04:41:26.337Z] Building... 87s
+- [2026-01-27T04:41:29.344Z] Building... 90s
+- [2026-01-27T04:41:32.348Z] Building... 93s
+- [2026-01-27T04:41:35.356Z] Building... 96s
+- [2026-01-27T04:41:38.364Z] Building... 99s
+- [2026-01-27T04:41:41.374Z] Building... 102s
+- [2026-01-27T04:41:44.383Z] Building... 105s
+- [2026-01-27T04:41:47.391Z] Building... 108s
+- [2026-01-27T04:41:50.399Z] Building... 111s
+- [2026-01-27T04:41:53.408Z] Building... 114s
+- [2026-01-27T04:41:56.417Z] Building... 117s
+- [2026-01-27T04:41:59.425Z] Building... 120s
+- [2026-01-27T04:42:02.431Z] Building... 123s
+- [2026-01-27T04:42:05.435Z] Building... 126s
+- [2026-01-27T04:42:08.443Z] Building... 129s
+- [2026-01-27T04:42:11.450Z] Building... 132s
+- [2026-01-27T04:42:14.456Z] Building... 135s
+- [2026-01-27T04:42:17.462Z] Building... 138s
+- [2026-01-27T04:42:20.470Z] Building... 141s
+- [2026-01-27T04:42:23.479Z] Building... 144s
+- [2026-01-27T04:42:26.486Z] Building... 147s
+- [2026-01-27T04:42:29.493Z] Building... 150s
+- [2026-01-27T04:42:32.499Z] Building... 153s
+- [2026-01-27T04:42:35.506Z] Building... 156s
+- [2026-01-27T04:42:38.511Z] Building... 159s
+- [2026-01-27T04:42:41.519Z] Building... 162s
+- [2026-01-27T04:42:44.528Z] Building... 165s
+- [2026-01-27T04:42:47.535Z] Building... 168s
+- [2026-01-27T04:42:50.543Z] Building... 171s
+- [2026-01-27T04:42:53.549Z] Building... 174s
+- [2026-01-27T04:42:56.557Z] Building... 177s
+- [2026-01-27T04:42:59.566Z] Building... 180s
+- [2026-01-27T04:43:04.710Z] Screenshot: visible-01-BEFORE.png - Initial build WITHOUT phone number
+- [2026-01-27T04:43:04.710Z] Step 2: Sending amendment to ADD phone number...
+- [2026-01-27T04:43:04.730Z] Amendment sent - requesting phone number addition
+- [2026-01-27T04:43:04.731Z] Step 3: Waiting for rebuild with phone number...
+- [2026-01-27T04:45:04.876Z] Screenshot: visible-02-AFTER.png - After amendment WITH phone number
+- [2026-01-27T04:45:04.876Z] === TEST COMPLETE - Compare screenshots to see phone number added ===
+- [2026-01-27T04:53:42.134Z] === FINAL CUSTOMER TEST - Chat Amendment Verification ===
+- [2026-01-27T04:53:42.946Z] Step 1: Building page WITHOUT phone number...
+- [2026-01-27T04:53:43.028Z] Build started
+- [2026-01-27T04:53:46.032Z] Building... 3s
+- [2026-01-27T04:53:49.038Z] Building... 6s
+- [2026-01-27T04:53:52.044Z] Building... 9s
+- [2026-01-27T04:53:55.048Z] Building... 12s
+- [2026-01-27T04:53:58.050Z] Building... 15s
+- [2026-01-27T04:54:01.053Z] Building... 18s
+- [2026-01-27T04:54:04.057Z] Building... 21s
+- [2026-01-27T04:54:07.061Z] Building... 24s
+- [2026-01-27T04:54:10.070Z] Building... 27s
+- [2026-01-27T04:54:13.074Z] Building... 30s
+- [2026-01-27T04:54:16.079Z] Building... 33s
+- [2026-01-27T04:54:19.088Z] Building... 36s
+- [2026-01-27T04:54:22.091Z] Building... 39s
+- [2026-01-27T04:54:25.099Z] Building... 42s
+- [2026-01-27T04:54:28.108Z] Building... 45s
+- [2026-01-27T04:54:31.113Z] Building... 48s
+- [2026-01-27T04:54:34.120Z] Building... 51s
+- [2026-01-27T04:54:37.124Z] Building... 54s
+- [2026-01-27T04:54:40.131Z] Building... 57s
+- [2026-01-27T04:54:43.138Z] Building... 60s
+- [2026-01-27T04:54:46.147Z] Building... 63s
+- [2026-01-27T04:54:49.156Z] Building... 66s
+- [2026-01-27T04:54:52.164Z] Building... 69s
+- [2026-01-27T04:54:55.172Z] Building... 72s
+- [2026-01-27T04:54:58.180Z] Building... 75s
+- [2026-01-27T04:55:01.187Z] Building... 78s
+- [2026-01-27T04:55:04.195Z] Building... 81s
+- [2026-01-27T04:55:07.201Z] Building... 84s
+- [2026-01-27T04:55:10.208Z] Building... 87s
+- [2026-01-27T04:55:13.215Z] Building... 90s
+- [2026-01-27T04:55:16.223Z] Building... 93s
+- [2026-01-27T04:55:19.232Z] Building... 96s
+- [2026-01-27T04:55:22.240Z] Building... 99s
+- [2026-01-27T04:55:25.246Z] Building... 102s
+- [2026-01-27T04:55:28.252Z] Building... 105s
+- [2026-01-27T04:55:31.259Z] Building... 108s
+- [2026-01-27T04:55:34.267Z] Building... 111s
+- [2026-01-27T04:55:37.272Z] Building... 114s
+- [2026-01-27T04:55:40.279Z] Building... 117s
+- [2026-01-27T04:55:43.287Z] Building... 120s
+- [2026-01-27T04:55:46.295Z] Building... 123s
+- [2026-01-27T04:55:49.304Z] Building... 126s
+- [2026-01-27T04:55:52.312Z] Building... 129s
+- [2026-01-27T04:55:55.317Z] Building... 132s
+- [2026-01-27T04:55:58.325Z] Building... 135s
+- [2026-01-27T04:56:01.333Z] Building... 138s
+- [2026-01-27T04:56:04.340Z] Building... 141s
+- [2026-01-27T04:56:07.349Z] Building... 144s
+- [2026-01-27T04:56:10.358Z] Building... 147s
+- [2026-01-27T04:56:13.367Z] Building... 150s
+- [2026-01-27T04:56:16.371Z] Building... 153s
+- [2026-01-27T04:56:19.379Z] Building... 156s
+- [2026-01-27T04:56:22.388Z] Building... 159s
+- [2026-01-27T04:56:25.397Z] Building... 162s
+- [2026-01-27T04:56:28.405Z] Building... 165s
+- [2026-01-27T04:56:31.415Z] Building... 168s
+- [2026-01-27T04:56:34.423Z] Building... 171s
+- [2026-01-27T04:56:37.431Z] Building... 174s
+- [2026-01-27T04:56:40.434Z] Building... 177s
+- [2026-01-27T04:56:43.440Z] Building... 180s
+- [2026-01-27T04:56:48.587Z] Screenshot: final-01-BEFORE.png
+- [2026-01-27T04:56:48.587Z] Step 2: Sending chat amendment to ADD phone number...
+- [2026-01-27T04:56:48.607Z] Amendment sent
+- [2026-01-27T04:56:48.607Z] Step 3: Waiting for rebuild...
+- [2026-01-27T04:57:03.613Z] Waiting... 10s
+- [2026-01-27T04:57:03.624Z] Phone number detected in page!
+- [2026-01-27T04:57:08.772Z] Screenshot: final-02-AFTER.png
+- [2026-01-27T04:57:08.775Z] Phone number in page: true
+- [2026-01-27T04:57:08.775Z] === TEST COMPLETE ===
+- [2026-01-27T05:04:20.665Z] === REAL FINAL TEST - Chat Amendment with Deployed Verification ===
+- [2026-01-27T05:04:21.472Z] Building initial page...
+- [2026-01-27T05:04:24.589Z] Building... 3s
+- [2026-01-27T05:04:27.601Z] Building... 6s
+- [2026-01-27T05:04:30.607Z] Building... 9s
+- [2026-01-27T05:04:33.621Z] Building... 12s
+- [2026-01-27T05:04:36.624Z] Building... 15s
+- [2026-01-27T05:04:39.628Z] Building... 18s
+- [2026-01-27T05:04:42.632Z] Building... 21s
+- [2026-01-27T05:04:45.639Z] Building... 24s
+- [2026-01-27T05:04:48.649Z] Building... 27s
+- [2026-01-27T05:04:51.654Z] Building... 30s
+- [2026-01-27T05:04:54.657Z] Building... 33s
+- [2026-01-27T05:04:57.662Z] Building... 36s
+- [2026-01-27T05:05:00.668Z] Building... 39s
+- [2026-01-27T05:05:03.677Z] Building... 42s
+- [2026-01-27T05:05:06.685Z] Building... 45s
+- [2026-01-27T05:05:09.693Z] Building... 48s
+- [2026-01-27T05:05:12.700Z] Building... 51s
+- [2026-01-27T05:05:15.705Z] Building... 54s
+- [2026-01-27T05:05:18.709Z] Building... 57s
+- [2026-01-27T05:05:21.718Z] Building... 60s
+- [2026-01-27T05:05:24.726Z] Building... 63s
+- [2026-01-27T05:05:27.736Z] Building... 66s
+- [2026-01-27T05:05:30.745Z] Building... 69s
+- [2026-01-27T05:05:33.752Z] Building... 72s
+- [2026-01-27T05:05:36.759Z] Building... 75s
+- [2026-01-27T05:05:39.767Z] Building... 78s
+- [2026-01-27T05:05:42.776Z] Building... 81s
+- [2026-01-27T05:05:45.781Z] Building... 84s
+- [2026-01-27T05:05:48.787Z] Building... 87s
+- [2026-01-27T05:05:51.795Z] Building... 90s
+- [2026-01-27T05:05:54.802Z] Building... 93s
+- [2026-01-27T05:05:57.810Z] Building... 96s
+- [2026-01-27T05:06:00.820Z] Building... 99s
+- [2026-01-27T05:06:03.829Z] Building... 102s
+- [2026-01-27T05:06:06.836Z] Building... 105s
+- [2026-01-27T05:06:09.845Z] Building... 108s
+- [2026-01-27T05:06:12.853Z] Building... 111s
+- [2026-01-27T05:06:15.862Z] Building... 114s
+- [2026-01-27T05:06:18.869Z] Building... 117s
+- [2026-01-27T05:06:21.876Z] Building... 120s
+- [2026-01-27T05:06:24.884Z] Building... 123s
+- [2026-01-27T05:06:27.893Z] Building... 126s
+- [2026-01-27T05:06:30.901Z] Building... 129s
+- [2026-01-27T05:06:33.909Z] Building... 132s
+- [2026-01-27T05:06:36.919Z] Building... 135s
+- [2026-01-27T05:06:39.926Z] Building... 138s
+- [2026-01-27T05:06:42.934Z] Building... 141s
+- [2026-01-27T05:06:45.942Z] Building... 144s
+- [2026-01-27T05:06:48.946Z] Building... 147s
+- [2026-01-27T05:06:51.954Z] Building... 150s
+- [2026-01-27T05:06:54.960Z] Building... 153s
+- [2026-01-27T05:06:57.967Z] Building... 156s
+- [2026-01-27T05:07:00.974Z] Building... 159s
+- [2026-01-27T05:07:03.983Z] Building... 162s
+- [2026-01-27T05:07:06.991Z] Building... 165s
+- [2026-01-27T05:07:09.996Z] Building... 168s
+- [2026-01-27T05:07:13.004Z] Building... 171s
+- [2026-01-27T05:07:16.011Z] Building... 174s
+- [2026-01-27T05:07:19.016Z] Building... 177s
+- [2026-01-27T05:07:22.023Z] Building... 180s
+- [2026-01-27T05:07:27.034Z] Initial URL: https://appu0s0iwhi14-kaozw3t6b-antons-projects-f1d70cf2.vercel.app
+- [2026-01-27T05:07:30.760Z] Screenshot: DEPLOYED site BEFORE amendment
+- [2026-01-27T05:07:30.764Z] Sending chat amendment: Add phone number...
+- [2026-01-27T05:07:30.785Z] Amendment sent
+- [2026-01-27T05:07:30.785Z] Waiting 45s for modification and deployment...
+- [2026-01-27T05:08:15.928Z] Screenshot: Builder after amendment
+- [2026-01-27T05:08:15.928Z] Checking deployed site for phone number...
+- [2026-01-27T05:08:20.614Z] Phone number in deployed site: false
+- [2026-01-27T05:08:20.761Z] Screenshot: DEPLOYED site AFTER amendment
+- [2026-01-27T05:08:20.763Z] === TEST COMPLETE ===

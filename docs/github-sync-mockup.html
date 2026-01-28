@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Sync - Faibric</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #24292e 0%, #1b1f23 100%);
+            color: white;
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .github-icon {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        .card-header-content h1 {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .card-header-content p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .card-body {
+            padding: 32px;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #757575;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .repo-connection {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .repo-input {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            color: #424242;
+            background: #fafafa;
+        }
+
+        .repo-input:focus {
+            outline: none;
+            border-color: #1976d2;
+            background: white;
+        }
+
+        .connected-badge {
+            background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .connected-badge svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+
+        .sync-status-card {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .sha-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .sha-row:last-of-type {
+            border-bottom: none;
+        }
+
+        .sha-label {
+            font-size: 14px;
+            color: #757575;
+            font-weight: 500;
+        }
+
+        .sha-value {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 14px;
+            color: #424242;
+            background: #ffffff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 16px;
+            margin-top: 8px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .status-dot.in-sync {
+            background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+        }
+
+        .status-dot.updates-available {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            box-shadow: 0 0 8px rgba(255, 152, 0, 0.4);
+        }
+
+        .status-dot.local-changes {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+        }
+
+        .status-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4caf50;
+        }
+
+        .status-text.updates-available {
+            color: #ff9800;
+        }
+
+        .status-text.local-changes {
+            color: #2196f3;
+        }
+
+        .last-sync {
+            font-size: 13px;
+            color: #9e9e9e;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-pull {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-pull:hover {
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-pull svg {
+            fill: white;
+        }
+
+        .btn-push {
+            background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-push:hover {
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-push svg {
+            fill: white;
+        }
+
+        .card-footer {
+            background: #fafafa;
+            padding: 16px 32px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-text {
+            font-size: 13px;
+            color: #757575;
+        }
+
+        .footer-link {
+            color: #1976d2;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <svg class="github-icon" viewBox="0 0 24 24">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                <div class="card-header-content">
+                    <h1>GitHub Sync</h1>
+                    <p>Bidirectional synchronization with your repository</p>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="section">
+                    <div class="section-title">Repository Connection</div>
+                    <div class="repo-connection">
+                        <input type="text" class="repo-input" value="https://github.com/acme-corp/landing-page" readonly>
+                        <div class="connected-badge">
+                            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                            Connected
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Sync Status</div>
+                    <div class="sync-status-card">
+                        <div class="sha-row">
+                            <span class="sha-label">Local SHA</span>
+                            <span class="sha-value">abc1234...</span>
+                        </div>
+                        <div class="sha-row">
+                            <span class="sha-label">Remote SHA</span>
+                            <span class="sha-value">abc1234...</span>
+                        </div>
+                        <div class="status-row">
+                            <div class="status-indicator">
+                                <div class="status-dot in-sync"></div>
+                                <span class="status-text">In Sync</span>
+                            </div>
+                            <span class="last-sync">Last synced: Jan 15, 2026 at 2:30 PM</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Actions</div>
+                    <div class="action-buttons">
+                        <button class="btn btn-pull">
+                            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            Pull from GitHub
+                        </button>
+                        <button class="btn btn-push">
+                            <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+                            Push to GitHub
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <span class="footer-text">Automatic sync on publish enabled</span>
+                <a href="#" class="footer-link">Configure sync settings</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

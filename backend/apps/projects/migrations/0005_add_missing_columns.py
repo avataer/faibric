@@ -35,15 +35,8 @@ def add_missing_columns(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    # Depend on 0004 to avoid issues with 0005/0006 that reference model fields
     dependencies = [
         ('projects', '0004_customer_api_keys'),
-    ]
-
-    # Replace 0005 and 0006 migrations since we're adding columns manually
-    replaces = [
-        ('projects', '0005_add_preferred_model'),
-        ('projects', '0006_project_github_repo_project_last_github_sha'),
     ]
 
     operations = [

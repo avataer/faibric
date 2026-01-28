@@ -1,14 +1,17 @@
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 
-from .models import Tenant, TenantMembership, TenantInvitation, AuditLog
+from .models import Tenant, TenantMembership, TenantInvitation, AuditLog, WhitelabelConfig, SSOConfiguration
 from .serializers import (
     TenantSerializer, TenantCreateSerializer, TenantMembershipSerializer,
     TenantInvitationSerializer, InviteUserSerializer, AcceptInvitationSerializer,
-    AuditLogSerializer, UserTenantSerializer
+    AuditLogSerializer, UserTenantSerializer, WhitelabelConfigSerializer,
+    SSOConfigurationSerializer
 )
+from .sso_service import SSOService, SSOError
 from .permissions import TenantPermission, TenantAdminPermission, TenantOwnerPermission
 from .utils import create_tenant_for_user, invite_user_to_tenant, accept_invitation, get_user_tenants
 
@@ -218,7 +221,7 @@ class InvitationViewSet(viewsets.ReadOnlyModelViewSet):
         """Accept an invitation"""
         serializer = AcceptInvitationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         try:
             membership = accept_invitation(
                 token=serializer.validated_data['token'],
@@ -229,6 +232,239 @@ class InvitationViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_201_CREATED
             )
         except ValueError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class WhitelabelConfigView(APIView):
+    """
+    API endpoint for managing tenant whitelabel configuration.
+    GET: Returns current tenant whitelabel config (creates one if it does not exist)
+    PUT: Updates whitelabel config
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """Get the whitelabel config for the current user's tenant"""
+        membership = request.user.tenant_memberships.filter(is_active=True).first()
+        if not membership:
+            return Response(
+                {'error': 'No active tenant membership found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        tenant = membership.tenant
+        config, created = WhitelabelConfig.objects.get_or_create(tenant=tenant)
+        serializer = WhitelabelConfigSerializer(config)
+        return Response(serializer.data)
+
+    def put(self, request):
+        """Update the whitelabel config for the current user's tenant"""
+        membership = request.user.tenant_memberships.filter(
+            is_active=True,
+            role__in=['owner', 'admin']
+        ).first()
+        if not membership:
+            return Response(
+                {'error': 'You must be a tenant admin or owner to modify whitelabel config'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        tenant = membership.tenant
+        config, created = WhitelabelConfig.objects.get_or_create(tenant=tenant)
+        serializer = WhitelabelConfigSerializer(config, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyDomainView(APIView):
+    """
+    API endpoint for verifying custom domain DNS configuration.
+    POST: Verifies custom domain by checking DNS CNAME record
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """Verify the custom domain for the current user's tenant"""
+        membership = request.user.tenant_memberships.filter(is_active=True).first()
+        if not membership:
+            return Response(
+                {'error': 'No active tenant membership found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        tenant = membership.tenant
+        config = get_object_or_404(WhitelabelConfig, tenant=tenant)
+
+        if not config.custom_domain:
+            return Response(
+                {'error': 'No custom domain configured'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Simple domain verification - check if CNAME exists
+        try:
+            import dns.resolver
+            answers = dns.resolver.resolve(config.custom_domain, 'CNAME')
+            config.domain_verified = True
+            config.save()
+            return Response({
+                'verified': True,
+                'domain': config.custom_domain
+            })
+        except Exception:
+            config.domain_verified = False
+            config.save()
+            return Response(
+                {'verified': False, 'error': 'DNS verification failed'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class SSOConfigView(APIView):
+    """
+    API endpoint for managing tenant SSO configuration.
+    GET: Returns current tenant SSO config (creates one if it does not exist)
+    PUT: Updates SSO config
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """Get the SSO config for the current user's tenant"""
+        membership = request.user.tenant_memberships.filter(
+            is_active=True,
+            role__in=['owner', 'admin']
+        ).first()
+        if not membership:
+            return Response(
+                {'error': 'You must be a tenant admin or owner to view SSO config'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        tenant = membership.tenant
+        config, created = SSOConfiguration.objects.get_or_create(tenant=tenant)
+        serializer = SSOConfigurationSerializer(config)
+        return Response(serializer.data)
+
+    def put(self, request):
+        """Update the SSO config for the current user's tenant"""
+        membership = request.user.tenant_memberships.filter(
+            is_active=True,
+            role__in=['owner', 'admin']
+        ).first()
+        if not membership:
+            return Response(
+                {'error': 'You must be a tenant admin or owner to modify SSO config'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        tenant = membership.tenant
+        config, created = SSOConfiguration.objects.get_or_create(tenant=tenant)
+        serializer = SSOConfigurationSerializer(config, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SSOLoginView(APIView):
+    """
+    API endpoint to initiate SSO login.
+    GET: Redirects to the configured identity provider.
+    """
+    permission_classes = []  # Public endpoint
+
+    def get(self, request, tenant_slug):
+        """Initiate SSO login for the specified tenant"""
+        tenant = get_object_or_404(Tenant, slug=tenant_slug)
+
+        # Build callback URL
+        callback_url = request.build_absolute_uri(f'/api/tenants/sso/callback/{tenant_slug}/')
+
+        try:
+            sso_service = SSOService(tenant)
+            redirect_url = sso_service.initiate_login(callback_url)
+            return Response({'redirect_url': redirect_url})
+        except SSOError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class SSOCallbackView(APIView):
+    """
+    API endpoint to handle SSO callback from identity provider.
+    POST: Handles SAML or OIDC callback and returns authentication token.
+    """
+    permission_classes = []  # Public endpoint
+
+    def post(self, request, tenant_slug):
+        """Handle SSO callback for the specified tenant"""
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        tenant = get_object_or_404(Tenant, slug=tenant_slug)
+
+        try:
+            sso_service = SSOService(tenant)
+            config = tenant.sso_config
+
+            # Build callback URL for validation
+            callback_url = request.build_absolute_uri(f'/api/tenants/sso/callback/{tenant_slug}/')
+
+            if config.sso_type == 'saml':
+                # Handle SAML response
+                saml_response = request.data.get('SAMLResponse')
+                relay_state = request.data.get('RelayState')
+
+                if not saml_response:
+                    return Response(
+                        {'error': 'SAMLResponse not provided'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                user, was_created = sso_service.handle_saml_callback(saml_response, relay_state)
+
+            elif config.sso_type == 'oidc':
+                # Handle OIDC callback
+                code = request.data.get('code')
+                state = request.data.get('state')
+
+                if not code:
+                    return Response(
+                        {'error': 'Authorization code not provided'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                user, was_created = sso_service.handle_oidc_callback(code, callback_url, state)
+
+            else:
+                return Response(
+                    {'error': 'Unknown SSO type'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Generate JWT tokens for the user
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': {
+                    'id': str(user.id),
+                    'email': user.email,
+                    'username': user.username,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                },
+                'tenant': {
+                    'id': str(tenant.id),
+                    'name': tenant.name,
+                    'slug': tenant.slug,
+                },
+                'was_created': was_created,
+            })
+
+        except SSOError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST

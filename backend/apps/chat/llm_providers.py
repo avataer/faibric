@@ -7,8 +7,30 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional, Generator
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# Customer Test AI Logging
+CHAT_AI_LOG_FILE = Path.home() / "Code/Faibric/customer-tests/coffee-shop-menu/chat_ai_calls.jsonl"
+
+def log_chat_ai_call(provider: str, messages: list, response: str, metadata: dict = None):
+    """Log chat AI call to file for Customer Test verification"""
+    try:
+        CHAT_AI_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "provider": provider,
+            "messages": [{"role": m.role, "content": m.content[:200]} for m in messages] if messages else [],
+            "response_preview": response[:500] if response else None,
+            "response_length": len(response) if response else 0,
+            "metadata": metadata or {}
+        }
+        with open(CHAT_AI_LOG_FILE, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception as e:
+        logger.error(f"[CHAT_AI_LOG] Error logging: {e}")
 
 
 @dataclass
@@ -144,10 +166,21 @@ class AnthropicProvider(BaseLLMProvider):
             response.raise_for_status()
             data = response.json()
             
+            content = data['content'][0]['text']
+            tokens = data['usage']['input_tokens'] + data['usage']['output_tokens']
+
+            # Log for Customer Test verification
+            log_chat_ai_call(
+                provider="anthropic",
+                messages=messages,
+                response=content,
+                metadata={"model": data['model'], "tokens": tokens}
+            )
+
             return LLMResponse(
-                content=data['content'][0]['text'],
+                content=content,
                 model=data['model'],
-                tokens_used=data['usage']['input_tokens'] + data['usage']['output_tokens'],
+                tokens_used=tokens,
                 finish_reason=data['stop_reason'] or 'stop'
             )
         except Exception as e:

@@ -104,6 +104,12 @@ def create_preview_html(app_code: str, project_name: str = "Preview") -> str:
 
     Uses the same CDN-based React setup as Vercel deployment.
     """
+    # CRITICAL: Strip ES module syntax that doesn't work in browser Babel
+    # Babel in-browser can't handle 'export default' - it's not a bundler
+    import re
+    app_code = re.sub(r'^\s*export\s+default\s+\w+\s*;?\s*$', '', app_code, flags=re.MULTILINE)
+    app_code = re.sub(r'^\s*import\s+React.*$', '', app_code, flags=re.MULTILINE)
+
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head>

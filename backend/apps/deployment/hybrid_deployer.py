@@ -188,7 +188,8 @@ class HybridDeployer:
                 app_code=current_code,
                 project_id=project_id,
                 generated_images=generated_images or {},
-                session_token=session_token
+                session_token=session_token,
+                user_prompt=user_prompt
             )
             
             total_deploy_time += result.get('deploy_time_seconds', 0)

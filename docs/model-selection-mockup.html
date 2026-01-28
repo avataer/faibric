@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Selection - Faibric</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .model-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px 24px;
+            width: 300px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 3px solid transparent;
+        }
+
+        .model-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .model-card.selected {
+            border-color: #667eea;
+        }
+
+        .model-card.recommended {
+            position: relative;
+        }
+
+        .recommended-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .radio-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .radio-button {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .model-card.selected .radio-button {
+            border-color: #667eea;
+        }
+
+        .radio-button::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+            transform: scale(0);
+            transition: transform 0.2s ease;
+        }
+
+        .model-card.selected .radio-button::after {
+            transform: scale(1);
+        }
+
+        .model-name {
+            font-size: 20px;
+            font-weight: 500;
+            color: #1a1a2e;
+        }
+
+        .model-tier {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .tier-label {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .tier-powerful {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .tier-balanced {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .tier-fast {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .model-description {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .credits-section {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .credits-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .credits-label {
+            font-size: 14px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .feature-list {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .feature-check {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .select-button {
+            width: 100%;
+            padding: 14px 24px;
+            margin-top: 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .model-card.selected .select-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .select-button:hover {
+            opacity: 0.9;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: white;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Select Your AI Model</h1>
+            <p>Choose the model that best fits your project needs</p>
+        </div>
+
+        <div class="cards-container">
+            <!-- Claude Opus 4.5 Card -->
+            <div class="model-card" onclick="selectCard(this)">
+                <div class="radio-container">
+                    <div class="radio-button"></div>
+                    <span class="model-name">Claude Opus 4.5</span>
+                </div>
+
+                <div class="model-tier">
+                    <span class="tier-label tier-powerful">Most Powerful</span>
+                </div>
+
+                <p class="model-description">
+                    Best for complex apps requiring advanced reasoning, nuanced understanding, and sophisticated code generation.
+                </p>
+
+                <div class="credits-section">
+                    <div class="credits-value">3</div>
+                    <div class="credits-label">credits per generation</div>
+                </div>
+
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="feature-check">[OK]</span>
+                        <span>Advanced reasoning</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-check">[OK]</span>
+                        <span>Complex architectures</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-check">[OK]</span>
+                        <span>Enterprise-grade quality</span>
+                    </div>
+                </div>
+
+                <button class="select-button">Select Model</button>
+            </div>
+
+            <!-- Claude Sonnet 4 Card -->
+            <div class="model-card recommended selected" onclick="selectCard(this)">
+                <div class="recommended-badge">Recommended</div>
+
+                <div class="radio-container">
+                    <div class="radio-button"></div>
+                    <span class="model-name">Claude Sonnet 4</span>
+                </div>
+
+                <div class="model-tier">
+                    <span class="tier-label tier-balanced">Balanced</span>
+                </div>
+
+                <p class="model-description">
+                    Perfect balance of speed and capability. Ideal for most applications with excellent code quality.
+                </p>
+
+                <div class="credits-section">
+                    <div class="credits-value">2</div>
+                    <div class="credits-label">credits per generation</div>
+                </div>
+
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="feature-check">[OK]</span>
+                        <span>Fast responses</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-check">[OK]</span>
+                        <span>High-quality output</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-check">[OK]</span>
+                        <span>Cost-effective</span>
+                    </div>
+                </div>
+
+                <button class="select-button">Selected</button>
+            </div>
+
+            <!-- Claude Haiku 3.5 Card -->
+            <div class="model-card" onclick="selectCard(this)">
+                <div class="radio-container">
+                    <div class="radio-button"></div>
+                    <span class="model-name">Claude Haiku 3.5</span>
+                </div>
+
+                <div class="model-tier">
+                    <span class="tier-label tier-fast">Fast</span>
+                </div>
+
+                <p class="model-description">
+                    Lightning-fast responses at the lowest cost. Great for simple tasks and rapid prototyping.
+                </p>
+
+                <div class="credits-section">
+                    <div class="credits-value">1</div>
+                    <div class="credits-label">credit per generation</div>
+                </div>
+
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="feature-check">[OK]</span>
+                        <span>Fastest responses</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-check">[OK]</span>
+                        <span>Most economical</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-check">[OK]</span>
+                        <span>Simple tasks</span>
+                    </div>
+                </div>
+
+                <button class="select-button">Select Model</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>You can change your model selection at any time from project settings</p>
+        </div>
+    </div>
+
+    <script>
+        function selectCard(card) {
+            // Remove selected class from all cards
+            document.querySelectorAll('.model-card').forEach(function(c) {
+                c.classList.remove('selected');
+                var btn = c.querySelector('.select-button');
+                if (btn) {
+                    btn.textContent = 'Select Model';
+                }
+            });
+
+            // Add selected class to clicked card
+            card.classList.add('selected');
+            var selectedBtn = card.querySelector('.select-button');
+            if (selectedBtn) {
+                selectedBtn.textContent = 'Selected';
+            }
+        }
+    </script>
+</body>
+</html>

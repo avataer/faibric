@@ -114,6 +114,26 @@ WEBSITE-SPECIFIC RULES:
 3. Include all sections the user asks for
 4. Use a cohesive color scheme
 
+COLOR REQUIREMENTS - MANDATORY:
+If the user mentions "brown", "cream", "coffee", "espresso", or similar:
+- USE ONLY amber/brown color palette - NO OTHER COLORS ALLOWED
+- FORBIDDEN: gray, slate, zinc, blue, indigo, green, emerald, teal, cyan, purple, violet
+- REQUIRED COLORS:
+  * Headers/navbars: bg-amber-900 (dark brown)
+  * Section backgrounds: bg-amber-50 (cream) - NOT white, NOT gray
+  * Buttons: bg-amber-700 hover:bg-amber-800
+  * Cards: bg-amber-50 border border-amber-200
+  * Text on dark: text-amber-50 or text-white
+  * Text on light: text-amber-900 or text-stone-800
+- For "green": Use bg-green-600, bg-emerald-700, bg-green-800
+- DO NOT use gray/white/blue/green when the user asks for brown/cream
+- The user's color preference is MANDATORY, not optional
+
+IMAGES for coffee/cafe themes:
+- Use coffee-themed seeds: coffee-latte, espresso-cup, cafe-interior, coffee-beans
+- Example: https://picsum.photos/seed/coffee-latte/1920/1080
+- NEVER use: snow, winter, forest, landscape, generic seeds
+
 OUTPUT FORMAT (strict JSON):
 {{
     "title": "Page Title",
@@ -411,6 +431,27 @@ RULES:
 4. Only change what the CURRENT MODIFICATION REQUEST asks for
 5. Maintain the website's original purpose and theme
 6. You can use: react-router-dom, recharts, lucide-react, clsx, date-fns
+
+COLOR CHANGE REQUIREMENTS - CRITICAL:
+If the modification request mentions "brown", "cream", "coffee", "espresso", or similar:
+- You MUST use ONLY brown/amber color palette - NO OTHER COLORS ALLOWED
+- FORBIDDEN COLORS: gray, slate, zinc, blue, indigo, green, emerald, teal, cyan, purple, violet
+- REQUIRED COLOR MAPPING:
+  * Headers/navbars: bg-amber-900 (dark brown)
+  * Section backgrounds: bg-amber-50 (cream/beige)
+  * Buttons: bg-amber-700 hover:bg-amber-800
+  * Text on dark backgrounds: text-amber-50 or text-white
+  * Text on light backgrounds: text-amber-900 or text-stone-800
+  * Borders: border-amber-200 or border-amber-300
+  * Cards: bg-amber-50 with border-amber-200
+- REPLACE EVERY INSTANCE of bg-gray-*, bg-slate-*, bg-blue-*, bg-green-*, bg-indigo-* with amber equivalents
+- DO NOT leave ANY gray, blue, green, or purple colors in the code
+- The client is PAYING for this color change - you MUST deliver COMPLETE replacement
+
+IMAGE REQUIREMENTS for coffee/cafe themes:
+- Use coffee-themed Picsum seeds: coffee-latte, espresso-cup, cafe-interior, coffee-beans, cappuccino
+- Example: https://picsum.photos/seed/coffee-latte/1920/1080
+- NEVER use generic seeds like snow, winter, forest, landscape
 
 Return ONLY the complete modified component code, starting with import and ending with export:"""
 

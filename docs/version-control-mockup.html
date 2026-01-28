@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Version History - Faibric</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 24px 32px;
+        }
+
+        .card-header h1 {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .card-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .version-list {
+            padding: 0;
+        }
+
+        .version-item {
+            display: flex;
+            align-items: center;
+            padding: 20px 32px;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.2s ease;
+        }
+
+        .version-item:last-child {
+            border-bottom: none;
+        }
+
+        .version-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .version-info {
+            flex: 1;
+        }
+
+        .version-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .version-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1976d2;
+        }
+
+        .current-badge {
+            background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .version-timestamp {
+            font-size: 13px;
+            color: #757575;
+            margin-bottom: 4px;
+        }
+
+        .version-note {
+            font-size: 14px;
+            color: #424242;
+        }
+
+        .version-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-view {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .btn-view:hover {
+            background: #bbdefb;
+        }
+
+        .btn-rollback {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+        }
+
+        .btn-rollback:hover {
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-current {
+            background: #e8f5e9;
+            color: #4caf50;
+            cursor: default;
+        }
+
+        .version-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .version-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: #1976d2;
+        }
+
+        .card-footer {
+            background: #fafafa;
+            padding: 16px 32px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-text {
+            font-size: 13px;
+            color: #757575;
+        }
+
+        .footer-link {
+            color: #1976d2;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>Version History</h1>
+                <p>My Landing Page Project - 5 versions saved</p>
+            </div>
+
+            <div class="version-list">
+                <div class="version-item">
+                    <div class="version-icon">
+                        <svg viewBox="0 0 24 24"><path d="M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z"/></svg>
+                    </div>
+                    <div class="version-info">
+                        <div class="version-header">
+                            <span class="version-number">v1.5</span>
+                            <span class="current-badge">Current</span>
+                        </div>
+                        <div class="version-timestamp">Jan 15, 2026 at 11:30 AM</div>
+                        <div class="version-note">Added contact form with validation</div>
+                    </div>
+                    <div class="version-actions">
+                        <button class="btn btn-current">Current Version</button>
+                    </div>
+                </div>
+
+                <div class="version-item">
+                    <div class="version-icon">
+                        <svg viewBox="0 0 24 24"><path d="M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z"/></svg>
+                    </div>
+                    <div class="version-info">
+                        <div class="version-header">
+                            <span class="version-number">v1.4</span>
+                        </div>
+                        <div class="version-timestamp">Jan 15, 2026 at 10:45 AM</div>
+                        <div class="version-note">Updated hero section background gradient</div>
+                    </div>
+                    <div class="version-actions">
+                        <button class="btn btn-view">View</button>
+                        <button class="btn btn-rollback">Rollback</button>
+                    </div>
+                </div>
+
+                <div class="version-item">
+                    <div class="version-icon">
+                        <svg viewBox="0 0 24 24"><path d="M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z"/></svg>
+                    </div>
+                    <div class="version-info">
+                        <div class="version-header">
+                            <span class="version-number">v1.3</span>
+                        </div>
+                        <div class="version-timestamp">Jan 15, 2026 at 9:15 AM</div>
+                        <div class="version-note">Changed header color to dark blue</div>
+                    </div>
+                    <div class="version-actions">
+                        <button class="btn btn-view">View</button>
+                        <button class="btn btn-rollback">Rollback</button>
+                    </div>
+                </div>
+
+                <div class="version-item">
+                    <div class="version-icon">
+                        <svg viewBox="0 0 24 24"><path d="M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z"/></svg>
+                    </div>
+                    <div class="version-info">
+                        <div class="version-header">
+                            <span class="version-number">v1.2</span>
+                        </div>
+                        <div class="version-timestamp">Jan 14, 2026 at 4:30 PM</div>
+                        <div class="version-note">Added testimonials section</div>
+                    </div>
+                    <div class="version-actions">
+                        <button class="btn btn-view">View</button>
+                        <button class="btn btn-rollback">Rollback</button>
+                    </div>
+                </div>
+
+                <div class="version-item">
+                    <div class="version-icon">
+                        <svg viewBox="0 0 24 24"><path d="M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z"/></svg>
+                    </div>
+                    <div class="version-info">
+                        <div class="version-header">
+                            <span class="version-number">v1.1</span>
+                        </div>
+                        <div class="version-timestamp">Jan 14, 2026 at 2:00 PM</div>
+                        <div class="version-note">Added features grid layout</div>
+                    </div>
+                    <div class="version-actions">
+                        <button class="btn btn-view">View</button>
+                        <button class="btn btn-rollback">Rollback</button>
+                    </div>
+                </div>
+
+                <div class="version-item">
+                    <div class="version-icon">
+                        <svg viewBox="0 0 24 24"><path d="M13,9V3.5L18.5,9M6,2C4.89,2 4,2.89 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2H6Z"/></svg>
+                    </div>
+                    <div class="version-info">
+                        <div class="version-header">
+                            <span class="version-number">v1.0</span>
+                        </div>
+                        <div class="version-timestamp">Jan 14, 2026 at 10:00 AM</div>
+                        <div class="version-note">Initial version</div>
+                    </div>
+                    <div class="version-actions">
+                        <button class="btn btn-view">View</button>
+                        <button class="btn btn-rollback">Rollback</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <span class="footer-text">Auto-save enabled - versions created on every publish</span>
+                <a href="#" class="footer-link">Manage storage</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

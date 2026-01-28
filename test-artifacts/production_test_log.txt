@@ -1,0 +1,57 @@
+[2026-01-27T08:43:34.990Z] === PRODUCTION CUSTOMER TEST ===
+[2026-01-27T08:43:34.991Z] Testing: https://faibric-frontend.onrender.com
+[2026-01-27T08:43:36.381Z] Loaded production frontend
+[2026-01-27T08:43:36.396Z] Submitting initial request...
+[2026-01-27T08:43:36.454Z] Build started
+[2026-01-27T08:43:36.454Z] Waiting for initial deployment...
+[2026-01-27T08:43:41.458Z] Building... 5s
+[2026-01-27T08:43:46.462Z] Building... 10s
+[2026-01-27T08:43:51.466Z] Building... 15s
+[2026-01-27T08:43:56.471Z] Building... 20s
+[2026-01-27T08:44:01.475Z] Building... 25s
+[2026-01-27T08:44:06.479Z] Building... 30s
+[2026-01-27T08:44:11.486Z] Building... 35s
+[2026-01-27T08:44:16.489Z] Building... 40s
+[2026-01-27T08:44:21.495Z] Building... 45s
+[2026-01-27T08:44:26.497Z] Building... 50s
+[2026-01-27T08:44:31.503Z] Building... 55s
+[2026-01-27T08:44:36.506Z] Building... 60s
+[2026-01-27T08:44:41.507Z] Building... 65s
+[2026-01-27T08:44:46.512Z] Building... 70s
+[2026-01-27T08:44:51.515Z] Building... 75s
+[2026-01-27T08:44:56.518Z] Building... 80s
+[2026-01-27T08:45:01.521Z] Building... 85s
+[2026-01-27T08:45:06.524Z] Building... 90s
+[2026-01-27T08:45:11.527Z] Building... 95s
+[2026-01-27T08:45:16.531Z] Building... 100s
+[2026-01-27T08:45:21.535Z] Building... 105s
+[2026-01-27T08:45:26.536Z] Building... 110s
+[2026-01-27T08:45:31.539Z] Building... 115s
+[2026-01-27T08:45:36.540Z] Building... 120s
+[2026-01-27T08:45:41.545Z] Building... 125s
+[2026-01-27T08:45:46.553Z] Building... 130s
+[2026-01-27T08:45:51.561Z] Building... 135s
+[2026-01-27T08:45:56.565Z] Building... 140s
+[2026-01-27T08:46:01.580Z] Building... 145s
+[2026-01-27T08:46:06.587Z] Building... 150s
+[2026-01-27T08:46:11.595Z] Building... 155s
+[2026-01-27T08:46:16.601Z] Building... 160s
+[2026-01-27T08:46:21.611Z] Building... 165s
+[2026-01-27T08:46:26.624Z] Building... 170s
+[2026-01-27T08:46:31.630Z] Building... 175s
+[2026-01-27T08:46:36.635Z] Building... 180s
+[2026-01-27T08:46:41.645Z] Building... 185s
+[2026-01-27T08:46:46.649Z] Building... 190s
+[2026-01-27T08:46:51.655Z] Building... 195s
+[2026-01-27T08:46:56.658Z] Building... 200s
+[2026-01-27T08:47:01.661Z] Building... 205s
+[2026-01-27T08:47:06.664Z] Building... 210s
+[2026-01-27T08:47:11.671Z] Building... 215s
+[2026-01-27T08:47:16.680Z] Building... 220s
+[2026-01-27T08:47:21.689Z] Building... 225s
+[2026-01-27T08:47:26.696Z] Building... 230s
+[2026-01-27T08:47:31.699Z] Building... 235s
+[2026-01-27T08:47:36.708Z] Building... 240s
+[2026-01-27T08:47:36.709Z] ERROR: Initial deployment timed out after 4 minutes
+Error: Initial deployment timed out after 4 minutes
+    at run (/Users/avataer/Code/Faibric/customer-tests/coffee-shop-menu/customer_test_production.js:62:19)

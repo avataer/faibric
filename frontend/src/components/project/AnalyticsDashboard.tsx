@@ -8,103 +8,274 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Skeleton,
+  Card,
+  CardContent,
+  CircularProgress,
+  Alert,
+  Divider,
 } from '@mui/material'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
 import { projectServicesApi, AnalyticsData } from '../../services/projectServices'
+import {
+  analyticsService,
+  EventStats,
+  Funnel,
+  FunnelStats,
+} from '../../services/analyticsService'
 
 interface AnalyticsDashboardProps {
   projectId: number | string
 }
 
-const StatCard = ({ title, value, subtitle }: { title: string; value: string | number; subtitle?: string }) => (
-  <Paper sx={{ p: 3, height: '100%' }}>
-    <Typography variant="body2" color="text.secondary" gutterBottom>
-      {title}
-    </Typography>
-    <Typography variant="h4" fontWeight={700}>
-      {typeof value === 'number' ? value.toLocaleString() : value}
-    </Typography>
-    {subtitle && (
-      <Typography variant="caption" color="text.secondary">
-        {subtitle}
+interface MetricCardProps {
+  title: string
+  value: string | number
+  subtitle?: string
+  loading?: boolean
+}
+
+const MetricCard = ({ title, value, subtitle, loading }: MetricCardProps) => (
+  <Card sx={{ height: '100%' }}>
+    <CardContent>
+      <Typography variant="body2" color="text.secondary" gutterBottom>
+        {title}
       </Typography>
-    )}
-  </Paper>
+      {loading ? (
+        <CircularProgress size={24} />
+      ) : (
+        <>
+          <Typography variant="h4" fontWeight={700}>
+            {typeof value === 'number' ? value.toLocaleString() : value}
+          </Typography>
+          {subtitle && (
+            <Typography variant="caption" color="text.secondary">
+              {subtitle}
+            </Typography>
+          )}
+        </>
+      )}
+    </CardContent>
+  </Card>
 )
 
-const SimpleChart = ({ data }: { data: { date: string; views: number }[] }) => {
-  if (!data || data.length === 0) {
+interface FunnelVisualizationProps {
+  stats: FunnelStats | null
+  loading: boolean
+}
+
+const FunnelVisualization = ({ stats, loading }: FunnelVisualizationProps) => {
+  if (loading) {
     return (
-      <Box sx={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Typography color="text.secondary">No data yet</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress />
       </Box>
     )
   }
 
-  const max = Math.max(...data.map((d) => d.views), 1)
-  const width = 100 / data.length
+  if (!stats || !stats.steps || stats.steps.length === 0) {
+    return (
+      <Typography color="text.secondary" sx={{ py: 2 }}>
+        No funnel data available
+      </Typography>
+    )
+  }
+
+  const maxEntered = Math.max(...stats.steps.map((s) => s.entered), 1)
 
   return (
-    <Box sx={{ height: 200, display: 'flex', alignItems: 'flex-end', gap: 0.5, px: 1 }}>
-      {data.map((d, i) => (
-        <Box
-          key={i}
-          sx={{
-            width: `${width}%`,
-            height: `${(d.views / max) * 100}%`,
-            minHeight: 4,
-            bgcolor: 'primary.main',
-            borderRadius: '4px 4px 0 0',
-            transition: 'height 0.3s',
-            '&:hover': {
-              bgcolor: 'primary.dark',
-            },
-          }}
-          title={`${d.date}: ${d.views} views`}
-        />
-      ))}
+    <Box>
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          Overall Conversion: {stats.overall_conversion_rate.toFixed(1)}%
+        </Typography>
+      </Box>
+      {stats.steps.map((step, index) => {
+        const widthPercent = (step.entered / maxEntered) * 100
+        return (
+          <Box key={index} sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography variant="body2" fontWeight={500}>
+                {step.step_name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {step.entered.toLocaleString()} users ({step.conversion_rate.toFixed(1)}%)
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                width: `${widthPercent}%`,
+                minWidth: '20%',
+                height: 32,
+                bgcolor: 'primary.main',
+                borderRadius: 1,
+                transition: 'width 0.3s ease',
+              }}
+            />
+            {index < stats.steps.length - 1 && (
+              <Typography variant="caption" color="error.main" sx={{ mt: 0.5, display: 'block' }}>
+                Drop-off: {step.drop_off_rate.toFixed(1)}%
+              </Typography>
+            )}
+          </Box>
+        )
+      })}
     </Box>
   )
 }
 
 export const AnalyticsDashboard = ({ projectId }: AnalyticsDashboardProps) => {
-  const [data, setData] = useState<AnalyticsData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [pageviewData, setPageviewData] = useState<AnalyticsData | null>(null)
+  const [eventStats, setEventStats] = useState<EventStats | null>(null)
+  const [funnels, setFunnels] = useState<Funnel[]>([])
+  const [selectedFunnel, setSelectedFunnel] = useState<number | ''>('')
+  const [funnelStats, setFunnelStats] = useState<FunnelStats | null>(null)
   const [timeRange, setTimeRange] = useState('7d')
+  const [loading, setLoading] = useState({
+    pageviews: true,
+    events: true,
+    funnels: true,
+    funnelStats: false,
+  })
+  const [error, setError] = useState<string | null>(null)
+
+  const getDaysFromRange = (range: string): number => {
+    switch (range) {
+      case '24h':
+        return 1
+      case '7d':
+        return 7
+      case '30d':
+        return 30
+      case '90d':
+        return 90
+      default:
+        return 7
+    }
+  }
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
-      setLoading(true)
+    const fetchPageviews = async () => {
+      setLoading((prev) => ({ ...prev, pageviews: true }))
       try {
         const result = await projectServicesApi.getAnalytics(projectId, timeRange)
-        setData(result)
+        setPageviewData(result)
       } catch {
-        // Failed to fetch analytics
+        setError('Failed to load pageview data')
       }
-      setLoading(false)
+      setLoading((prev) => ({ ...prev, pageviews: false }))
     }
 
-    fetchAnalytics()
-    const interval = setInterval(fetchAnalytics, 60000) // Refresh every minute
+    const fetchEventStats = async () => {
+      setLoading((prev) => ({ ...prev, events: true }))
+      try {
+        const days = getDaysFromRange(timeRange)
+        const result = await analyticsService.getEventStats(days)
+        setEventStats(result)
+      } catch {
+        // Event stats may not be available for all projects
+      }
+      setLoading((prev) => ({ ...prev, events: false }))
+    }
+
+    const fetchFunnels = async () => {
+      setLoading((prev) => ({ ...prev, funnels: true }))
+      try {
+        const result = await analyticsService.getFunnels()
+        setFunnels(result)
+        if (result.length > 0 && selectedFunnel === '') {
+          setSelectedFunnel(result[0].id)
+        }
+      } catch {
+        // Funnels may not be available
+      }
+      setLoading((prev) => ({ ...prev, funnels: false }))
+    }
+
+    fetchPageviews()
+    fetchEventStats()
+    fetchFunnels()
+
+    const interval = setInterval(() => {
+      fetchPageviews()
+      fetchEventStats()
+    }, 60000)
     return () => clearInterval(interval)
   }, [projectId, timeRange])
 
-  if (loading) {
+  useEffect(() => {
+    const fetchFunnelStats = async () => {
+      if (!selectedFunnel) {
+        setFunnelStats(null)
+        return
+      }
+
+      setLoading((prev) => ({ ...prev, funnelStats: true }))
+      try {
+        const days = getDaysFromRange(timeRange)
+        const result = await analyticsService.getFunnelStats(selectedFunnel as number, days)
+        setFunnelStats(result)
+      } catch {
+        setFunnelStats(null)
+      }
+      setLoading((prev) => ({ ...prev, funnelStats: false }))
+    }
+
+    fetchFunnelStats()
+  }, [selectedFunnel, timeRange])
+
+  const isLoading = loading.pageviews && loading.events
+
+  if (isLoading) {
     return (
-      <Box>
-        <Grid container spacing={3}>
-          {[1, 2, 3, 4].map((i) => (
-            <Grid item xs={6} md={3} key={i}>
-              <Skeleton variant="rounded" height={100} />
-            </Grid>
-          ))}
-        </Grid>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
+        <CircularProgress />
       </Box>
     )
   }
 
+  const chartData =
+    eventStats?.by_day?.map((item) => ({
+      date: new Date(item.date).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+      events: item.count,
+    })) ||
+    pageviewData?.pageviews_by_day?.map((item) => ({
+      date: new Date(item.date).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+      events: item.views,
+    })) ||
+    []
+
+  const eventBreakdownData =
+    eventStats?.by_event_name?.slice(0, 10).map((item) => ({
+      name: item.event_name.length > 15 ? item.event_name.substring(0, 15) + '...' : item.event_name,
+      fullName: item.event_name,
+      count: item.count,
+    })) || []
+
+  const conversionRate =
+    funnelStats?.overall_conversion_rate ??
+    (pageviewData?.total_visitors && pageviewData?.total_pageviews
+      ? ((pageviewData.total_visitors / pageviewData.total_pageviews) * 100)
+      : 0)
+
   return (
     <Box>
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6" fontWeight={600}>
           Analytics
@@ -126,83 +297,186 @@ export const AnalyticsDashboard = ({ projectId }: AnalyticsDashboardProps) => {
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={6} md={3}>
-          <StatCard
-            title="Total Pageviews"
-            value={data?.total_pageviews || 0}
-            subtitle={`${data?.pageviews_today || 0} today`}
+          <MetricCard
+            title="Total Events"
+            value={eventStats?.total_events ?? pageviewData?.total_pageviews ?? 0}
+            subtitle={`${pageviewData?.pageviews_today ?? 0} today`}
+            loading={loading.events && loading.pageviews}
           />
         </Grid>
         <Grid item xs={6} md={3}>
-          <StatCard
-            title="Unique Visitors"
-            value={data?.total_visitors || 0}
-            subtitle={`${data?.visitors_today || 0} today`}
+          <MetricCard
+            title="Unique Users"
+            value={eventStats?.unique_users ?? pageviewData?.total_visitors ?? 0}
+            subtitle={`${pageviewData?.visitors_today ?? 0} today`}
+            loading={loading.events && loading.pageviews}
           />
         </Grid>
         <Grid item xs={6} md={3}>
-          <StatCard
-            title="Avg. per Day"
+          <MetricCard
+            title="Conversion Rate"
+            value={`${conversionRate.toFixed(1)}%`}
+            subtitle={funnelStats ? 'Funnel completion' : 'Visitor ratio'}
+            loading={loading.funnelStats}
+          />
+        </Grid>
+        <Grid item xs={6} md={3}>
+          <MetricCard
+            title="Avg Events/Day"
             value={
-              data?.pageviews_by_day?.length
-                ? Math.round(
-                    data.pageviews_by_day.reduce((sum, d) => sum + d.views, 0) /
-                      data.pageviews_by_day.length
-                  )
+              chartData.length > 0
+                ? Math.round(chartData.reduce((sum, d) => sum + d.events, 0) / chartData.length)
                 : 0
             }
+            subtitle={`Over ${timeRange}`}
+            loading={loading.events && loading.pageviews}
           />
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <StatCard title="Top Pages" value={data?.top_pages?.length || 0} subtitle="unique pages" />
         </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-              Traffic Over Time
+              Events Over Time
             </Typography>
-            <SimpleChart data={data?.pageviews_by_day || []} />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, px: 1 }}>
-              {data?.pageviews_by_day?.slice(0, 7).map((d, i) => (
-                <Typography key={i} variant="caption" color="text.secondary">
-                  {new Date(d.date).toLocaleDateString('en', { weekday: 'short' })}
-                </Typography>
-              ))}
-            </Box>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="events"
+                    stroke="#1976d2"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <Box
+                sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Typography color="text.secondary">No event data available</Typography>
+              </Box>
+            )}
           </Paper>
         </Grid>
 
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+              Event Breakdown
+            </Typography>
+            {eventBreakdownData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={eventBreakdownData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" tick={{ fontSize: 12 }} />
+                  <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={100} />
+                  <Tooltip
+                    formatter={(value: number) => [value.toLocaleString(), 'Count']}
+                    labelFormatter={(label: string) => {
+                      const item = eventBreakdownData.find((d) => d.name === label)
+                      return item?.fullName || label
+                    }}
+                  />
+                  <Bar dataKey="count" fill="#1976d2" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <Box
+                sx={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Typography color="text.secondary">No event breakdown available</Typography>
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="subtitle1" fontWeight={600}>
+                Funnel Analysis
+              </Typography>
+              {funnels.length > 0 && (
+                <FormControl size="small" sx={{ minWidth: 200 }}>
+                  <InputLabel>Select Funnel</InputLabel>
+                  <Select
+                    value={selectedFunnel}
+                    label="Select Funnel"
+                    onChange={(e) => setSelectedFunnel(e.target.value as number)}
+                  >
+                    {funnels.map((funnel) => (
+                      <MenuItem key={funnel.id} value={funnel.id}>
+                        {funnel.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+            {loading.funnels ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : funnels.length === 0 ? (
+              <Typography color="text.secondary" sx={{ py: 2 }}>
+                No funnels configured. Create a funnel to track user conversion.
+              </Typography>
+            ) : (
+              <FunnelVisualization stats={funnelStats} loading={loading.funnelStats} />
+            )}
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, height: '100%' }}>
+            <Typography variant="subtitle1" fontWeight={600} gutterBottom>
               Top Pages
             </Typography>
-            {data?.top_pages?.length ? (
+            {pageviewData?.top_pages?.length ? (
               <Box>
-                {data.top_pages.slice(0, 5).map((page, i) => (
+                {pageviewData.top_pages.slice(0, 8).map((page, i) => (
                   <Box
                     key={i}
                     sx={{
                       display: 'flex',
                       justifyContent: 'space-between',
-                      py: 1,
-                      borderBottom: '1px solid',
+                      py: 1.5,
+                      borderBottom: i < 7 ? '1px solid' : 'none',
                       borderColor: 'divider',
                     }}
                   >
-                    <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '70%',
+                      }}
+                      title={page.path}
+                    >
                       {page.path}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {page.views}
+                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                      {page.views.toLocaleString()}
                     </Typography>
                   </Box>
                 ))}
               </Box>
             ) : (
-              <Typography color="text.secondary" variant="body2">
+              <Typography color="text.secondary" variant="body2" sx={{ py: 2 }}>
                 No page data yet
               </Typography>
             )}
@@ -214,6 +488,3 @@ export const AnalyticsDashboard = ({ projectId }: AnalyticsDashboardProps) => {
 }
 
 export default AnalyticsDashboard
-
-
-

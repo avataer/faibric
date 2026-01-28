@@ -33,16 +33,28 @@ FUNNEL_TEMPLATES = {
 
 class AnalyticsProxy:
     """Proxy for forwarding events to external analytics services."""
-    
+
     def __init__(self, config=None):
         self.config = config
-    
+
     def track(self, event_name: str, properties: dict = None, user_id: str = None):
         """Track an event."""
         pass
-    
+
+    def track_event(self, event):
+        """Track an event object. Called from TrackEventView."""
+        # Forward to external services based on config
+        # For now, internal storage is handled by the view
+        pass
+
     def identify(self, user_id: str, traits: dict = None):
         """Identify a user."""
+        pass
+
+    def identify_user(self, distinct_id: str, traits: dict = None):
+        """Identify a user. Called from IdentifyUserView."""
+        # Forward to external services based on config
+        # For now, internal storage is handled by the view
         pass
 
 

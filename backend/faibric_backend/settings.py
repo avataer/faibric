@@ -293,7 +293,7 @@ APP_SUBDOMAIN_BASE = os.getenv('APP_SUBDOMAIN_BASE', 'localhost')
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://redis:6379/1',  # Use DB 1 for cache (DB 0 for Celery)
+        'LOCATION': os.getenv('REDIS_URL', 'redis://localhost:6379/1'),  # Use DB 1 for cache (DB 0 for Celery)
     }
 }
 

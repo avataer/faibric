@@ -261,7 +261,7 @@ class ProjectDecomposer:
         'landing': [
             (ComponentType.LAYOUT, 'app', 0),
             (ComponentType.NAVIGATION, 'header', 0),
-            (ComponentType.HERO, 'full', 1),
+            (ComponentType.HERO, 'centered', 1),  # Classic gradient hero
             (ComponentType.FEATURE, 'grid', 1),
             (ComponentType.CTA, 'centered', 2),
             (ComponentType.FOOTER, 'full', 2),
@@ -269,6 +269,7 @@ class ProjectDecomposer:
         'ecommerce': [
             (ComponentType.LAYOUT, 'app', 0),
             (ComponentType.NAVIGATION, 'header', 0),
+            (ComponentType.HERO, 'cards', 1),  # Card-based hero with product highlights
             (ComponentType.CARD, 'product', 1),
             (ComponentType.PRICING, 'simple', 2),
             (ComponentType.FOOTER, 'full', 2),
@@ -276,9 +277,52 @@ class ProjectDecomposer:
         'portfolio': [
             (ComponentType.LAYOUT, 'app', 0),
             (ComponentType.NAVIGATION, 'minimal', 0),
-            (ComponentType.HERO, 'personal', 1),
+            (ComponentType.HERO, 'minimal', 1),  # Clean text-only hero
             (ComponentType.GALLERY, 'grid', 1),
             (ComponentType.FOOTER, 'simple', 2),
+        ],
+        # NEW: Restaurant/Hospitality - photo background
+        'restaurant': [
+            (ComponentType.LAYOUT, 'app', 0),
+            (ComponentType.NAVIGATION, 'header', 0),
+            (ComponentType.HERO, 'photo_overlay', 1),  # Full photo with floating card
+            (ComponentType.CARD, 'menu', 1),
+            (ComponentType.FORM, 'reservation', 2),
+            (ComponentType.FOOTER, 'full', 2),
+        ],
+        # NEW: SaaS/Tech - split layout
+        'saas': [
+            (ComponentType.LAYOUT, 'app', 0),
+            (ComponentType.NAVIGATION, 'header', 0),
+            (ComponentType.HERO, 'split', 1),  # Text left, image right
+            (ComponentType.FEATURE, 'grid', 1),
+            (ComponentType.PRICING, 'simple', 2),
+            (ComponentType.FOOTER, 'full', 2),
+        ],
+        # NEW: Agency/Creative - video-style animated
+        'agency': [
+            (ComponentType.LAYOUT, 'app', 0),
+            (ComponentType.NAVIGATION, 'header', 0),
+            (ComponentType.HERO, 'video', 1),  # Animated zoom background
+            (ComponentType.GALLERY, 'portfolio', 1),
+            (ComponentType.FOOTER, 'full', 2),
+        ],
+        # NEW: Wellness/Spa - photo overlay soft
+        'wellness': [
+            (ComponentType.LAYOUT, 'app', 0),
+            (ComponentType.NAVIGATION, 'header', 0),
+            (ComponentType.HERO, 'photo_overlay', 1),
+            (ComponentType.CARD, 'service', 1),
+            (ComponentType.FORM, 'booking', 2),
+            (ComponentType.FOOTER, 'simple', 2),
+        ],
+        # NEW: Gaming/Entertainment - video animated
+        'gaming': [
+            (ComponentType.LAYOUT, 'app', 0),
+            (ComponentType.NAVIGATION, 'header', 0),
+            (ComponentType.HERO, 'video', 1),
+            (ComponentType.CARD, 'game', 1),
+            (ComponentType.FOOTER, 'full', 2),
         ],
         'task_management': [
             (ComponentType.LAYOUT, 'app', 0),

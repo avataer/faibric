@@ -205,3 +205,79 @@ class TenantInvitation(models.Model):
     def is_accepted(self):
         return self.accepted_at is not None
 
+
+class SSOConfiguration(models.Model):
+    """
+    SSO configuration for a tenant.
+    Supports SAML 2.0 and OpenID Connect authentication providers.
+    """
+    SSO_TYPE_CHOICES = [
+        ('saml', 'SAML 2.0'),
+        ('oidc', 'OpenID Connect'),
+    ]
+
+    tenant = models.OneToOneField(Tenant, on_delete=models.CASCADE, related_name='sso_config')
+    is_enabled = models.BooleanField(default=False)
+    sso_type = models.CharField(max_length=10, choices=SSO_TYPE_CHOICES, default='saml')
+
+    # SAML configuration
+    idp_entity_id = models.CharField(max_length=255, blank=True)
+    idp_sso_url = models.URLField(blank=True)
+    idp_certificate = models.TextField(blank=True)
+
+    # OIDC configuration
+    oidc_issuer = models.URLField(blank=True)
+    oidc_client_id = models.CharField(max_length=255, blank=True)
+    oidc_client_secret = models.CharField(max_length=255, blank=True)
+
+    # User provisioning
+    domain_restriction = models.CharField(max_length=255, blank=True)
+    auto_provision_users = models.BooleanField(default=True)
+    default_role = models.CharField(max_length=50, default='member')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'SSO Configuration'
+        verbose_name_plural = 'SSO Configurations'
+
+    def __str__(self):
+        return f"SSO Config for {self.tenant.name} ({self.get_sso_type_display()})"
+
+
+class WhitelabelConfig(models.Model):
+    """
+    Whitelabel configuration for a tenant.
+    Allows customization of branding, colors, and domain for white-labeled deployments.
+    """
+    tenant = models.OneToOneField(Tenant, on_delete=models.CASCADE, related_name='whitelabel')
+    is_enabled = models.BooleanField(default=False)
+
+    # Branding
+    company_name = models.CharField(max_length=100, blank=True)
+    logo_url = models.URLField(blank=True)
+    favicon_url = models.URLField(blank=True)
+
+    # Colors
+    primary_color = models.CharField(max_length=7, default='#2563eb')  # hex color
+    secondary_color = models.CharField(max_length=7, default='#64748b')
+    accent_color = models.CharField(max_length=7, default='#10b981')
+
+    # Domain
+    custom_domain = models.CharField(max_length=255, blank=True)
+    domain_verified = models.BooleanField(default=False)
+
+    # Footer/legal
+    footer_text = models.CharField(max_length=255, blank=True)
+    support_email = models.EmailField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Whitelabel Configuration'
+        verbose_name_plural = 'Whitelabel Configurations'
+
+    def __str__(self):
+        return f"Whitelabel for {self.tenant.name}"

@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_bash.py"
+            "command": "python3 /Users/avataer/Code/CloudAtlas/.claude/hooks/validate_bash.py"
           }
         ]
       },
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_edit.py"
+            "command": "python3 /Users/avataer/Code/CloudAtlas/.claude/hooks/validate_edit.py"
           }
         ]
       },
@@ -24,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_edit.py"
+            "command": "python3 /Users/avataer/Code/CloudAtlas/.claude/hooks/validate_edit.py"
           }
         ]
       },
@@ -33,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_notebook.py"
+            "command": "python3 /Users/avataer/Code/CloudAtlas/.claude/hooks/validate_notebook.py"
           }
         ]
       },
@@ -42,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_task.py"
+            "command": "python3 /Users/avataer/Code/CloudAtlas/.claude/hooks/validate_task.py"
           }
         ]
       },
@@ -51,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /Users/abram/Code/CloudAtlas/.claude/hooks/validate_stop.py"
+            "command": "python3 /Users/avataer/Code/CloudAtlas/.claude/hooks/validate_stop.py"
           }
         ]
       }

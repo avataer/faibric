@@ -18,10 +18,24 @@ class LandingSession(models.Model):
     Tracks a visitor session from landing to conversion.
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    
+
     # Session identification
     session_token = models.CharField(max_length=64, unique=True, db_index=True)
-    
+
+    # Session mode: discussion (planning) or building
+    MODE_CHOICES = [
+        ('discussion', 'Discussion/Planning'),
+        ('building', 'Building'),
+    ]
+    mode = models.CharField(max_length=20, choices=MODE_CHOICES, default='building')
+
+    # Planning outputs - stores the structured brief/checklist from planning mode
+    requirements_checklist = models.TextField(
+        null=True,
+        blank=True,
+        help_text="Structured planning outputs/checklist from discussion mode"
+    )
+
     # The initial request they made
     initial_request = models.TextField(help_text="What the user typed in the main input")
     

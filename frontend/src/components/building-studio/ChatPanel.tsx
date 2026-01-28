@@ -7,12 +7,22 @@ import {
   IconButton,
   CircularProgress,
   Chip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material'
 import SendIcon from '@mui/icons-material/Send'
 import StopIcon from '@mui/icons-material/Stop'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import { Message } from './types'
+
+interface ModelOption {
+  key: string
+  name: string
+  credits_per_request: number
+}
 
 interface ChatPanelProps {
   messages: Message[]
@@ -26,6 +36,10 @@ interface ChatPanelProps {
   onStop: () => void
   onNewProject?: () => void
   onRetry?: () => void
+  models?: ModelOption[]
+  selectedModel?: string
+  onModelChange?: (modelKey: string) => void
+  modelsLoading?: boolean
 }
 
 export function ChatPanel({
@@ -40,6 +54,10 @@ export function ChatPanel({
   onStop,
   onNewProject,
   onRetry,
+  models = [],
+  selectedModel = '',
+  onModelChange,
+  modelsLoading = false,
 }: ChatPanelProps) {
   // Check if the last message is an error
   const lastMessage = messages[messages.length - 1]
@@ -187,24 +205,52 @@ export function ChatPanel({
         p: 2,
         borderTop: '1px solid #e5e7eb',
         display: 'flex',
+        flexDirection: 'column',
         gap: 1,
       }}>
-        <TextField
-          fullWidth
-          placeholder={isBuilding ? "Building in progress..." : "Describe changes or request a new website..."}
-          value={input}
-          onChange={(e) => onInputChange(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && !isBuilding && onSend()}
-          size="small"
-          disabled={isBuilding}
-        />
-        <IconButton
-          color="primary"
-          onClick={onSend}
-          disabled={!input.trim() || isBuilding}
-        >
-          <SendIcon />
-        </IconButton>
+        {/* Model Selector */}
+        {models.length > 0 && onModelChange && (
+          <FormControl size="small" fullWidth>
+            <InputLabel id="model-select-label">AI Model</InputLabel>
+            <Select
+              labelId="model-select-label"
+              id="model-select"
+              value={selectedModel}
+              label="AI Model"
+              onChange={(e) => onModelChange(e.target.value)}
+              disabled={isBuilding || modelsLoading}
+            >
+              {models.map((model) => (
+                <MenuItem key={model.key} value={model.key}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                    <Typography variant="body2">{model.name}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
+                      {model.credits_per_request} credit{model.credits_per_request !== 1 ? 's' : ''}
+                    </Typography>
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <TextField
+            fullWidth
+            placeholder={isBuilding ? "Building in progress..." : "Describe changes or request a new website..."}
+            value={input}
+            onChange={(e) => onInputChange(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && !isBuilding && onSend()}
+            size="small"
+            disabled={isBuilding}
+          />
+          <IconButton
+            color="primary"
+            onClick={onSend}
+            disabled={!input.trim() || isBuilding}
+          >
+            <SendIcon />
+          </IconButton>
+        </Box>
       </Box>
     </Box>
   )

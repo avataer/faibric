@@ -124,7 +124,16 @@ Focus on generating practical, working code that solves the user's problem."""
         sections.append("3. Include necessary imports")
         sections.append("4. Add helpful comments")
         sections.append("5. Make the code production-ready")
-        
+        sections.append("")
+        sections.append("## CRITICAL: Color and Styling Requirements")
+        sections.append("If the description mentions ANY specific colors:")
+        sections.append("- You MUST use those colors in the generated code")
+        sections.append("- For 'brown' use Tailwind: bg-amber-900, bg-stone-800, bg-yellow-900")
+        sections.append("- For 'cream/beige' use: bg-amber-50, bg-orange-50, bg-yellow-50")
+        sections.append("- For 'green' use: bg-green-600, bg-emerald-700")
+        sections.append("- DO NOT use default gray/white colors if specific colors are requested")
+        sections.append("- The user's color preference is MANDATORY, not optional")
+
         return '\n'.join(sections)
     
     def build_modification_prompt(
@@ -138,22 +147,31 @@ Focus on generating practical, working code that solves the user's problem."""
         Build a prompt for modifying existing code.
         """
         sections = []
-        
+
         sections.append("## Modification Request\n")
         sections.append(f"{modification_request}\n")
-        
+
         sections.append("\n## Original Code\n")
         sections.append(f"```{language}\n{original_code}\n```\n")
-        
+
         if constraints:
             sections.append("\n" + constraints)
-        
+
         sections.append("\n## Instructions\n")
-        sections.append("1. Apply the requested modifications")
+        sections.append("1. Apply the requested modifications EXACTLY as specified")
         sections.append("2. Preserve existing functionality unless asked to change it")
         sections.append("3. Follow all constraints if provided")
         sections.append("4. Return the complete modified code")
-        
+        sections.append("")
+        sections.append("## CRITICAL: Color and Styling Requirements")
+        sections.append("If the modification request mentions ANY colors (brown, cream, green, blue, etc.):")
+        sections.append("- You MUST change the actual CSS/Tailwind colors in the code")
+        sections.append("- Replace bg-white with the requested background color (e.g., bg-amber-900 for brown)")
+        sections.append("- Replace text-gray-* with the requested text color")
+        sections.append("- Change inline styles if present")
+        sections.append("- DO NOT just acknowledge the request - ACTUALLY CHANGE THE CODE")
+        sections.append("- Common color mappings: brown=amber/stone, cream=amber-50/orange-50, green=green/emerald")
+
         return '\n'.join(sections)
     
     def build_review_prompt(

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Tenant, TenantMembership, TenantInvitation, AuditLog
+from .models import Tenant, TenantMembership, TenantInvitation, AuditLog, WhitelabelConfig, SSOConfiguration
 
 User = get_user_model()
 
@@ -87,3 +87,33 @@ class UserTenantSerializer(serializers.Serializer):
     tenant = TenantSerializer()
     role = serializers.CharField()
 
+
+class WhitelabelConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WhitelabelConfig
+        fields = [
+            'id', 'is_enabled', 'company_name', 'logo_url', 'favicon_url',
+            'primary_color', 'secondary_color', 'accent_color',
+            'custom_domain', 'domain_verified', 'footer_text', 'support_email',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'domain_verified', 'created_at', 'updated_at']
+
+
+class SSOConfigurationSerializer(serializers.ModelSerializer):
+    sso_type_display = serializers.CharField(source='get_sso_type_display', read_only=True)
+
+    class Meta:
+        model = SSOConfiguration
+        fields = [
+            'id', 'is_enabled', 'sso_type', 'sso_type_display',
+            'idp_entity_id', 'idp_sso_url', 'idp_certificate',
+            'oidc_issuer', 'oidc_client_id', 'oidc_client_secret',
+            'domain_restriction', 'auto_provision_users', 'default_role',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'oidc_client_secret': {'write_only': True},
+            'idp_certificate': {'write_only': True},
+        }
