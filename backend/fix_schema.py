@@ -71,11 +71,59 @@ def fix_onboarding_schema():
                 traceback.print_exc()
 
 
+def fix_projects_schema():
+    """
+    Fix projects_project.preferred_model column.
+    This fixes: NOT NULL constraint failed: projects_project.preferred_model
+
+    The problem: The column was added but is NOT NULL, and Django's model
+    has the field commented out, so INSERTs don't include it.
+    """
+    with connection.cursor() as cursor:
+        try:
+            # Check if column exists and its nullability
+            cursor.execute("""
+                SELECT column_name, is_nullable
+                FROM information_schema.columns
+                WHERE table_name = 'projects_project' AND column_name = 'preferred_model'
+            """)
+            result = cursor.fetchone()
+
+            if result is None:
+                # Column doesn't exist - add it as nullable
+                print("[fix_schema] Adding preferred_model column (nullable)")
+                cursor.execute("""
+                    ALTER TABLE projects_project
+                    ADD COLUMN preferred_model VARCHAR(50) NULL DEFAULT 'claude-opus'
+                """)
+            else:
+                # Column exists - check if it's nullable
+                is_nullable = result[1]
+                if is_nullable == 'NO':
+                    print("[fix_schema] Making preferred_model column nullable")
+                    cursor.execute("""
+                        ALTER TABLE projects_project
+                        ALTER COLUMN preferred_model DROP NOT NULL
+                    """)
+                    cursor.execute("""
+                        ALTER TABLE projects_project
+                        ALTER COLUMN preferred_model SET DEFAULT 'claude-opus'
+                    """)
+                else:
+                    print("[fix_schema] preferred_model column is already nullable")
+
+            print("[fix_schema] projects_project.preferred_model fix complete")
+        except Exception as e:
+            print(f"[fix_schema] Error fixing preferred_model: {e}")
+            traceback.print_exc()
+
+
 if __name__ == '__main__':
     print("[fix_schema] Running pre-migration schema fixes...")
     print(f"[fix_schema] DATABASE_URL: {os.environ.get('DATABASE_URL', 'NOT SET')[:50]}...")
     try:
         fix_onboarding_schema()
+        fix_projects_schema()
         print("[fix_schema] Schema fixes complete.")
     except Exception as e:
         print(f"[fix_schema] Error: {e}")
