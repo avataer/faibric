@@ -9,4 +9,4 @@ class AvailableModelsView(APIView):
 
     def get(self, request):
         models = get_available_models()
-        return Response({"models": models})
+        return Response({"models": models, "_deploy_version": "2026-01-27-v3"})
