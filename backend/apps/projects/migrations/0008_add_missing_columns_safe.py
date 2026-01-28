@@ -36,7 +36,7 @@ def add_missing_columns(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('projects', '0004_customer_api_keys'),
+        ('projects', '0007_placeholder'),
     ]
 
     operations = [
