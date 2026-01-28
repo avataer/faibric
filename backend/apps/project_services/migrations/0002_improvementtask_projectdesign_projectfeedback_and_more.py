@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('project_services', '0001_initial'),
-        ('projects', '0006_project_github_repo_project_last_github_sha'),
+        ('projects', '0006_placeholder'),
     ]
 
     operations = [
