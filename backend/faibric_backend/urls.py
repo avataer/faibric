@@ -19,7 +19,7 @@ def health_check(request):
     return JsonResponse({
         'status': 'healthy',
         'service': 'faibric-api',
-        'version': 'v3-analytics-fix',  # Fix Analytics track endpoint
+        'version': 'v4-idempotent-migration',  # Fix onboarding migration
         'deployment': deploy_status,
     })
 
