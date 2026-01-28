@@ -387,25 +387,28 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def github_status(self, request, pk=None):
         """Check GitHub sync status."""
         project = self.get_object()
-        if not project.github_repo:
+        github_repo = getattr(project, 'github_repo', '') or ''
+        if not github_repo:
             return Response({"connected": False})
         # Parse owner/repo from URL
-        parts = project.github_repo.rstrip("/").split("/")
+        parts = github_repo.rstrip("/").split("/")
         owner, repo = parts[-2], parts[-1]
         token = getattr(settings, "GITHUB_TOKEN", "")
         if not token:
             return Response({"error": "GitHub token not configured"}, status=500)
         svc = GitHubSyncService(token, owner, repo)
         status_data = svc.check_for_updates(project)
-        return Response({"connected": True, "last_sha": project.last_github_sha, **status_data})
+        last_sha = getattr(project, 'last_github_sha', '') or ''
+        return Response({"connected": True, "last_sha": last_sha, **status_data})
 
     @action(detail=True, methods=["post"])
     def github_pull(self, request, pk=None):
         """Pull changes from GitHub."""
         project = self.get_object()
-        if not project.github_repo:
+        github_repo = getattr(project, 'github_repo', '') or ''
+        if not github_repo:
             return Response({"error": "No GitHub repo connected"}, status=400)
-        parts = project.github_repo.rstrip("/").split("/")
+        parts = github_repo.rstrip("/").split("/")
         owner, repo = parts[-2], parts[-1]
         token = getattr(settings, "GITHUB_TOKEN", "")
         if not token:
@@ -414,7 +417,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         success = svc.pull_changes(project)
         if success:
             latest = svc.get_latest_commit()
-            if latest:
+            if latest and hasattr(project, 'last_github_sha'):
                 project.last_github_sha = latest
                 project.save(update_fields=["last_github_sha"])
             return Response({"success": True, "message": "Changes pulled"})
