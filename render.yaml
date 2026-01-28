@@ -16,7 +16,7 @@ services:
     region: oregon
     plan: standard  # 2GB RAM, always-on - NEVER use starter
     buildCommand: |
-      cd backend && pip install -r requirements.txt
+      cd backend && pip install -r requirements.txt && python fix_schema.py
     startCommand: |
       cd backend && python fix_schema.py && (python manage.py migrate --noinput || echo 'Migration warning - continuing') && gunicorn faibric_backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2
     healthCheckPath: /api/health/

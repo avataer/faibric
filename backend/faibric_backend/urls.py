@@ -19,7 +19,7 @@ def health_check(request):
     return JsonResponse({
         'status': 'healthy',
         'service': 'faibric-api',
-        'version': 'v8-fix-schema-plpgsql',  # Use PL/pgSQL DO block for schema fix
+        'version': 'v9-dockerfile-fix-schema',  # Add fix_schema.py to Dockerfile CMD
         'deployment': deploy_status,
     })
 

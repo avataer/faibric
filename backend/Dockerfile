@@ -32,7 +32,8 @@ RUN python manage.py collectstatic --noinput || true
 # Expose port
 EXPOSE 10000
 
-# Run migrations (with error handling) and start server with gunicorn
+# Run schema fixes, then migrations, then start server with gunicorn
+# fix_schema.py ensures missing columns are added before migrations run
 # If migrations fail, we still try to start the server - it might work with existing tables
-CMD ["sh", "-c", "python manage.py migrate --noinput || echo 'Migration failed, continuing...' && gunicorn faibric_backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2"]
+CMD ["sh", "-c", "python fix_schema.py && python manage.py migrate --noinput || echo 'Migration failed, continuing...' && gunicorn faibric_backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2"]
 
