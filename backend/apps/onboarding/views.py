@@ -71,7 +71,10 @@ class LandingFlowView(APIView):
         """
         import traceback
         serializer = SubmitRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            errors = serializer.errors
+            errors['_debug_version'] = 'v2'
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             session = OnboardingService.create_session(
