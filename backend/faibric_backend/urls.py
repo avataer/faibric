@@ -19,7 +19,7 @@ def health_check(request):
     return JsonResponse({
         'status': 'healthy',
         'service': 'faibric-api',
-        'version': 'v6-debug-traceback',  # Add error traceback to start endpoint
+        'version': 'v7-fix-schema-script',  # Run fix_schema.py before migrations
         'deployment': deploy_status,
     })
 
