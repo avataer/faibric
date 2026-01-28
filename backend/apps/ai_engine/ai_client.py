@@ -59,16 +59,17 @@ class AIClient:
         """
         self.model = get_model_id(model_key)
     
-    def chat_completion(self, messages, temperature=0.7, response_format=None, project_id=None, step_description="Processing"):
+    def chat_completion(self, messages, temperature=0.7, response_format=None, project_id=None, step_description="Processing", max_tokens=None):
         """
         Send a chat completion request to Anthropic Claude
-        
+
         Args:
             messages: List of message dicts with 'role' and 'content'
             temperature: Sampling temperature (0-1)
             response_format: Optional response format (e.g., {"type": "json_object"})
             project_id: Project ID to broadcast progress to
             step_description: Description of what this API call is for
+            max_tokens: Maximum tokens in response (default: 16384 for Opus/Sonnet, 8192 for Haiku)
         
         Returns:
             Response text from the API
@@ -113,10 +114,15 @@ class AIClient:
                 })
         
         # Build request kwargs
-        # Use 16K tokens to avoid truncation on complex apps
+        # Determine max_tokens based on model if not specified
+        if max_tokens is None:
+            if "haiku" in self.model.lower():
+                max_tokens = 8192  # Haiku limit
+            else:
+                max_tokens = 16384  # Opus/Sonnet limit
         kwargs = {
             "model": self.model,
-            "max_tokens": 16384,
+            "max_tokens": max_tokens,
             "messages": anthropic_messages,
         }
         

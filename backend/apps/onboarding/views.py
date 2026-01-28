@@ -692,7 +692,7 @@ Keep responses under 3 sentences unless they need more detail."""
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_request}
             ]
-            response = client.chat_completion(messages, temperature=0.7)
+            response = client.chat_completion(messages, temperature=0.7, max_tokens=500)
             return {
                 'mode': 'conversation',
                 'response': response,
