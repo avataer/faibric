@@ -30,31 +30,6 @@ from apps.ai_engine.agent_mode import AgentModeService
 # Public Endpoints (Landing Page Flow)
 # ============================================
 
-class DebugHealthView(APIView):
-    """Debug endpoint to check onboarding health."""
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        import traceback
-        errors = []
-
-        # Test model imports
-        try:
-            from .models import LandingSession
-            errors.append("LandingSession import: OK")
-        except Exception as e:
-            errors.append(f"LandingSession import: {e}")
-
-        # Test database query
-        try:
-            count = LandingSession.objects.count()
-            errors.append(f"LandingSession count: {count}")
-        except Exception as e:
-            errors.append(f"LandingSession query: {e}\n{traceback.format_exc()}")
-
-        return Response({"checks": errors})
-
-
 class LandingFlowView(APIView):
     """
     Main landing page flow endpoints.
@@ -69,31 +44,21 @@ class LandingFlowView(APIView):
         User types something in the main input and submits.
         Returns a session token.
         """
-        import traceback
         serializer = SubmitRequestSerializer(data=request.data)
-        if not serializer.is_valid():
-            errors = serializer.errors
-            errors['_debug_version'] = 'v2'
-            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
 
-        try:
-            session = OnboardingService.create_session(
-                initial_request=serializer.validated_data['request'],
-                ip_address=request.META.get('REMOTE_ADDR'),
-                user_agent=request.META.get('HTTP_USER_AGENT', ''),
-                utm_source=serializer.validated_data.get('utm_source', ''),
-                utm_medium=serializer.validated_data.get('utm_medium', ''),
-                utm_campaign=serializer.validated_data.get('utm_campaign', ''),
-                utm_content=serializer.validated_data.get('utm_content', ''),
-                utm_term=serializer.validated_data.get('utm_term', ''),
-                referrer=serializer.validated_data.get('referrer', ''),
-                landing_page=serializer.validated_data.get('landing_page', ''),
-            )
-        except Exception as e:
-            return Response({
-                'error': str(e),
-                'traceback': traceback.format_exc(),
-            }, status=500)
+        session = OnboardingService.create_session(
+            initial_request=serializer.validated_data['request'],
+            ip_address=request.META.get('REMOTE_ADDR'),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            utm_source=serializer.validated_data.get('utm_source', ''),
+            utm_medium=serializer.validated_data.get('utm_medium', ''),
+            utm_campaign=serializer.validated_data.get('utm_campaign', ''),
+            utm_content=serializer.validated_data.get('utm_content', ''),
+            utm_term=serializer.validated_data.get('utm_term', ''),
+            referrer=serializer.validated_data.get('referrer', ''),
+            landing_page=serializer.validated_data.get('landing_page', ''),
+        )
 
         return Response({
             'success': True,
