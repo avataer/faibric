@@ -687,13 +687,12 @@ Do NOT generate any code. Just have a natural conversation.
 Keep responses under 3 sentences unless they need more detail."""
 
         try:
-            client = AIClient()
-            response = client.generate(
-                prompt=user_request,
-                system_prompt=system_prompt,
-                model="claude-3-5-haiku-20241022",  # Fast model for conversation
-                max_tokens=500,
-            )
+            client = AIClient("claude-haiku")  # Fast model for conversation
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_request}
+            ]
+            response = client.chat_completion(messages, temperature=0.7)
             return {
                 'mode': 'conversation',
                 'response': response,
