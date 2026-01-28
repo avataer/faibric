@@ -93,6 +93,15 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
       })
 
       const mode = res.data.mode
+
+      // Handle conversation mode (questions/feedback) - no build needed
+      if (mode === 'conversation') {
+        addAssistantMessage(res.data.response || "I'd be happy to help!")
+        // Don't trigger any build - just show the response
+        return
+      }
+
+      // Handle build modes
       addAssistantMessage(
         mode === 'modify'
           ? "Got it! Applying your changes quickly..."

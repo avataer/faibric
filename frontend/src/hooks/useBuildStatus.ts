@@ -172,7 +172,8 @@ export function useBuildStatus({
     setIsBuilding(true)
     setTargetProgress(mode === 'modify' ? 50 : 5)
     setBuildPhase(mode === 'modify' ? 'Modifying code...' : 'Starting new build...')
-    setDeploymentUrl(null)
+    // Keep showing old deployment until new one is ready (prevents blank screen)
+    // setDeploymentUrl(null)  // REMOVED - preserves preview during modifications
     processedEventIds.current.clear()
   }, [])
 

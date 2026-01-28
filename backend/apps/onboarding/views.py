@@ -604,8 +604,50 @@ class FollowUpInputView(APIView):
             return Response({'error': 'Session not found'}, status=404)
         
         InputTracker.log_follow_up(session, message, context)
-        
+
         return Response({'status': 'logged'})
+
+
+def detect_intent(user_request: str) -> str:
+    """
+    Detect intent from user message.
+    Returns: 'question', 'feedback', or 'command'
+    """
+    request_lower = user_request.lower().strip()
+
+    # Question patterns - asking for information
+    question_indicators = [
+        'what ', 'which ', 'how ', 'can you ', 'could you ', 'would you ',
+        'is it ', 'are there ', 'do you ', 'does ', 'why ', 'where ', 'when ',
+        'tell me ', 'explain ', 'show me ', 'list ', 'suggestions',
+        'options', 'ideas', 'recommend', 'what are', 'what is', 'how do',
+        'can i ', 'should i ', 'what if', 'is there', 'are you able',
+    ]
+
+    # Feedback patterns - opinions without action request
+    feedback_indicators = [
+        'i dont like', "i don't like", 'i think', 'looks ', 'too ',
+        'not sure', 'maybe ', 'perhaps ', 'seems ', 'feels ',
+        'i prefer', 'i wish', 'i want to understand', 'curious about',
+        'wondering ', 'thoughts on', 'opinion on', 'feedback on',
+    ]
+
+    # Check for question mark at end
+    if request_lower.rstrip().endswith('?'):
+        return 'question'
+
+    # Check question indicators
+    for indicator in question_indicators:
+        if request_lower.startswith(indicator) or f' {indicator}' in request_lower:
+            return 'question'
+
+    # Check feedback indicators
+    for indicator in feedback_indicators:
+        if indicator in request_lower:
+            return 'feedback'
+
+    # Default to command (modification request)
+    return 'command'
 
 
 class ModifyBuildView(APIView):
@@ -614,7 +656,57 @@ class ModifyBuildView(APIView):
     Only rebuilds from scratch if explicitly requested or no existing code.
     """
     permission_classes = [AllowAny]
-    
+
+    def handle_conversation(self, session, user_request: str, intent: str):
+        """
+        Handle conversational messages (questions/feedback) without code modification.
+        Uses fast Haiku model for quick responses.
+        """
+        from apps.ai_engine.ai_client import AIClient
+
+        # Build context about the current project
+        project_context = ""
+        if session.converted_to_project:
+            project = session.converted_to_project
+            project_context = f"""
+Current project: {project.name}
+Description: {project.description}
+Status: {project.status}
+"""
+
+        # Create conversational prompt
+        system_prompt = f"""You are a helpful assistant for Faibric, an AI website builder.
+The user is chatting with you about their website project.
+
+{project_context}
+
+Respond conversationally and helpfully. Be concise but friendly.
+If they ask about colors, features, or design options, give them helpful suggestions.
+If they have feedback, acknowledge it and ask clarifying questions.
+Do NOT generate any code. Just have a natural conversation.
+Keep responses under 3 sentences unless they need more detail."""
+
+        try:
+            client = AIClient()
+            response = client.generate(
+                prompt=user_request,
+                system_prompt=system_prompt,
+                model="claude-3-5-haiku-20241022",  # Fast model for conversation
+                max_tokens=500,
+            )
+            return {
+                'mode': 'conversation',
+                'response': response,
+                'intent': intent,
+            }
+        except Exception as e:
+            return {
+                'mode': 'conversation',
+                'response': "I'd be happy to help! Could you tell me more about what you'd like to know?",
+                'intent': intent,
+                'error': str(e),
+            }
+
     def post(self, request):
         """Modify existing code or rebuild if needed."""
         import logging
@@ -632,7 +724,13 @@ class ModifyBuildView(APIView):
             session = LandingSession.objects.get(session_token=session_token)
         except LandingSession.DoesNotExist:
             return Response({'error': 'Session not found'}, status=404)
-        
+
+        # INTENT DETECTION: Handle questions and feedback conversationally
+        intent = detect_intent(user_request)
+        if intent in ('question', 'feedback'):
+            result = self.handle_conversation(session, user_request, intent)
+            return Response(result)
+
         # Check if this is a modification or new project request
         is_new_project = any(phrase in user_request.lower() for phrase in [
             'new website', 'new project', 'start over', 'from scratch',
