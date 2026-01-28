@@ -5,6 +5,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from .views import (
+    DebugHealthView,
     LandingFlowView,
     PlanningFlowView,
     PlanToBuildView,
@@ -35,6 +36,9 @@ router.register(r'admin/reports', DailyReportViewSet, basename='daily-reports')
 router.register(r'admin/notifications', AdminNotificationViewSet, basename='admin-notifications')
 
 urlpatterns = [
+    # Debug endpoint
+    path('debug/', DebugHealthView.as_view(), name='debug-health'),
+
     # Public landing flow
     path('start/', LandingFlowView.as_view(), name='landing-start'),
     path('start-dev/', DevFlowView.as_view(), name='landing-start-dev'),  # DEV: skip email

@@ -30,6 +30,31 @@ from apps.ai_engine.agent_mode import AgentModeService
 # Public Endpoints (Landing Page Flow)
 # ============================================
 
+class DebugHealthView(APIView):
+    """Debug endpoint to check onboarding health."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        import traceback
+        errors = []
+
+        # Test model imports
+        try:
+            from .models import LandingSession
+            errors.append("LandingSession import: OK")
+        except Exception as e:
+            errors.append(f"LandingSession import: {e}")
+
+        # Test database query
+        try:
+            count = LandingSession.objects.count()
+            errors.append(f"LandingSession count: {count}")
+        except Exception as e:
+            errors.append(f"LandingSession query: {e}\n{traceback.format_exc()}")
+
+        return Response({"checks": errors})
+
+
 class LandingFlowView(APIView):
     """
     Main landing page flow endpoints.
