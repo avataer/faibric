@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
-import { Box, Typography, Paper, TextField, IconButton, Button, CircularProgress } from '@mui/material'
+import { Box, Typography, Paper, TextField, IconButton, Button, CircularProgress, LinearProgress, Chip } from '@mui/material'
 import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
+import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import LanguageIcon from '@mui/icons-material/Language'
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import { projectsService } from '../services/projects'
 import ProgressivePreview from '../components/ProgressivePreview'
 
@@ -249,161 +253,383 @@ const LiveCreation = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#ffffff' }}>
       {error ? (
-        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#1a1a2e' }}>
-          <Box sx={{ textAlign: 'center', color: 'white', p: 4 }}>
-            <Typography variant="h5" sx={{ mb: 2, color: '#ef4444' }}>Error</Typography>
-            <Typography variant="body1" sx={{ mb: 3 }}>{error}</Typography>
-            <Button variant="outlined" onClick={() => window.location.href = '/dashboard'} sx={{ color: 'white', borderColor: 'white' }}>
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#ffffff' }}>
+          <Paper elevation={0} sx={{
+            textAlign: 'center',
+            p: 5,
+            maxWidth: 440,
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: 3,
+          }}>
+            <ErrorOutlineIcon sx={{ fontSize: 48, color: '#dc2626', mb: 2 }} />
+            <Typography variant="h5" sx={{ mb: 1.5, color: '#991b1b', fontWeight: 600 }}>
+              Something went wrong
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 3, color: '#7f1d1d' }}>{error}</Typography>
+            <Button
+              variant="contained"
+              onClick={() => window.location.href = '/dashboard'}
+              startIcon={<RefreshIcon />}
+              sx={{
+                backgroundColor: '#dc2626',
+                textTransform: 'none',
+                borderRadius: 2,
+                '&:hover': { backgroundColor: '#b91c1c' },
+              }}
+            >
               Go to Dashboard
             </Button>
-          </Box>
+          </Paper>
         </Box>
       ) : (
         <>
-          {/* Left side - Preview */}
-          <Box sx={{ flex: 1, bgcolor: '#1a1a2e', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-            {deploymentUrl ? (
-              <>
-                {/* URL bar */}
-                <Box sx={{ bgcolor: '#0a0e1a', py: 1.5, px: 3, borderBottom: '1px solid #2d3748', display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box sx={{ bgcolor: '#1a1f2e', color: '#9ca3af', px: 3, py: 1, borderRadius: 2, fontSize: '0.9rem', flex: 1, fontFamily: 'monospace' }}>
-                    {deploymentUrl}
-                  </Box>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={isReloading ? <CircularProgress size={16} /> : <RefreshIcon />}
-                    disabled={isReloading}
-                    onClick={handleRefresh}
-                    sx={{ color: 'white', borderColor: '#4b5563', '&:hover': { borderColor: '#667eea', bgcolor: 'rgba(102, 126, 234, 0.1)' } }}
-                  >
-                    {isReloading ? 'Loading...' : 'Refresh'}
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    onClick={() => window.open(deploymentUrl, '_blank')}
-                    sx={{ bgcolor: '#667eea', '&:hover': { bgcolor: '#5a67d8' } }}
-                  >
-                    Open
-                  </Button>
+          {/* Left side - Preview (~60%) */}
+          <Box sx={{
+            flex: 1.5,
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: '#f9fafb',
+            position: 'relative',
+          }}>
+            {/* Browser Chrome */}
+            <Box sx={{
+              backgroundColor: '#f8f9fa',
+              borderBottom: '1px solid #e0e0e0',
+            }}>
+              {/* Top bar with traffic lights, URL bar, and actions */}
+              <Box sx={{
+                px: 2,
+                py: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+              }}>
+                {/* Traffic light dots */}
+                <Box sx={{ display: 'flex', gap: 0.75, flexShrink: 0 }}>
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#ff5f57' }} />
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#febc2e' }} />
+                  <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#28c840' }} />
                 </Box>
-                {/* iframe */}
-                <Box sx={{ flex: 1, position: 'relative' }}>
-                  <iframe 
-                    ref={iframeRef} 
-                    style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} 
-                    title="Live Product" 
+
+                {/* URL bar */}
+                <Box sx={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: 2,
+                  px: 1.5,
+                  py: 0.5,
+                  gap: 1,
+                  minWidth: 0,
+                }}>
+                  <LanguageIcon sx={{ fontSize: 14, color: '#9ca3af', flexShrink: 0 }} />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: '#6b7280',
+                      fontSize: '0.75rem',
+                      fontFamily: '"SF Mono", "Fira Code", "Fira Mono", Menlo, monospace',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {deploymentUrl || 'about:blank'}
+                  </Typography>
+                </Box>
+
+                {/* Action buttons */}
+                <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                  <IconButton
+                    size="small"
+                    onClick={handleRefresh}
+                    disabled={isReloading || !deploymentUrl}
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      color: '#6b7280',
+                      '&:hover': { backgroundColor: '#e5e7eb', color: '#374151' },
+                    }}
+                  >
+                    {isReloading ? <CircularProgress size={14} /> : <RefreshIcon sx={{ fontSize: 16 }} />}
+                  </IconButton>
+                  {deploymentUrl && (
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open(deploymentUrl, '_blank')}
+                      sx={{
+                        width: 30,
+                        height: 30,
+                        color: '#6b7280',
+                        '&:hover': { backgroundColor: '#e5e7eb', color: '#374151' },
+                      }}
+                    >
+                      <OpenInNewIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Preview Content */}
+            <Box sx={{
+              flex: 1,
+              position: 'relative',
+              overflow: 'hidden',
+              m: 1.5,
+              borderRadius: '0 0 10px 10px',
+              border: '1px solid #e0e0e0',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              backgroundColor: '#ffffff',
+            }}>
+              {deploymentUrl ? (
+                <>
+                  <iframe
+                    ref={iframeRef}
+                    style={{ width: '100%', height: '100%', border: 'none', background: 'white' }}
+                    title="Live Product"
                   />
                   {isBuilding && (
-                    <Box sx={{ 
-                      position: 'absolute', 
-                      inset: 0, 
-                      bgcolor: 'rgba(0,0,0,0.7)', 
-                      display: 'flex', 
-                      alignItems: 'center', 
+                    <Box sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      bgcolor: 'rgba(255,255,255,0.85)',
+                      backdropFilter: 'blur(4px)',
+                      display: 'flex',
+                      alignItems: 'center',
                       justifyContent: 'center',
-                      color: 'white',
-                      zIndex: 100
+                      zIndex: 100,
                     }}>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <CircularProgress sx={{ color: '#667eea', mb: 2 }} />
-                        <Typography variant="h6">Updating your app...</Typography>
-                        <Typography variant="body2" sx={{ opacity: 0.8 }}>{currentPhase}</Typography>
+                      <Box sx={{ textAlign: 'center', maxWidth: 320 }}>
+                        <CircularProgress sx={{ color: '#1976d2', mb: 2 }} size={40} />
+                        <Typography variant="h6" sx={{ color: '#111827', fontWeight: 600 }}>
+                          Updating your app...
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#6b7280', mt: 0.5 }}>
+                          {currentPhase}
+                        </Typography>
                       </Box>
                     </Box>
                   )}
-                </Box>
-              </>
-            ) : aiTimedOut ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'white', bgcolor: '#1a1a2e', alignItems: 'center', justifyContent: 'center' }}>
-                <Box sx={{ textAlign: 'center', p: 4, maxWidth: 500 }}>
-                  <Typography variant="h5" sx={{ mb: 2, color: '#667eea', fontWeight: 600 }}>
+                </>
+              ) : aiTimedOut ? (
+                <Box sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  gap: 3,
+                  p: 4,
+                  backgroundColor: '#fafafa',
+                }}>
+                  <ErrorOutlineIcon sx={{ fontSize: 56, color: '#94a3b8' }} />
+                  <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827' }}>
                     AI Service Unavailable
                   </Typography>
-                  <Typography variant="body1" sx={{ mb: 3, opacity: 0.8 }}>
+                  <Typography variant="body1" sx={{ color: '#6b7280', textAlign: 'center', maxWidth: 420 }}>
                     The AI building service is not responding. Your project exists but no preview is available yet.
                   </Typography>
-                  <Typography variant="body2" sx={{ mb: 3, opacity: 0.6 }}>
+                  <Typography variant="body2" sx={{ color: '#9ca3af', textAlign: 'center', maxWidth: 400 }}>
                     You can send chat messages and they will be processed once the AI service comes back online.
                   </Typography>
                   <Button
-                    variant="outlined"
+                    variant="contained"
+                    startIcon={<RefreshIcon />}
                     onClick={() => {
                       setAiTimedOut(false)
                       setIsBuilding(true)
                       buildStartTimeRef.current = Date.now()
                       pollCountRef.current = 0
                     }}
-                    sx={{ color: 'white', borderColor: '#667eea', '&:hover': { borderColor: '#5a67d8', bgcolor: 'rgba(102, 126, 234, 0.1)' } }}
+                    sx={{
+                      backgroundColor: '#1976d2',
+                      textTransform: 'none',
+                      borderRadius: 2,
+                      '&:hover': { backgroundColor: '#1565c0' },
+                    }}
                   >
                     Retry Connection
                   </Button>
                 </Box>
-              </Box>
-            ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'white', position: 'relative' }}>
-                <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-                  <ProgressivePreview
-                    progress={displayProgress}
-                    phase={currentPhase}
-                    projectName={id}
-                    userRequest={messages.find(m => m.id.startsWith('user_'))?.content || ''}
-                  />
+              ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+                  <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+                    <ProgressivePreview
+                      progress={displayProgress}
+                      phase={currentPhase}
+                      projectName={id}
+                      userRequest={messages.find(m => m.id.startsWith('user_'))?.content || ''}
+                    />
 
-                  {/* Overlay progress info */}
-                  <Box sx={{
-                    position: 'absolute',
-                    top: 24,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    bgcolor: 'rgba(0,0,0,0.8)',
-                    backdropFilter: 'blur(10px)',
-                    px: 3,
-                    py: 1,
-                    borderRadius: 10,
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    zIndex: 10,
-                    textAlign: 'center',
-                    minWidth: 300
-                  }}>
-                    <Typography variant="subtitle2" sx={{ color: '#667eea', fontWeight: 600, mb: 0.5 }}>
-                      BUILDING YOUR CUSTOM PROJECT
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Box sx={{ flex: 1, height: 4, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
-                        <Box sx={{
-                          width: `${displayProgress}%`,
-                          height: '100%',
-                          bgcolor: '#667eea',
-                          borderRadius: 2,
-                          transition: 'width 0.1s linear'
-                        }} />
+                    {/* Overlay progress info */}
+                    <Box sx={{
+                      position: 'absolute',
+                      top: 24,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      bgcolor: 'rgba(255,255,255,0.95)',
+                      backdropFilter: 'blur(10px)',
+                      px: 3,
+                      py: 1.5,
+                      borderRadius: 3,
+                      border: '1px solid #e0e0e0',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                      zIndex: 10,
+                      textAlign: 'center',
+                      minWidth: 300,
+                    }}>
+                      <Typography variant="subtitle2" sx={{ color: '#1976d2', fontWeight: 700, mb: 0.5, fontSize: '0.7rem', letterSpacing: '0.05em' }}>
+                        BUILDING YOUR CUSTOM PROJECT
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={displayProgress}
+                          sx={{
+                            flex: 1,
+                            height: 5,
+                            borderRadius: 2,
+                            backgroundColor: '#e5e7eb',
+                            '& .MuiLinearProgress-bar': {
+                              borderRadius: 2,
+                              backgroundColor: '#1976d2',
+                              transition: 'transform 0.1s linear',
+                            },
+                          }}
+                        />
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#1976d2' }}>
+                          {Math.round(displayProgress)}%
+                        </Typography>
                       </Box>
-                      <Typography variant="caption" sx={{ fontWeight: 700 }}>{Math.round(displayProgress)}%</Typography>
+                      <Typography variant="caption" sx={{ color: '#6b7280', mt: 0.5, display: 'block' }}>
+                        {currentPhase}
+                      </Typography>
                     </Box>
-                    <Typography variant="caption" sx={{ opacity: 0.7, mt: 0.5, display: 'block' }}>
-                      {currentPhase}
-                    </Typography>
                   </Box>
                 </Box>
-              </Box>
-            )}
+              )}
+            </Box>
           </Box>
 
-          {/* Right side - Chat */}
-          <Box sx={{ width: 400, bgcolor: '#f8fafc', borderLeft: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ p: 3, borderBottom: '1px solid #e2e8f0', bgcolor: 'white' }}>
-              <Typography variant="h6" fontWeight={600}>AI Building Process</Typography>
-              <Typography variant="caption" color="text.secondary">Watch as AI creates your product</Typography>
+          {/* Right side - Chat (~40%) */}
+          <Box sx={{
+            width: '40%',
+            minWidth: 380,
+            borderLeft: '1px solid #e5e7eb',
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: '#ffffff',
+          }}>
+            {/* Chat Header */}
+            <Box sx={{
+              px: 2.5,
+              py: 2,
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: '#ffffff',
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <AutoAwesomeIcon sx={{ color: '#1976d2', fontSize: 22 }} />
+                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827' }}>
+                  AI Builder
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                {isBuilding ? (
+                  <Chip
+                    label="Building"
+                    size="small"
+                    sx={{
+                      backgroundColor: '#eff6ff',
+                      color: '#1976d2',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      '@keyframes pulse-dot': {
+                        '0%, 100%': { opacity: 1 },
+                        '50%': { opacity: 0.4 },
+                      },
+                      '&::before': {
+                        content: '""',
+                        display: 'inline-block',
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        backgroundColor: '#1976d2',
+                        marginRight: '6px',
+                        animation: 'pulse-dot 1.2s ease-in-out infinite',
+                      },
+                    }}
+                  />
+                ) : (
+                  <Chip
+                    label="Ready"
+                    size="small"
+                    sx={{
+                      backgroundColor: '#f0fdf4',
+                      color: '#16a34a',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                    }}
+                  />
+                )}
+              </Box>
             </Box>
 
-            <Box sx={{ flex: 1, overflowY: 'auto', p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {/* Build Progress Bar */}
+            {isBuilding && (
+              <Box sx={{ px: 2.5, py: 1.5, backgroundColor: '#f8f9fa' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                    {currentPhase || 'Building your website...'}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 600 }}>
+                    {Math.round(displayProgress)}%
+                  </Typography>
+                </Box>
+                <LinearProgress
+                  variant="determinate"
+                  value={displayProgress}
+                  sx={{
+                    height: 5,
+                    borderRadius: 2,
+                    backgroundColor: '#e5e7eb',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 2,
+                      backgroundColor: '#1976d2',
+                      '@keyframes shimmer': {
+                        '0%': { opacity: 1 },
+                        '50%': { opacity: 0.7 },
+                        '100%': { opacity: 1 },
+                      },
+                      animation: 'shimmer 1.5s ease-in-out infinite',
+                    },
+                  }}
+                />
+              </Box>
+            )}
+
+            {/* Messages */}
+            <Box sx={{
+              flex: 1,
+              overflowY: 'auto',
+              px: 2,
+              py: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+              backgroundColor: '#f8f9fa',
+            }}>
               {messages.length === 0 && !aiTimedOut && (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <CircularProgress size={24} sx={{ mb: 2 }} />
+                  <CircularProgress size={24} sx={{ mb: 2, color: '#1976d2' }} />
                   <Typography variant="body2" color="text.secondary">Waiting for AI...</Typography>
                 </Box>
               )}
@@ -411,7 +637,7 @@ const LiveCreation = () => {
               {aiTimedOut && messages.length === 0 && (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    AI service is not responding. The builder is available without AI.
+                    AI service is not responding.
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     You can still send messages once the AI service is back online.
@@ -422,65 +648,124 @@ const LiveCreation = () => {
               {messages.map((message) => {
                 const isUserMessage = message.id.startsWith('user_')
                 const isProcessing = message.id.startsWith('processing_')
-                
-                return (
-                  <Paper key={message.id} elevation={0} sx={{ 
-                    p: 2, 
-                    bgcolor: isUserMessage ? '#eff6ff' : message.type === 'success' ? '#f0fdf4' : message.type === 'error' ? '#fef2f2' : isProcessing ? '#fef9c3' : '#f8fafc', 
-                    border: '1px solid', 
-                    borderColor: isUserMessage ? '#93c5fd' : message.type === 'success' ? '#86efac' : message.type === 'error' ? '#fecaca' : isProcessing ? '#fde047' : '#e2e8f0', 
-                    borderRadius: 2,
-                    ml: isUserMessage ? 2 : 0,
-                  }}>
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                      <Box sx={{ 
-                        width: 8, 
-                        height: 8, 
-                        borderRadius: '50%', 
-                        bgcolor: isUserMessage ? '#3b82f6' : message.type === 'success' ? '#10b981' : message.type === 'error' ? '#ef4444' : isProcessing ? '#eab308' : '#3b82f6', 
-                        mt: 0.5, 
-                        flexShrink: 0 
-                      }} />
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" sx={{ 
-                          color: isUserMessage ? '#1e40af' : message.type === 'success' ? '#166534' : message.type === 'error' ? '#991b1b' : '#1e293b', 
-                          lineHeight: 1.6,
-                          fontWeight: isUserMessage ? 500 : 400
-                        }}>
+                const isError = message.type === 'error'
+
+                // System-like messages (processing, success)
+                if (isProcessing || message.type === 'success') {
+                  return (
+                    <Box key={message.id} sx={{ display: 'flex', justifyContent: 'center', my: 0.5 }}>
+                      <Typography variant="caption" sx={{
+                        fontStyle: 'italic',
+                        color: '#9ca3af',
+                        fontSize: '0.75rem',
+                        px: 1.5,
+                        py: 0.5,
+                      }}>
+                        {message.content}
+                      </Typography>
+                    </Box>
+                  )
+                }
+
+                // Error messages
+                if (isError) {
+                  return (
+                    <Box key={message.id} sx={{ display: 'flex', justifyContent: 'center', my: 0.5 }}>
+                      <Paper elevation={0} sx={{
+                        p: 2,
+                        maxWidth: '90%',
+                        backgroundColor: '#fef2f2',
+                        border: '1px solid #fecaca',
+                        borderRadius: 2.5,
+                      }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                          <ErrorOutlineIcon sx={{ fontSize: 18, color: '#dc2626' }} />
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#dc2626' }}>
+                            Something went wrong
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" sx={{ color: '#991b1b' }}>
                           {message.content}
                         </Typography>
-                        <Typography variant="caption" sx={{ color: '#64748b', display: 'block', mt: 0.5 }}>
-                          {new Date(message.timestamp).toLocaleTimeString()}
-                        </Typography>
-                      </Box>
+                      </Paper>
                     </Box>
-                  </Paper>
+                  )
+                }
+
+                // User and AI message bubbles
+                return (
+                  <Box
+                    key={message.id}
+                    sx={{
+                      display: 'flex',
+                      justifyContent: isUserMessage ? 'flex-end' : 'flex-start',
+                      mb: 0.5,
+                    }}
+                  >
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        px: 2,
+                        py: 1.5,
+                        maxWidth: '80%',
+                        borderRadius: isUserMessage
+                          ? '16px 16px 4px 16px'
+                          : '16px 16px 16px 4px',
+                        backgroundColor: isUserMessage ? '#1976d2' : '#f5f5f5',
+                        color: isUserMessage ? '#ffffff' : '#1f2937',
+                        border: isUserMessage ? 'none' : '1px solid #ebebeb',
+                        boxShadow: isUserMessage
+                          ? '0 1px 3px rgba(25,118,210,0.2)'
+                          : '0 1px 3px rgba(0,0,0,0.04)',
+                      }}
+                    >
+                      <Typography variant="body2" sx={{ lineHeight: 1.5, fontSize: '0.875rem' }}>
+                        {message.content}
+                      </Typography>
+                      <Typography variant="caption" sx={{
+                        display: 'block',
+                        mt: 0.5,
+                        color: isUserMessage ? 'rgba(255,255,255,0.7)' : '#9ca3af',
+                        fontSize: '0.65rem',
+                      }}>
+                        {new Date(message.timestamp).toLocaleTimeString()}
+                      </Typography>
+                    </Paper>
+                  </Box>
                 )
               })}
 
               <div ref={chatEndRef} />
             </Box>
 
-            <Box sx={{ p: 2, borderTop: '1px solid #e2e8f0', bgcolor: 'white' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                {isBuilding ? (
-                  <>
-                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#3b82f6', animation: 'pulse 2s ease-in-out infinite', '@keyframes pulse': { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.5 } } }} />
-                    <Typography variant="caption" fontWeight={500} color="primary">Building...</Typography>
-                  </>
-                ) : (
-                  <>
-                    <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#10b981' }} />
-                    <Typography variant="caption" fontWeight={500} sx={{ color: '#10b981' }}>Live</Typography>
-                  </>
-                )}
-              </Box>
-              
-              <Box sx={{ display: 'flex', gap: 1 }}>
+            {/* Input Area */}
+            <Box sx={{
+              p: 2,
+              borderTop: '1px solid #e5e7eb',
+              backgroundColor: '#ffffff',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1.5,
+            }}>
+              <Box sx={{
+                display: 'flex',
+                gap: 1,
+                alignItems: 'flex-end',
+                backgroundColor: '#f9fafb',
+                borderRadius: 3,
+                border: '1px solid #e5e7eb',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                px: 2,
+                py: 1,
+                transition: 'border-color 0.2s, box-shadow 0.2s',
+                '&:focus-within': {
+                  borderColor: '#1976d2',
+                  boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
+                },
+              }}>
                 <TextField
                   fullWidth
-                  size="small"
-                  placeholder="Request changes (e.g., 'Make it darker')"
+                  placeholder={isBuilding ? "Building in progress..." : "Request changes (e.g., 'Make it darker')"}
                   value={userMessage}
                   onChange={(e) => setUserMessage(e.target.value)}
                   disabled={isSending}
@@ -490,15 +775,39 @@ const LiveCreation = () => {
                       handleSendMessage()
                     }
                   }}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  size="small"
+                  variant="standard"
+                  sx={{
+                    '& .MuiInput-root': {
+                      fontSize: '0.875rem',
+                      py: 0.5,
+                      '&:before, &:after': { display: 'none' },
+                    },
+                    '& .MuiInputBase-input': {
+                      padding: '8px 0',
+                    },
+                  }}
                 />
-                <IconButton 
-                  color="primary" 
+                <IconButton
                   onClick={handleSendMessage}
                   disabled={!userMessage.trim() || isSending}
-                  sx={{ bgcolor: '#667eea', color: 'white', '&:hover': { bgcolor: '#5a67d8' }, '&:disabled': { bgcolor: '#e0e0e0' } }}
+                  sx={{
+                    backgroundColor: !userMessage.trim() || isSending ? '#e5e7eb' : '#1976d2',
+                    color: !userMessage.trim() || isSending ? '#9ca3af' : '#ffffff',
+                    width: 36,
+                    height: 36,
+                    borderRadius: 2,
+                    flexShrink: 0,
+                    '&:hover': {
+                      backgroundColor: !userMessage.trim() || isSending ? '#e5e7eb' : '#1565c0',
+                    },
+                    '&.Mui-disabled': {
+                      backgroundColor: '#e5e7eb',
+                      color: '#9ca3af',
+                    },
+                  }}
                 >
-                  <SendIcon />
+                  <SendIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               </Box>
             </Box>
