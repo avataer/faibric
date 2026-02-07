@@ -1,62 +1,28 @@
-# ChatPanel UI Improvement - Test Log
+# Builder Studio UI Improvements - Test Log
 
-## Test: ChatPanel.tsx Styling Improvements
+## Test: ChatPanel and PreviewPanel UI Improvements
 **Date:** 2026-02-07
-**Component:** frontend/src/components/building-studio/ChatPanel.tsx
+**Worker Session:** 1770504511-53833
 
 ## Changes Made
 
-### 1. Header Improvements
-- Added AutoAwesomeIcon branding icon in blue (#1976d2)
-- Bolder title typography (fontWeight: 700, 1.1rem)
-- Replaced "Deployed" chip with "Ready" chip (green on light green bg)
-- "Building" chip uses light blue background (#eff6ff) instead of MUI primary
-- Buttons use textTransform: none, rounded corners, smaller font
-- "Start New" renamed to "New Project" with subtle border styling
+### ChatPanel.tsx (chunk-001-chatpanel)
+1. **Assistant message bubbles**: Changed background from `#ffffff` to `#f5f5f5` (light gray) for better visual distinction from the white panel background
+2. **Building chip**: Added animated pulsing blue dot indicator for visual feedback during builds
+3. **Progress bar**: Increased height from 4px to 5px for better visibility
+4. **Assistant message border**: Softened border color from `#e5e7eb` to `#ebebeb`
+5. **Input area padding**: Increased padding (px: 1.5 to 2, py: 0.75 to 1) for more premium feel
+6. **Input field padding**: Increased from 6px to 8px for better touch targets
 
-### 2. Chat Message Bubbles
-- User messages: #1976d2 blue background, white text, asymmetric rounded corners (16px top, 4px bottom-right)
-- Assistant messages: #ffffff white background, dark text (#1f2937), 1px border, subtle shadow, asymmetric corners (4px bottom-left)
-- System messages: centered, smaller caption text, subtle gray
-- Section-related system messages: purple with ViewQuilt icon (preserved)
-- All messages use elevation={0} with custom box-shadow for cleaner look
-
-### 3. Input Area
-- Wrapped text field + send button in a container with:
-  - Light background (#f9fafb)
-  - Rounded corners (borderRadius: 3 = 24px)
-  - Box shadow: 0 2px 8px rgba(0,0,0,0.08)
-  - Focus-within blue border highlight
-- TextField uses variant="standard" with hidden underlines
-- Send button: blue background (#1976d2) with white icon, 36px square, rounded
-- Disabled state: gray background with muted icon
-
-### 4. Model Selector
-- Compact font sizes (0.8rem body, 0.7rem credits)
-- Shortened label from "AI Model" to "Model"
-- Light background (#f9fafb) on the select
-- Subtle border colors (#e5e7eb)
-- Rounded corners (borderRadius: 1.5)
-
-### 5. Build Progress
-- Replaced CircularProgress chip with LinearProgress bar
-- Separate progress section below header with light bg (#f8f9fa)
-- Status text left-aligned, percentage right-aligned in blue
-- Progress bar: 4px height, blue (#1976d2), rounded
-- Shimmer animation (opacity pulse) during active build
-
-### 6. Error State Styling
-- Light red background (#fef2f2) with pink border (#fecaca)
-- Red error icon and "Something went wrong" header
-- Dark red text (#991b1b) for error message body
-- "Try Again" button with red background, textTransform: none
-- Rounded corners on error container
-
-### 7. Timestamps
-- Added formatTimestamp() helper (12h format with AM/PM)
-- shouldShowTimestamp() shows time when gap > 2 minutes between messages
-- First message always shows timestamp
-- Centered, very small (0.7rem), gray (#9ca3af)
+### PreviewPanel.tsx (chunk-002-previewpanel)
+1. **Browser chrome header**: Replaced flat header with browser-like chrome featuring:
+   - Traffic light dots (red #ff5f57, yellow #febc2e, green #28c840)
+   - URL bar with globe icon, monospace font, showing deployment URL
+   - Compact refresh/open-in-new-tab buttons with hover effects
+2. **Toolbar row**: Moved edit mode, section mode, and section editor buttons to a second row with smaller, compact styling
+3. **Preview container**: Added border-radius (0 0 10px 10px), border (1px solid #e0e0e0), box-shadow (0 4px 20px rgba(0,0,0,0.08)), and margin
+4. **Empty state**: Added elegant placeholder when no preview URL showing WebIcon with "Your website preview will appear here" message
+5. **New icon imports**: Added LanguageIcon (globe for URL bar) and WebIcon (for empty state)
 
 ## Build Verification
 
@@ -67,24 +33,31 @@ transforming...
 1952 modules transformed.
 rendering chunks...
 computing gzip size...
-dist/index.html                     0.79 kB
-dist/assets/index-IUqgTuwR.css      0.25 kB
-dist/assets/index-CB1m4mNt.js   1,186.67 kB
-built in 2.32s
+dist/index.html                     0.79 kB | gzip:   0.45 kB
+dist/assets/index-IUqgTuwR.css      0.25 kB | gzip:   0.20 kB
+dist/assets/index-BHHSo6Lx.js   1,188.75 kB | gzip: 349.89 kB
+built in 2.25s
 ```
 
-**Result: BUILD SUCCESSFUL**
+**Result: BUILD SUCCESS - No errors**
 
-## Props Interface
-No changes to ChatPanelProps interface. All existing props preserved.
+## Design Compliance
 
-## Business Logic
-No changes to business logic, API calls, or data flow. All modifications are purely visual/styling.
+- All backgrounds: white (#ffffff) or light gray (#f5f5f5, #f8f9fa, #f9fafb, #fafafa)
+- No dark backgrounds used
+- Blue (#1976d2) for primary accents and buttons
+- Material-UI sx props used for all styling
+- No business logic or data flow changes
+- Same component structure and props interface maintained
+- All existing features preserved
 
 ## Files Modified
-- frontend/src/components/building-studio/ChatPanel.tsx
+- `frontend/src/components/building-studio/ChatPanel.tsx`
+- `frontend/src/components/building-studio/PreviewPanel.tsx`
 
-## Imports Changed
-- Removed: CircularProgress (no longer used)
-- Added: LinearProgress (for build progress bar)
-- Added: AutoAwesomeIcon (for header branding)
+## Constraints Compliance
+- No emojis in code
+- Functional components with hooks only
+- MUI sx props for styling
+- No direct external API calls
+- No security vulnerabilities introduced

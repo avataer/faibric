@@ -20,6 +20,8 @@ import EditIcon from '@mui/icons-material/Edit'
 import TouchAppIcon from '@mui/icons-material/TouchApp'
 import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize'
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
+import LanguageIcon from '@mui/icons-material/Language'
+import WebIcon from '@mui/icons-material/Web'
 import ProgressivePreview from '../ProgressivePreview'
 import PropertyPanel from '../builder/PropertyPanel'
 import type { Section } from '../builder/sectionTypes'
@@ -218,121 +220,197 @@ export function PreviewPanel({
       flexDirection: 'column',
       backgroundColor: '#f9fafb',
     }}>
-      {/* Preview Header */}
+      {/* Browser Chrome */}
       <Box sx={{
-        p: 2,
-        borderBottom: '1px solid #e5e7eb',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#f8f9fa',
+        borderBottom: '1px solid #e0e0e0',
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="subtitle1" fontWeight={500}>
-            Live Preview
-          </Typography>
-          {editMode && (
+        {/* Top bar with traffic lights, URL bar, and actions */}
+        <Box sx={{
+          px: 2,
+          py: 1,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+        }}>
+          {/* Traffic light dots */}
+          <Box sx={{ display: 'flex', gap: 0.75, flexShrink: 0 }}>
+            <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#ff5f57' }} />
+            <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#febc2e' }} />
+            <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#28c840' }} />
+          </Box>
+
+          {/* URL bar */}
+          <Box sx={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            backgroundColor: '#ffffff',
+            border: '1px solid #e0e0e0',
+            borderRadius: 2,
+            px: 1.5,
+            py: 0.5,
+            gap: 1,
+            minWidth: 0,
+          }}>
+            <LanguageIcon sx={{ fontSize: 14, color: '#9ca3af', flexShrink: 0 }} />
             <Typography
-              variant="caption"
+              variant="body2"
               sx={{
-                bgcolor: '#2563eb',
-                color: 'white',
-                px: 1,
-                py: 0.5,
-                borderRadius: 1,
-                fontWeight: 600,
-              }}
-            >
-              EDIT MODE - Click anywhere to modify
-            </Typography>
-          )}
-          {sectionEditMode && (
-            <Typography
-              variant="caption"
-              sx={{
-                bgcolor: '#7c3aed',
-                color: 'white',
-                px: 1,
-                py: 0.5,
-                borderRadius: 1,
-                fontWeight: 600,
-              }}
-            >
-              SECTION MODE - Boundaries visible
-            </Typography>
-          )}
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          {deploymentUrl && (
-            <Tooltip title={editMode ? "Exit Edit Mode" : "Click-to-Edit Mode"}>
-              <ToggleButton
-                value="edit"
-                selected={editMode}
-                onChange={() => setEditMode(!editMode)}
-                size="small"
-                sx={{
-                  border: editMode ? '2px solid #2563eb' : '1px solid #e0e0e0',
-                  bgcolor: editMode ? '#eff6ff' : 'transparent',
-                }}
-              >
-                <TouchAppIcon sx={{ color: editMode ? '#2563eb' : 'inherit' }} />
-              </ToggleButton>
-            </Tooltip>
-          )}
-          {deploymentUrl && (
-            <Tooltip title={sectionEditMode ? "Exit Section Edit Mode" : "Section Edit Mode"}>
-              <ToggleButton
-                value="sectionEdit"
-                selected={sectionEditMode}
-                onChange={() => setSectionEditMode(!sectionEditMode)}
-                size="small"
-                sx={{
-                  border: sectionEditMode ? '2px solid #7c3aed' : '1px solid #e0e0e0',
-                  bgcolor: sectionEditMode ? '#f5f3ff' : 'transparent',
-                }}
-              >
-                <ViewQuiltIcon sx={{ color: sectionEditMode ? '#7c3aed' : 'inherit' }} />
-              </ToggleButton>
-            </Tooltip>
-          )}
-          {onToggleSectionEditor && (
-            <Button
-              size="small"
-              variant={sectionEditorOpen ? "contained" : "outlined"}
-              onClick={onToggleSectionEditor}
-              startIcon={<DashboardCustomizeIcon />}
-              sx={{
-                textTransform: 'none',
+                color: '#6b7280',
                 fontSize: '0.75rem',
-                minWidth: 'auto',
-                px: 1.5,
-                py: 0.5,
-                ...(sectionEditorOpen ? {
-                  backgroundColor: '#1976d2',
-                  color: '#ffffff',
-                  '&:hover': { backgroundColor: '#1565c0' },
-                } : {
-                  borderColor: '#e0e0e0',
-                  color: 'inherit',
-                  '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
-                }),
+                fontFamily: '"SF Mono", "Fira Code", "Fira Mono", Menlo, monospace',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
-              {sectionEditorOpen ? "Close Editor" : "Section Editor"}
-            </Button>
-          )}
-          <IconButton size="small" onClick={onRefresh} title="Refresh preview">
-            <RefreshIcon />
-          </IconButton>
-          {deploymentUrl && (
-            <IconButton
-              size="small"
-              onClick={() => window.open(deploymentUrl, '_blank')}
-              title="Open in new tab"
-            >
-              <OpenInNewIcon />
-            </IconButton>
-          )}
+              {deploymentUrl || 'about:blank'}
+            </Typography>
+          </Box>
+
+          {/* Browser action buttons */}
+          <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+            <Tooltip title="Refresh preview">
+              <IconButton
+                size="small"
+                onClick={onRefresh}
+                sx={{
+                  width: 30,
+                  height: 30,
+                  color: '#6b7280',
+                  '&:hover': { backgroundColor: '#e5e7eb', color: '#374151' },
+                }}
+              >
+                <RefreshIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
+            {deploymentUrl && (
+              <Tooltip title="Open in new tab">
+                <IconButton
+                  size="small"
+                  onClick={() => window.open(deploymentUrl, '_blank')}
+                  sx={{
+                    width: 30,
+                    height: 30,
+                    color: '#6b7280',
+                    '&:hover': { backgroundColor: '#e5e7eb', color: '#374151' },
+                  }}
+                >
+                  <OpenInNewIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        </Box>
+
+        {/* Toolbar row: edit mode, section editor, status badges */}
+        <Box sx={{
+          px: 2,
+          pb: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {editMode && (
+              <Typography
+                variant="caption"
+                sx={{
+                  bgcolor: '#2563eb',
+                  color: 'white',
+                  px: 1,
+                  py: 0.25,
+                  borderRadius: 1,
+                  fontWeight: 600,
+                  fontSize: '0.65rem',
+                }}
+              >
+                EDIT MODE
+              </Typography>
+            )}
+            {sectionEditMode && (
+              <Typography
+                variant="caption"
+                sx={{
+                  bgcolor: '#7c3aed',
+                  color: 'white',
+                  px: 1,
+                  py: 0.25,
+                  borderRadius: 1,
+                  fontWeight: 600,
+                  fontSize: '0.65rem',
+                }}
+              >
+                SECTION MODE
+              </Typography>
+            )}
+          </Box>
+          <Box sx={{ display: 'flex', gap: 0.75 }}>
+            {deploymentUrl && (
+              <Tooltip title={editMode ? "Exit Edit Mode" : "Click-to-Edit Mode"}>
+                <ToggleButton
+                  value="edit"
+                  selected={editMode}
+                  onChange={() => setEditMode(!editMode)}
+                  size="small"
+                  sx={{
+                    width: 30,
+                    height: 30,
+                    border: editMode ? '2px solid #2563eb' : '1px solid #d1d5db',
+                    bgcolor: editMode ? '#eff6ff' : 'transparent',
+                  }}
+                >
+                  <TouchAppIcon sx={{ fontSize: 16, color: editMode ? '#2563eb' : '#6b7280' }} />
+                </ToggleButton>
+              </Tooltip>
+            )}
+            {deploymentUrl && (
+              <Tooltip title={sectionEditMode ? "Exit Section Edit Mode" : "Section Edit Mode"}>
+                <ToggleButton
+                  value="sectionEdit"
+                  selected={sectionEditMode}
+                  onChange={() => setSectionEditMode(!sectionEditMode)}
+                  size="small"
+                  sx={{
+                    width: 30,
+                    height: 30,
+                    border: sectionEditMode ? '2px solid #7c3aed' : '1px solid #d1d5db',
+                    bgcolor: sectionEditMode ? '#f5f3ff' : 'transparent',
+                  }}
+                >
+                  <ViewQuiltIcon sx={{ fontSize: 16, color: sectionEditMode ? '#7c3aed' : '#6b7280' }} />
+                </ToggleButton>
+              </Tooltip>
+            )}
+            {onToggleSectionEditor && (
+              <Button
+                size="small"
+                variant={sectionEditorOpen ? "contained" : "outlined"}
+                onClick={onToggleSectionEditor}
+                startIcon={<DashboardCustomizeIcon sx={{ fontSize: 14 }} />}
+                sx={{
+                  textTransform: 'none',
+                  fontSize: '0.7rem',
+                  minWidth: 'auto',
+                  px: 1.25,
+                  py: 0.25,
+                  height: 30,
+                  ...(sectionEditorOpen ? {
+                    backgroundColor: '#1976d2',
+                    color: '#ffffff',
+                    '&:hover': { backgroundColor: '#1565c0' },
+                  } : {
+                    borderColor: '#d1d5db',
+                    color: '#6b7280',
+                    '&:hover': { backgroundColor: '#f3f4f6' },
+                  }),
+                }}
+              >
+                {sectionEditorOpen ? "Close" : "Sections"}
+              </Button>
+            )}
+          </Box>
         </Box>
       </Box>
 
@@ -342,6 +420,10 @@ export function PreviewPanel({
           flex: 1,
           position: 'relative',
           overflow: 'hidden',
+          m: 1.5,
+          borderRadius: '0 0 10px 10px',
+          border: '1px solid #e0e0e0',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           backgroundColor: '#fff',
           cursor: editMode ? 'crosshair' : 'default',
         }}
@@ -439,6 +521,7 @@ export function PreviewPanel({
             height: '100%',
             gap: 3,
             p: 4,
+            backgroundColor: '#fafafa',
           }}>
             <DashboardCustomizeIcon sx={{ fontSize: 64, color: '#94a3b8' }} />
             <Typography variant="h5" fontWeight={600} color="text.primary" textAlign="center">
@@ -457,6 +540,25 @@ export function PreviewPanel({
                 Open Section Editor
               </Button>
             )}
+          </Box>
+        ) : buildProgress === 0 && !buildPhase ? (
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            gap: 2.5,
+            p: 4,
+            backgroundColor: '#fafafa',
+          }}>
+            <WebIcon sx={{ fontSize: 56, color: '#d1d5db' }} />
+            <Typography variant="h6" sx={{ fontWeight: 500, color: '#6b7280' }} textAlign="center">
+              Your website preview will appear here
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#9ca3af', maxWidth: 360 }} textAlign="center">
+              Describe what you want to build in the chat and we will generate a live preview for you.
+            </Typography>
           </Box>
         ) : (
           <ProgressivePreview

@@ -115,6 +115,20 @@ export function ChatPanel({
                   fontWeight: 600,
                   fontSize: '0.75rem',
                   '& .MuiChip-icon': { color: '#1976d2' },
+                  '@keyframes pulse-dot': {
+                    '0%, 100%': { opacity: 1 },
+                    '50%': { opacity: 0.4 },
+                  },
+                  '&::before': {
+                    content: '""',
+                    display: 'inline-block',
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    backgroundColor: '#1976d2',
+                    marginRight: '6px',
+                    animation: 'pulse-dot 1.2s ease-in-out infinite',
+                  },
                 }}
               />
               <Button
@@ -185,7 +199,7 @@ export function ChatPanel({
             variant="determinate"
             value={buildProgress}
             sx={{
-              height: 4,
+              height: 5,
               borderRadius: 2,
               backgroundColor: '#e5e7eb',
               '& .MuiLinearProgress-bar': {
@@ -334,10 +348,10 @@ export function ChatPanel({
                         ? '16px 16px 4px 16px'
                         : '16px 16px 16px 4px',
                       backgroundColor:
-                        msg.role === 'user' ? '#1976d2' : '#ffffff',
+                        msg.role === 'user' ? '#1976d2' : '#f5f5f5',
                       color:
                         msg.role === 'user' ? '#ffffff' : '#1f2937',
-                      border: msg.role === 'assistant' ? '1px solid #e5e7eb' : 'none',
+                      border: msg.role === 'assistant' ? '1px solid #ebebeb' : 'none',
                       boxShadow: msg.role === 'assistant'
                         ? '0 1px 3px rgba(0,0,0,0.04)'
                         : '0 1px 3px rgba(25,118,210,0.2)',
@@ -420,8 +434,8 @@ export function ChatPanel({
           borderRadius: 3,
           border: '1px solid #e5e7eb',
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-          px: 1.5,
-          py: 0.75,
+          px: 2,
+          py: 1,
           transition: 'border-color 0.2s, box-shadow 0.2s',
           '&:focus-within': {
             borderColor: '#1976d2',
@@ -444,7 +458,7 @@ export function ChatPanel({
                 '&:before, &:after': { display: 'none' },
               },
               '& .MuiInputBase-input': {
-                padding: '6px 0',
+                padding: '8px 0',
               },
             }}
           />
