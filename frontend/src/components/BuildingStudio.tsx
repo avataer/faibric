@@ -270,7 +270,13 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
   }, [messages, sessionToken, selectedModel, addAssistantMessage, addErrorMessage, resetForNewBuild])
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+    <Box sx={{
+      display: 'flex',
+      height: '100vh',
+      width: '100vw',
+      overflow: 'hidden',
+      backgroundColor: '#ffffff',
+    }}>
       <ChatPanel
         messages={messages}
         messagesEndRef={messagesEndRef}
@@ -327,16 +333,18 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
+          boxShadow: '-2px 0 8px rgba(0,0,0,0.04)',
         }}>
           <Box sx={{
             p: 2,
             borderBottom: '1px solid #e5e7eb',
+            backgroundColor: '#ffffff',
           }}>
-            <Typography variant="subtitle2" fontWeight={600}>
+            <Typography variant="subtitle2" fontWeight={600} sx={{ color: '#111827' }}>
               Sections
             </Typography>
           </Box>
-          <Box sx={{ flex: 1, overflow: 'auto' }}>
+          <Box sx={{ flex: 1, overflow: 'auto', backgroundColor: '#f8f9fa' }}>
             <DragDropSectionEditor
               sections={sections}
               onReorder={handleReorderSections}
