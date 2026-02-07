@@ -214,7 +214,7 @@ const LiveCreation = () => {
     const userMsg: AIMessage = {
       id: `user_${Date.now()}`,
       type: 'action',
-      content: `💬 You: ${messageToSend}`,
+      content: `You: ${messageToSend}`,
       timestamp: Date.now()
     }
     setMessages(prev => [...prev, userMsg])
@@ -225,7 +225,7 @@ const LiveCreation = () => {
       const processingMsg: AIMessage = {
         id: `processing_${Date.now()}`,
         type: 'thinking',
-        content: '🔄 Processing your request...',
+        content: 'Processing your request...',
         timestamp: Date.now()
       }
       setMessages(prev => [...prev, processingMsg])
