@@ -40,11 +40,11 @@ interface SessionData {
 }
 
 const TEMPLATES = [
-  { label: 'Restaurant', icon: RestaurantIcon, prompt: 'Modern restaurant website with menu, reservations, and photo gallery', color: '#ef4444' },
-  { label: 'Portfolio', icon: BrushIcon, prompt: 'Creative portfolio for a designer with project showcase and contact form', color: '#8b5cf6' },
-  { label: 'SaaS Landing', icon: RocketLaunchIcon, prompt: 'SaaS landing page with pricing tiers, features, and signup form', color: '#3b82f6' },
-  { label: 'Blog', icon: ArticleIcon, prompt: 'Tech blog with article cards, categories, and newsletter signup', color: '#10b981' },
-  { label: 'E-commerce', icon: StorefrontIcon, prompt: 'Fashion store with product grid, cart, and checkout', color: '#f59e0b' },
+  { label: 'Restaurant', icon: RestaurantIcon, prompt: 'Modern restaurant website with menu, reservations, and photo gallery', color: '#ef4444', desc: 'Menu, bookings & gallery' },
+  { label: 'Portfolio', icon: BrushIcon, prompt: 'Creative portfolio for a designer with project showcase and contact form', color: '#8b5cf6', desc: 'Showcase your work' },
+  { label: 'SaaS Landing', icon: RocketLaunchIcon, prompt: 'SaaS landing page with pricing tiers, features, and signup form', color: '#3b82f6', desc: 'Pricing, features & signup' },
+  { label: 'Blog', icon: ArticleIcon, prompt: 'Tech blog with article cards, categories, and newsletter signup', color: '#10b981', desc: 'Articles & newsletter' },
+  { label: 'E-commerce', icon: StorefrontIcon, prompt: 'Fashion store with product grid, cart, and checkout', color: '#f59e0b', desc: 'Products, cart & checkout' },
 ]
 
 const STATS = [
@@ -278,7 +278,7 @@ const LandingFlow = () => {
   return (
     <Box sx={{
       minHeight: '100vh',
-      background: 'linear-gradient(145deg, #0a0a1a 0%, #111133 35%, #0d0d2b 65%, #0a0a1a 100%)',
+      background: 'linear-gradient(145deg, #050510 0%, #0c0c2a 25%, #111138 50%, #0c0c2a 75%, #050510 100%)',
       position: 'relative',
       overflow: 'hidden',
     }}>
@@ -290,13 +290,14 @@ const LandingFlow = () => {
         width: '50vw',
         height: '50vw',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)',
-        filter: 'blur(60px)',
+        background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%)',
+        filter: 'blur(80px)',
         pointerEvents: 'none',
         animation: 'float 20s ease-in-out infinite',
         '@keyframes float': {
-          '0%, 100%': { transform: 'translate(0, 0)' },
-          '50%': { transform: 'translate(30px, 20px)' },
+          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+          '33%': { transform: 'translate(40px, 20px) scale(1.05)' },
+          '66%': { transform: 'translate(-10px, 30px) scale(0.98)' },
         },
       }} />
       <Box sx={{
@@ -306,13 +307,30 @@ const LandingFlow = () => {
         width: '45vw',
         height: '45vw',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)',
-        filter: 'blur(60px)',
+        background: 'radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%)',
+        filter: 'blur(80px)',
         pointerEvents: 'none',
         animation: 'float2 25s ease-in-out infinite',
         '@keyframes float2': {
+          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+          '50%': { transform: 'translate(-20px, -30px) scale(1.03)' },
+        },
+      }} />
+      {/* Third accent orb - teal */}
+      <Box sx={{
+        position: 'absolute',
+        top: '40%',
+        right: '5%',
+        width: '30vw',
+        height: '30vw',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 70%)',
+        filter: 'blur(80px)',
+        pointerEvents: 'none',
+        animation: 'float3 30s ease-in-out infinite',
+        '@keyframes float3': {
           '0%, 100%': { transform: 'translate(0, 0)' },
-          '50%': { transform: 'translate(-20px, -30px)' },
+          '50%': { transform: 'translate(-30px, 20px)' },
         },
       }} />
 
@@ -320,8 +338,19 @@ const LandingFlow = () => {
       <Box sx={{
         position: 'absolute',
         inset: 0,
-        backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
+        backgroundImage: 'radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px)',
+        backgroundSize: '48px 48px',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Horizontal line accents */}
+      <Box sx={{
+        position: 'absolute',
+        top: '30%',
+        left: 0,
+        right: 0,
+        height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.06), transparent)',
         pointerEvents: 'none',
       }} />
 
@@ -331,51 +360,62 @@ const LandingFlow = () => {
           <Box sx={{
             textAlign: 'center',
             pt: { xs: 8, md: 12 },
-            pb: { xs: 4, md: 6 },
+            pb: { xs: 3, md: 5 },
           }}>
             <Chip
-              icon={<AutoAwesomeIcon sx={{ fontSize: 16 }} />}
+              icon={<AutoAwesomeIcon sx={{ fontSize: 14 }} />}
               label="AI-Powered Website Builder"
               sx={{
                 mb: 3,
-                backgroundColor: 'rgba(99,102,241,0.15)',
+                backgroundColor: 'rgba(99,102,241,0.1)',
                 color: '#a5b4fc',
-                border: '1px solid rgba(99,102,241,0.3)',
+                border: '1px solid rgba(99,102,241,0.25)',
                 fontWeight: 500,
-                fontSize: '0.8rem',
-                letterSpacing: '0.02em',
-                '& .MuiChip-icon': { color: '#a5b4fc' },
+                fontSize: '0.78rem',
+                letterSpacing: '0.04em',
+                height: 30,
+                '& .MuiChip-icon': { color: '#818cf8' },
+                '& .MuiChip-label': { px: 1.5 },
               }}
             />
             <Typography
               variant="h1"
               sx={{
-                fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
+                fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.2rem' },
                 fontWeight: 800,
-                lineHeight: 1.1,
+                lineHeight: 1.08,
                 mb: 2.5,
-                background: 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 50%, #a5b4fc 100%)',
+                background: 'linear-gradient(135deg, #ffffff 0%, #e0e7ff 40%, #c7d2fe 60%, #a5b4fc 100%)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                letterSpacing: '-0.03em',
+                letterSpacing: '-0.035em',
               }}
             >
-              Describe it. We build it.
+              Describe it.{' '}
+              <Box component="span" sx={{
+                background: 'linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #a78bfa 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}>
+                We build it.
+              </Box>
             </Typography>
             <Typography
               variant="h5"
               sx={{
-                color: 'rgba(255,255,255,0.55)',
+                color: 'rgba(255,255,255,0.5)',
                 fontWeight: 400,
-                fontSize: { xs: '1rem', sm: '1.15rem', md: '1.25rem' },
-                maxWidth: 560,
+                fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
+                maxWidth: 520,
                 mx: 'auto',
-                lineHeight: 1.6,
+                lineHeight: 1.7,
+                letterSpacing: '0.01em',
               }}
             >
               Turn your idea into a live, deployed website in under a minute.
-              Just describe what you want -- AI handles the rest.
+              Just describe what you want&mdash;AI handles the rest.
             </Typography>
           </Box>
         </Fade>
@@ -423,154 +463,213 @@ const LandingFlow = () => {
         {step === 'input' && (
           <Fade in={visible} timeout={1000}>
             <Box>
+              {/* Main input card */}
               <Box sx={{
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                position: 'relative',
                 borderRadius: 4,
-                p: { xs: 3, md: 5 },
+                p: '1px',
                 mb: 4,
+                background: 'linear-gradient(145deg, rgba(99,102,241,0.2), rgba(139,92,246,0.1), rgba(255,255,255,0.05))',
               }}>
-                <Typography variant="h5" sx={{
-                  color: '#ffffff',
-                  fontWeight: 600,
-                  mb: 0.5,
-                  fontSize: { xs: '1.2rem', md: '1.5rem' },
+                <Box sx={{
+                  backgroundColor: 'rgba(10,10,30,0.85)',
+                  backdropFilter: 'blur(24px)',
+                  borderRadius: 3.8,
+                  p: { xs: 3, md: 5 },
                 }}>
-                  What do you want to build?
-                </Typography>
-                <Typography variant="body2" sx={{
-                  color: 'rgba(255,255,255,0.45)',
-                  mb: 3,
-                  fontSize: '0.9rem',
-                }}>
-                  Describe your app, website, or tool in plain English. Be as detailed as you like.
-                </Typography>
-
-                <TextField
-                  multiline
-                  rows={4}
-                  fullWidth
-                  placeholder="A modern portfolio website for a freelance photographer with a full-screen gallery, booking form, and about section..."
-                  value={request}
-                  onChange={(e) => {
-                    if (!typingStartRef.current) typingStartRef.current = Date.now()
-                    setRequest(e.target.value)
-                  }}
-                  sx={{
-                    mb: 3,
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'rgba(0,0,0,0.3)',
-                      borderRadius: 3,
-                      color: '#ffffff',
-                      fontSize: '1rem',
-                      lineHeight: 1.6,
-                      transition: 'all 0.2s ease',
-                      '& fieldset': {
-                        borderColor: 'rgba(255,255,255,0.1)',
-                        borderWidth: 1,
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'rgba(99,102,241,0.4)',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'rgba(99,102,241,0.6)',
-                        borderWidth: 1,
-                        boxShadow: '0 0 0 3px rgba(99,102,241,0.1)',
-                      },
-                    },
-                    '& .MuiOutlinedInput-input::placeholder': {
-                      color: 'rgba(255,255,255,0.25)',
-                      opacity: 1,
-                    },
-                  }}
-                />
-
-                {/* Quick Start Templates */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="caption" sx={{
-                    color: 'rgba(255,255,255,0.35)',
-                    mb: 1.5,
-                    display: 'block',
-                    fontSize: '0.75rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    fontWeight: 600,
+                  <Typography variant="h5" sx={{
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    mb: 0.5,
+                    fontSize: { xs: '1.2rem', md: '1.5rem' },
+                    letterSpacing: '-0.01em',
                   }}>
-                    Quick start from a template
+                    What do you want to build?
                   </Typography>
-                  <Box sx={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 1.5,
+                  <Typography variant="body2" sx={{
+                    color: 'rgba(255,255,255,0.4)',
+                    mb: 3,
+                    fontSize: '0.88rem',
                   }}>
-                    {TEMPLATES.map((template) => {
-                      const IconComponent = template.icon
-                      return (
-                        <Button
-                          key={template.label}
-                          variant="outlined"
-                          size="small"
-                          startIcon={<IconComponent sx={{ fontSize: '18px !important' }} />}
-                          onClick={() => setRequest(template.prompt)}
-                          sx={{
-                            borderColor: 'rgba(255,255,255,0.1)',
-                            color: 'rgba(255,255,255,0.7)',
-                            borderRadius: 2.5,
-                            px: 2,
-                            py: 0.8,
-                            fontSize: '0.82rem',
-                            fontWeight: 500,
-                            textTransform: 'none',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                              borderColor: template.color,
-                              backgroundColor: `${template.color}15`,
-                              color: '#ffffff',
-                              transform: 'translateY(-1px)',
-                            },
-                          }}
-                        >
-                          {template.label}
-                        </Button>
-                      )
-                    })}
-                  </Box>
-                </Box>
+                    Describe your website in plain English. Be as detailed as you like.
+                  </Typography>
 
-                <Button
-                  variant="contained"
-                  size="large"
-                  fullWidth
-                  onClick={handleRequestSubmit}
-                  disabled={loading || !request.trim()}
-                  endIcon={loading ? undefined : <ArrowForwardIcon />}
-                  sx={{
-                    py: 1.8,
-                    fontSize: '1.05rem',
-                    fontWeight: 600,
+                  <Box sx={{
+                    position: 'relative',
+                    mb: 3,
                     borderRadius: 3,
-                    textTransform: 'none',
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    boxShadow: '0 4px 20px rgba(99,102,241,0.3)',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                      boxShadow: '0 6px 30px rgba(99,102,241,0.4)',
-                      transform: 'translateY(-1px)',
+                    p: '1px',
+                    background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(255,255,255,0.06))',
+                    transition: 'all 0.3s ease',
+                    '&:focus-within': {
+                      background: 'linear-gradient(135deg, rgba(99,102,241,0.4), rgba(139,92,246,0.3), rgba(99,102,241,0.15))',
+                      boxShadow: '0 0 24px rgba(99,102,241,0.12), 0 0 48px rgba(99,102,241,0.06)',
                     },
-                    '&.Mui-disabled': {
-                      background: 'rgba(99,102,241,0.2)',
+                  }}>
+                    <TextField
+                      multiline
+                      rows={5}
+                      fullWidth
+                      placeholder="A modern portfolio website for a freelance photographer with a full-screen gallery, booking form, and about section..."
+                      value={request}
+                      onChange={(e) => {
+                        if (!typingStartRef.current) typingStartRef.current = Date.now()
+                        setRequest(e.target.value)
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          backgroundColor: 'rgba(5,5,20,0.7)',
+                          borderRadius: 2.8,
+                          color: '#ffffff',
+                          fontSize: '1rem',
+                          lineHeight: 1.7,
+                          '& fieldset': {
+                            border: 'none',
+                          },
+                          '&:hover fieldset': {
+                            border: 'none',
+                          },
+                          '&.Mui-focused fieldset': {
+                            border: 'none',
+                          },
+                        },
+                        '& .MuiOutlinedInput-input::placeholder': {
+                          color: 'rgba(255,255,255,0.22)',
+                          opacity: 1,
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Quick Start Templates */}
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant="caption" sx={{
                       color: 'rgba(255,255,255,0.3)',
-                    },
-                  }}
-                >
-                  {loading ? (
-                    <CircularProgress size={24} sx={{ color: 'rgba(255,255,255,0.7)' }} />
-                  ) : (
-                    'Start Building'
-                  )}
-                </Button>
+                      mb: 2,
+                      display: 'block',
+                      fontSize: '0.7rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.1em',
+                      fontWeight: 600,
+                    }}>
+                      Or start from a template
+                    </Typography>
+                    <Box sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
+                      gap: 1.5,
+                    }}>
+                      {TEMPLATES.map((template) => {
+                        const IconComponent = template.icon
+                        const isSelected = request === template.prompt
+                        return (
+                          <Box
+                            key={template.label}
+                            onClick={() => setRequest(template.prompt)}
+                            sx={{
+                              cursor: 'pointer',
+                              borderRadius: 3,
+                              p: 2,
+                              textAlign: 'center',
+                              backgroundColor: isSelected ? `${template.color}18` : 'rgba(255,255,255,0.03)',
+                              border: `1px solid ${isSelected ? `${template.color}40` : 'rgba(255,255,255,0.06)'}`,
+                              transition: 'all 0.2s ease',
+                              '&:hover': {
+                                backgroundColor: `${template.color}12`,
+                                borderColor: `${template.color}30`,
+                                transform: 'translateY(-2px)',
+                                boxShadow: `0 4px 16px ${template.color}15`,
+                              },
+                            }}
+                          >
+                            <Box sx={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 2.5,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              mx: 'auto',
+                              mb: 1.2,
+                              backgroundColor: `${template.color}15`,
+                              border: `1px solid ${template.color}25`,
+                            }}>
+                              <IconComponent sx={{ fontSize: 20, color: template.color }} />
+                            </Box>
+                            <Typography sx={{
+                              color: 'rgba(255,255,255,0.85)',
+                              fontSize: '0.82rem',
+                              fontWeight: 600,
+                              mb: 0.3,
+                              lineHeight: 1.2,
+                            }}>
+                              {template.label}
+                            </Typography>
+                            <Typography sx={{
+                              color: 'rgba(255,255,255,0.3)',
+                              fontSize: '0.68rem',
+                              lineHeight: 1.3,
+                              display: { xs: 'none', sm: 'block' },
+                            }}>
+                              {template.desc}
+                            </Typography>
+                          </Box>
+                        )
+                      })}
+                    </Box>
+                  </Box>
+
+                  <Button
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    onClick={handleRequestSubmit}
+                    disabled={loading || !request.trim()}
+                    endIcon={loading ? undefined : <ArrowForwardIcon />}
+                    sx={{
+                      py: 2,
+                      fontSize: '1.08rem',
+                      fontWeight: 600,
+                      borderRadius: 3,
+                      textTransform: 'none',
+                      background: 'linear-gradient(135deg, #6366f1 0%, #7c3aed 50%, #8b5cf6 100%)',
+                      boxShadow: '0 4px 24px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.1)',
+                      transition: 'all 0.25s ease',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)',
+                        opacity: 0,
+                        transition: 'opacity 0.25s ease',
+                      },
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #4f46e5 0%, #6d28d9 50%, #7c3aed 100%)',
+                        boxShadow: '0 8px 32px rgba(99,102,241,0.45), inset 0 1px 0 rgba(255,255,255,0.15)',
+                        transform: 'translateY(-1px)',
+                        '&::before': {
+                          opacity: 1,
+                        },
+                      },
+                      '&:active': {
+                        transform: 'translateY(0)',
+                      },
+                      '&.Mui-disabled': {
+                        background: 'rgba(99,102,241,0.15)',
+                        color: 'rgba(255,255,255,0.25)',
+                        boxShadow: 'none',
+                      },
+                    }}
+                  >
+                    {loading ? (
+                      <CircularProgress size={24} sx={{ color: 'rgba(255,255,255,0.7)' }} />
+                    ) : (
+                      'Start Building'
+                    )}
+                  </Button>
+                </Box>
               </Box>
 
               {/* Social proof / trust signals */}
@@ -578,36 +677,63 @@ const LandingFlow = () => {
                 <Box sx={{
                   display: 'flex',
                   justifyContent: 'center',
-                  gap: { xs: 3, md: 6 },
+                  alignItems: 'center',
+                  gap: { xs: 2, md: 1 },
                   pb: 8,
+                  flexDirection: { xs: 'column', sm: 'row' },
                 }}>
-                  {STATS.map((stat) => {
+                  {STATS.map((stat, index) => {
                     const IconComponent = stat.icon
                     return (
-                      <Box key={stat.label} sx={{ textAlign: 'center' }}>
+                      <Box key={stat.label} sx={{ display: 'flex', alignItems: 'center', gap: 0 }}>
                         <Box sx={{
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 0.8,
-                          mb: 0.5,
+                          gap: 1.2,
+                          px: { xs: 2.5, md: 3 },
+                          py: 1.5,
+                          borderRadius: 3,
+                          backgroundColor: 'rgba(255,255,255,0.025)',
+                          border: '1px solid rgba(255,255,255,0.04)',
                         }}>
-                          <IconComponent sx={{ fontSize: 18, color: 'rgba(165,180,252,0.6)' }} />
-                          <Typography variant="h6" sx={{
-                            color: '#ffffff',
-                            fontWeight: 700,
-                            fontSize: { xs: '1.1rem', md: '1.3rem' },
+                          <Box sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(99,102,241,0.1)',
                           }}>
-                            {stat.value}
-                          </Typography>
+                            <IconComponent sx={{ fontSize: 16, color: '#818cf8' }} />
+                          </Box>
+                          <Box>
+                            <Typography sx={{
+                              color: '#ffffff',
+                              fontWeight: 700,
+                              fontSize: '1.1rem',
+                              lineHeight: 1.2,
+                            }}>
+                              {stat.value}
+                            </Typography>
+                            <Typography sx={{
+                              color: 'rgba(255,255,255,0.35)',
+                              fontSize: '0.7rem',
+                              letterSpacing: '0.02em',
+                            }}>
+                              {stat.label}
+                            </Typography>
+                          </Box>
                         </Box>
-                        <Typography variant="caption" sx={{
-                          color: 'rgba(255,255,255,0.35)',
-                          fontSize: '0.75rem',
-                          letterSpacing: '0.03em',
-                        }}>
-                          {stat.label}
-                        </Typography>
+                        {index < STATS.length - 1 && (
+                          <Box sx={{
+                            width: '1px',
+                            height: 24,
+                            backgroundColor: 'rgba(255,255,255,0.06)',
+                            mx: 1,
+                            display: { xs: 'none', sm: 'block' },
+                          }} />
+                        )}
                       </Box>
                     )
                   })}
@@ -621,64 +747,70 @@ const LandingFlow = () => {
         {step === 'email' && (
           <Fade in timeout={600}>
             <Box sx={{
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              position: 'relative',
               borderRadius: 4,
-              p: { xs: 3, md: 5 },
-              textAlign: 'center',
+              p: '1px',
               maxWidth: 480,
               mx: 'auto',
+              background: 'linear-gradient(145deg, rgba(99,102,241,0.2), rgba(255,255,255,0.05))',
             }}>
-              <Typography variant="h5" sx={{ color: '#ffffff', fontWeight: 600, mb: 1 }}>
-                Enter your email to create your account
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 3 }}>
-                We'll send you a magic link to access your project dashboard.
-              </Typography>
+              <Box sx={{
+                backgroundColor: 'rgba(10,10,30,0.85)',
+                backdropFilter: 'blur(24px)',
+                borderRadius: 3.8,
+                p: { xs: 3, md: 5 },
+                textAlign: 'center',
+              }}>
+                <Typography variant="h5" sx={{ color: '#ffffff', fontWeight: 600, mb: 1 }}>
+                  Enter your email to create your account
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 3 }}>
+                  We'll send you a magic link to access your project dashboard.
+                </Typography>
 
-              <TextField
-                type="email"
-                fullWidth
-                placeholder="you@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                sx={{
-                  mb: 3,
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'rgba(0,0,0,0.3)',
+                <TextField
+                  type="email"
+                  fullWidth
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  sx={{
+                    mb: 3,
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'rgba(0,0,0,0.3)',
+                      borderRadius: 3,
+                      color: '#ffffff',
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                      '&:hover fieldset': { borderColor: 'rgba(99,102,241,0.4)' },
+                      '&.Mui-focused fieldset': { borderColor: 'rgba(99,102,241,0.6)', borderWidth: 1 },
+                    },
+                    '& .MuiOutlinedInput-input::placeholder': {
+                      color: 'rgba(255,255,255,0.25)',
+                      opacity: 1,
+                    },
+                  }}
+                />
+
+                <Button
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  onClick={handleEmailSubmit}
+                  disabled={loading || !email.trim()}
+                  sx={{
+                    py: 1.5,
+                    fontSize: '1rem',
+                    fontWeight: 600,
                     borderRadius: 3,
-                    color: '#ffffff',
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
-                    '&:hover fieldset': { borderColor: 'rgba(99,102,241,0.4)' },
-                    '&.Mui-focused fieldset': { borderColor: 'rgba(99,102,241,0.6)', borderWidth: 1 },
-                  },
-                  '& .MuiOutlinedInput-input::placeholder': {
-                    color: 'rgba(255,255,255,0.25)',
-                    opacity: 1,
-                  },
-                }}
-              />
-
-              <Button
-                variant="contained"
-                size="large"
-                fullWidth
-                onClick={handleEmailSubmit}
-                disabled={loading || !email.trim()}
-                sx={{
-                  py: 1.5,
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  '&:hover': { background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' },
-                  '&.Mui-disabled': { background: 'rgba(99,102,241,0.2)', color: 'rgba(255,255,255,0.3)' },
-                }}
-              >
-                {loading ? 'Sending...' : 'Send Magic Link'}
-              </Button>
+                    textTransform: 'none',
+                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    '&:hover': { background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' },
+                    '&.Mui-disabled': { background: 'rgba(99,102,241,0.2)', color: 'rgba(255,255,255,0.3)' },
+                  }}
+                >
+                  {loading ? 'Sending...' : 'Send Magic Link'}
+                </Button>
+              </Box>
             </Box>
           </Fade>
         )}
@@ -687,55 +819,61 @@ const LandingFlow = () => {
         {step === 'verify' && (
           <Fade in={step === 'verify'}>
             <Box sx={{
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              position: 'relative',
               borderRadius: 4,
-              p: { xs: 3, md: 5 },
-              textAlign: 'center',
+              p: '1px',
               maxWidth: 480,
               mx: 'auto',
+              background: 'linear-gradient(145deg, rgba(99,102,241,0.2), rgba(255,255,255,0.05))',
             }}>
-              <Box sx={{ mb: 3 }}>
-                <CircularProgress size={48} sx={{ color: '#818cf8' }} />
-              </Box>
-              <Typography variant="h5" sx={{ color: '#ffffff', fontWeight: 600, mb: 1 }}>
-                Check your email
-              </Typography>
-              <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mb: 2 }}>
-                We sent a magic link to <strong>{email}</strong>
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', mb: 3 }}>
-                Click the link in your email to start building your app.
-              </Typography>
+              <Box sx={{
+                backgroundColor: 'rgba(10,10,30,0.85)',
+                backdropFilter: 'blur(24px)',
+                borderRadius: 3.8,
+                p: { xs: 3, md: 5 },
+                textAlign: 'center',
+              }}>
+                <Box sx={{ mb: 3 }}>
+                  <CircularProgress size={48} sx={{ color: '#818cf8' }} />
+                </Box>
+                <Typography variant="h5" sx={{ color: '#ffffff', fontWeight: 600, mb: 1 }}>
+                  Check your email
+                </Typography>
+                <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mb: 2 }}>
+                  We sent a magic link to <strong>{email}</strong>
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', mb: 3 }}>
+                  Click the link in your email to start building your app.
+                </Typography>
 
-              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={handleResendEmail}
-                  disabled={resending}
-                  sx={{
-                    borderColor: 'rgba(255,255,255,0.15)',
-                    color: 'rgba(255,255,255,0.7)',
-                    textTransform: 'none',
-                    '&:hover': { borderColor: 'rgba(99,102,241,0.5)', backgroundColor: 'rgba(99,102,241,0.1)' },
-                  }}
-                >
-                  {resending ? 'Sending...' : 'Resend Email'}
-                </Button>
-                <Button
-                  variant="text"
-                  size="small"
-                  onClick={() => setEmailDialogOpen(true)}
-                  sx={{
-                    color: 'rgba(255,255,255,0.5)',
-                    textTransform: 'none',
-                    '&:hover': { color: '#a5b4fc' },
-                  }}
-                >
-                  Change Email
-                </Button>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={handleResendEmail}
+                    disabled={resending}
+                    sx={{
+                      borderColor: 'rgba(255,255,255,0.15)',
+                      color: 'rgba(255,255,255,0.7)',
+                      textTransform: 'none',
+                      '&:hover': { borderColor: 'rgba(99,102,241,0.5)', backgroundColor: 'rgba(99,102,241,0.1)' },
+                    }}
+                  >
+                    {resending ? 'Sending...' : 'Resend Email'}
+                  </Button>
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => setEmailDialogOpen(true)}
+                    sx={{
+                      color: 'rgba(255,255,255,0.5)',
+                      textTransform: 'none',
+                      '&:hover': { color: '#a5b4fc' },
+                    }}
+                  >
+                    Change Email
+                  </Button>
+                </Box>
               </Box>
             </Box>
           </Fade>
