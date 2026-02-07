@@ -61,6 +61,12 @@ const Pricing = () => {
 
   useEffect(() => {
     const fetchSubscription = async () => {
+      const token = localStorage.getItem('access_token')
+      if (!token) {
+        setCurrentPlan('free')
+        setLoading(false)
+        return
+      }
       try {
         const response = await api.get('/api/billing/subscription/')
         setCurrentPlan(response.data.plan || 'free')
