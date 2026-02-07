@@ -27,6 +27,7 @@ from .views import (
     AllInputsView,
     VisualEditView,
     AgentModeView,
+    SectionOperationsView,
 )
 
 router = DefaultRouter()
@@ -57,6 +58,7 @@ urlpatterns = [
     path('modify/', ModifyBuildView.as_view(), name='modify-build'),
     path('visual-edit/', VisualEditView.as_view(), name='visual-edit'),
     path('agent-mode/', AgentModeView.as_view(), name='agent-mode'),
+    path('sections/', SectionOperationsView.as_view(), name='section-operations'),
 
     # Visual dashboard
     path('admin/funnel/', FunnelDashboardView.as_view(), name='funnel-dashboard'),

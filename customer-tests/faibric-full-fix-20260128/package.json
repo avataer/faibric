@@ -1,0 +1,12 @@
+{
+  "name": "faibric-full-fix-test",
+  "version": "1.0.0",
+  "description": "Customer test for Faibric full fix",
+  "main": "customer_test.js",
+  "scripts": {
+    "test": "node customer_test.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  }
+}

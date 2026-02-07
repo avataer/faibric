@@ -4,12 +4,10 @@ from django.db import models
 class Template(models.Model):
     """Pre-built app templates"""
     CATEGORY_CHOICES = [
-        ('dashboard', 'Dashboard'),
-        ('crud', 'CRUD Application'),
-        ('blog', 'Blog/CMS'),
+        ('internal_ops', 'Internal Ops Dashboards'),
+        ('client_portal', 'Client Portals'),
+        ('admin_panel', 'Admin Panels'),
         ('ecommerce', 'E-commerce'),
-        ('social', 'Social Network'),
-        ('tool', 'Utility Tool'),
     ]
     
     name = models.CharField(max_length=200)

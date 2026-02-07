@@ -1300,6 +1300,59 @@ ALWAYS create stunning landing pages with hero section, features, testimonials, 
 """
 
 
+# Section-aware prompts for drag-and-drop section editor
+SECTION_TYPES = [
+    'hero', 'features', 'pricing', 'testimonials', 'contact',
+    'footer', 'gallery', 'cta', 'team', 'faq',
+]
+
+GENERATE_SECTION_PROMPT = """You are generating a single HTML section for a website builder.
+The user wants to add a new {section_type} section to their page.
+
+Generate ONLY the HTML for this single section. Use Tailwind CSS classes for styling.
+The section should be wrapped in a <section> tag with a unique id attribute.
+
+Requirements:
+- Use modern, professional design
+- Include realistic placeholder content (not Lorem ipsum)
+- Use Tailwind CSS utility classes
+- Make it responsive (mobile-friendly)
+- Include appropriate semantic HTML elements
+- The section id MUST be: section-{section_id}
+
+{context}
+
+Return ONLY the raw HTML for this one section. No wrapping html/body tags.
+No markdown, no backticks, no explanations."""
+
+REMOVE_SECTION_PROMPT = """You are modifying an existing HTML page for a website builder.
+The user wants to remove a specific section from their page.
+
+CURRENT PAGE HTML:
+{current_html}
+
+SECTION TO REMOVE: The section with id="{section_id}"
+
+Remove ONLY this section from the HTML. Keep everything else exactly as-is.
+Do not modify any other sections or content.
+
+Return the complete HTML with the section removed. No markdown, no backticks, no explanations."""
+
+REORDER_SECTIONS_PROMPT = """You are modifying an existing HTML page for a website builder.
+The user wants to reorder the sections on their page.
+
+CURRENT PAGE HTML:
+{current_html}
+
+NEW SECTION ORDER (by section id):
+{section_order}
+
+Rearrange the sections to match the specified order. Keep each section's content exactly as-is.
+Only change the order in which sections appear in the HTML.
+
+Return the complete reordered HTML. No markdown, no backticks, no explanations."""
+
+
 def get_prompt_for_request(user_prompt: str) -> str:
     """Get the appropriate prompt with hints based on user request"""
     prompt = get_generate_prompt(user_prompt)

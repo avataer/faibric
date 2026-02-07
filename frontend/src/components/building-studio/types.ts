@@ -19,6 +19,7 @@ export interface BuildStatusResponse {
   status: string
   build_progress?: number
   deployment_url?: string
+  project_id?: string
   events?: BuildEvent[]
 }
 

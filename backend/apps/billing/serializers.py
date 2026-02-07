@@ -112,4 +112,5 @@ class AttachPaymentMethodSerializer(serializers.Serializer):
 class ChangePlanSerializer(serializers.Serializer):
     """Request to change subscription plan."""
     plan = serializers.ChoiceField(choices=['free', 'starter', 'pro', 'enterprise'])
+    payment_method_id = serializers.CharField(required=False, allow_blank=True)
 

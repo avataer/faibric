@@ -18,8 +18,11 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import EditIcon from '@mui/icons-material/Edit'
 import TouchAppIcon from '@mui/icons-material/TouchApp'
+import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize'
+import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
 import ProgressivePreview from '../ProgressivePreview'
 import PropertyPanel from '../builder/PropertyPanel'
+import type { Section } from '../builder/sectionTypes'
 
 interface PreviewPanelProps {
   deploymentUrl: string | null
@@ -27,8 +30,12 @@ interface PreviewPanelProps {
   buildPhase: string
   initialRequest: string
   iframeKey: number
+  aiUnavailable?: boolean
   onRefresh: () => void
   onEditRequest?: (editRequest: string) => void
+  sections?: Section[]
+  sectionEditorOpen?: boolean
+  onToggleSectionEditor?: () => void
 }
 
 interface PropertyValue {
@@ -51,10 +58,15 @@ export function PreviewPanel({
   buildPhase,
   initialRequest,
   iframeKey,
+  aiUnavailable = false,
   onRefresh,
   onEditRequest,
+  sections = [],
+  sectionEditorOpen = false,
+  onToggleSectionEditor,
 }: PreviewPanelProps) {
   const [editMode, setEditMode] = useState(false)
+  const [sectionEditMode, setSectionEditMode] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editText, setEditText] = useState('')
   const [clickPosition, setClickPosition] = useState<{ x: number; y: number } | null>(null)
@@ -102,6 +114,23 @@ export function PreviewPanel({
       )
     }
   }, [editMode, deploymentUrl])
+
+  // Send section data to iframe when section edit mode changes
+  useEffect(() => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      if (sectionEditMode) {
+        iframeRef.current.contentWindow.postMessage(
+          { type: 'enable_section_editing', sections },
+          '*'
+        )
+      } else {
+        iframeRef.current.contentWindow.postMessage(
+          { type: 'disable_section_editing' },
+          '*'
+        )
+      }
+    }
+  }, [sectionEditMode, sections])
 
   // Apply edit via PropertyPanel
   const handlePropertyApply = useCallback(async (newValue: PropertyValue) => {
@@ -217,6 +246,21 @@ export function PreviewPanel({
               EDIT MODE - Click anywhere to modify
             </Typography>
           )}
+          {sectionEditMode && (
+            <Typography
+              variant="caption"
+              sx={{
+                bgcolor: '#7c3aed',
+                color: 'white',
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                fontWeight: 600,
+              }}
+            >
+              SECTION MODE - Boundaries visible
+            </Typography>
+          )}
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           {deploymentUrl && (
@@ -234,6 +278,48 @@ export function PreviewPanel({
                 <TouchAppIcon sx={{ color: editMode ? '#2563eb' : 'inherit' }} />
               </ToggleButton>
             </Tooltip>
+          )}
+          {deploymentUrl && (
+            <Tooltip title={sectionEditMode ? "Exit Section Edit Mode" : "Section Edit Mode"}>
+              <ToggleButton
+                value="sectionEdit"
+                selected={sectionEditMode}
+                onChange={() => setSectionEditMode(!sectionEditMode)}
+                size="small"
+                sx={{
+                  border: sectionEditMode ? '2px solid #7c3aed' : '1px solid #e0e0e0',
+                  bgcolor: sectionEditMode ? '#f5f3ff' : 'transparent',
+                }}
+              >
+                <ViewQuiltIcon sx={{ color: sectionEditMode ? '#7c3aed' : 'inherit' }} />
+              </ToggleButton>
+            </Tooltip>
+          )}
+          {onToggleSectionEditor && (
+            <Button
+              size="small"
+              variant={sectionEditorOpen ? "contained" : "outlined"}
+              onClick={onToggleSectionEditor}
+              startIcon={<DashboardCustomizeIcon />}
+              sx={{
+                textTransform: 'none',
+                fontSize: '0.75rem',
+                minWidth: 'auto',
+                px: 1.5,
+                py: 0.5,
+                ...(sectionEditorOpen ? {
+                  backgroundColor: '#1976d2',
+                  color: '#ffffff',
+                  '&:hover': { backgroundColor: '#1565c0' },
+                } : {
+                  borderColor: '#e0e0e0',
+                  color: 'inherit',
+                  '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+                }),
+              }}
+            >
+              {sectionEditorOpen ? "Close Editor" : "Section Editor"}
+            </Button>
           )}
           <IconButton size="small" onClick={onRefresh} title="Refresh preview">
             <RefreshIcon />
@@ -305,6 +391,22 @@ export function PreviewPanel({
           />
         )}
 
+        {/* Section edit mode border indicator */}
+        {sectionEditMode && deploymentUrl && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 5,
+              border: '3px dashed #7c3aed',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+
         {deploymentUrl ? (
           <iframe
             ref={iframeRef}
@@ -328,6 +430,34 @@ export function PreviewPanel({
             title="Your Deployed Website"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
           />
+        ) : aiUnavailable ? (
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            gap: 3,
+            p: 4,
+          }}>
+            <DashboardCustomizeIcon sx={{ fontSize: 64, color: '#94a3b8' }} />
+            <Typography variant="h5" fontWeight={600} color="text.primary" textAlign="center">
+              AI build service is currently unavailable
+            </Typography>
+            <Typography variant="body1" color="text.secondary" textAlign="center" maxWidth={480}>
+              You can use the Section Editor to manually build your page by adding, reordering, and customizing sections. Click the Section Editor button above to get started.
+            </Typography>
+            {onToggleSectionEditor && !sectionEditorOpen && (
+              <Button
+                variant="contained"
+                startIcon={<DashboardCustomizeIcon />}
+                onClick={onToggleSectionEditor}
+                sx={{ textTransform: 'none', mt: 1 }}
+              >
+                Open Section Editor
+              </Button>
+            )}
+          </Box>
         ) : (
           <ProgressivePreview
             progress={buildProgress}

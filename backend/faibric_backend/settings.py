@@ -317,6 +317,11 @@ STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
 STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', '')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
 
+# Stripe Price IDs (from Stripe Dashboard)
+STRIPE_PRICE_STARTER = os.getenv('STRIPE_PRICE_STARTER', 'price_starter_monthly')
+STRIPE_PRICE_PROFESSIONAL = os.getenv('STRIPE_PRICE_PROFESSIONAL', 'price_professional_monthly')
+STRIPE_PRICE_ENTERPRISE = os.getenv('STRIPE_PRICE_ENTERPRISE', 'price_enterprise_monthly')
+
 # PayPal Configuration  
 PAYPAL_CLIENT_ID = os.getenv('PAYPAL_CLIENT_ID', '')
 PAYPAL_SECRET = os.getenv('PAYPAL_SECRET', '')

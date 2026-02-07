@@ -1,11 +1,13 @@
-import { Drawer, List, ListItem, ListItemButton, ListItemText, Box, Typography } from '@mui/material'
+import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Box, Typography } from '@mui/material'
 import { Link, useLocation } from 'react-router-dom'
+import ViewModuleIcon from '@mui/icons-material/ViewModule'
 
 const drawerWidth = 240
 
 const menuItems = [
   { text: 'Dashboard', path: '/dashboard' },
   { text: 'My Projects', path: '/dashboard' },
+  { text: 'Templates', path: '/templates', icon: ViewModuleIcon },
   { text: 'Account', path: '/account' },
   { text: 'Panel Builder', path: '/panel-builder' },
 ]
@@ -48,13 +50,18 @@ const Sidebar = () => {
                 },
               }}
             >
-              <ListItemText 
-                primary={item.text} 
-                sx={{ 
-                  '& .MuiListItemText-primary': { 
+              {'icon' in item && item.icon && (
+                <ListItemIcon sx={{ minWidth: 36, color: '#000000' }}>
+                  <item.icon />
+                </ListItemIcon>
+              )}
+              <ListItemText
+                primary={item.text}
+                sx={{
+                  '& .MuiListItemText-primary': {
                     color: '#000000',
                     fontWeight: location.pathname === item.path ? 600 : 400,
-                  } 
+                  }
                 }}
               />
             </ListItemButton>

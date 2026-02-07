@@ -43,6 +43,26 @@ class GoldenTemplate:
                 placeholder = f"{{{{{key}}}}}"
                 code = code.replace(placeholder, str(value))
 
+        # SAFETY NET: Replace any remaining array placeholders with empty arrays
+        # This prevents "SyntaxError: Unexpected token" from {{@cards}} etc.
+        import re
+        remaining_arrays = re.findall(r'\{\{@(\w+)\}\}', code)
+        if remaining_arrays:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"[TEMPLATE] Unresolved array placeholders: {remaining_arrays}")
+            for arr_name in remaining_arrays:
+                code = code.replace(f"{{{{@{arr_name}}}}}", "[]")
+
+        # SAFETY NET: Replace any remaining string placeholders with empty strings
+        remaining_strings = re.findall(r'\{\{(\w+)\}\}', code)
+        if remaining_strings:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"[TEMPLATE] Unresolved string placeholders: {remaining_strings}")
+            for str_name in remaining_strings:
+                code = code.replace(f"{{{{{str_name}}}}}", '""')
+
         return code
 
 

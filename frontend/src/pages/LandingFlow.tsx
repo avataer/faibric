@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box,
   Container,
@@ -33,6 +34,7 @@ interface SessionData {
 }
 
 const LandingFlow = () => {
+  const navigate = useNavigate()
   // Check for ?clear query param to force-clear session
   const shouldClear = typeof window !== 'undefined' && window.location.search.includes('clear')
   
@@ -43,6 +45,7 @@ const LandingFlow = () => {
   const [step, setStep] = useState<FlowStep>(savedState?.step || 'input')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   
   // Form data
   const [request, setRequest] = useState(savedState?.request || '')
@@ -145,7 +148,12 @@ const LandingFlow = () => {
       setSessionToken(res.data.session_token)
       setStep('building')  // Skip email/verify, go directly to building
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to submit request')
+      if (err.response?.status === 402) {
+        setShowUpgradePrompt(true)
+        setError(err.response?.data?.message || 'You have reached your plan limit. Upgrade to continue building.')
+      } else {
+        setError(err.response?.data?.error || 'Failed to submit request')
+      }
     } finally {
       setLoading(false)
     }
@@ -260,7 +268,21 @@ const LandingFlow = () => {
 
         {/* Stepper hidden in dev mode */}
 
-        {error && (
+        {showUpgradePrompt && (
+          <Card sx={{ mb: 3, p: 3, textAlign: 'center', border: '2px solid #1976d2' }}>
+            <Typography variant="h6" sx={{ color: '#000000', fontWeight: 600, mb: 1 }}>
+              Plan Limit Reached
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#374151', mb: 2 }}>
+              {error}
+            </Typography>
+            <Button variant="contained" onClick={() => navigate('/pricing')}>
+              View Pricing Plans
+            </Button>
+          </Card>
+        )}
+
+        {error && !showUpgradePrompt && (
           <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
         )}
 

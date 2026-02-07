@@ -63,12 +63,26 @@ const Dashboard = () => {
         <Typography variant="h4" sx={{ color: '#000000', fontWeight: 600 }}>
           My Projects
         </Typography>
-        <Button
-          variant="contained"
-          onClick={() => navigate('/create')}
-        >
-          New Project
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/pricing')}
+          >
+            Pricing
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/templates')}
+          >
+            Browse Templates
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/create')}
+          >
+            New Project
+          </Button>
+        </Box>
       </Box>
 
       {projects.length === 0 ? (

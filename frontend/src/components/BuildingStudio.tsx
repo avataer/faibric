@@ -1,10 +1,13 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Box } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import { api } from '../services/api'
 import { useBuildStatus } from '../hooks/useBuildStatus'
 import { useBuildProgress } from '../hooks/useBuildProgress'
 import { useMessages } from '../hooks/useMessages'
 import { ChatPanel, PreviewPanel, BuildingStudioProps } from './building-studio'
+import { SectionLibrary, DragDropSectionEditor } from './builder'
+import { SECTION_TYPES } from './builder/sectionTypes'
+import type { Section } from './builder/sectionTypes'
 
 interface ModelConfig {
   key: string
@@ -22,6 +25,11 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
   const [models, setModels] = useState<ModelConfig[]>([])
   const [selectedModel, setSelectedModel] = useState<string>('')
   const [modelsLoading, setModelsLoading] = useState(true)
+
+  // Section editor state
+  const [sectionEditorOpen, setSectionEditorOpen] = useState(false)
+  const [sections, setSections] = useState<Section[]>([])
+  const [sectionLibraryOpen, setSectionLibraryOpen] = useState(false)
 
   // Fetch available models on mount
   useEffect(() => {
@@ -60,7 +68,9 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     isBuilding,
     buildPhase,
     deploymentUrl,
+    projectId,
     targetProgress,
+    aiUnavailable,
     stopBuilding,
     resetForNewBuild,
   } = useBuildStatus({
@@ -131,6 +141,104 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
     setIframeKey(prev => prev + 1)
   }, [])
 
+  // Section operation handlers
+  const handleAddSection = useCallback(async (sectionType: string) => {
+    try {
+      const res = await api.post('/api/onboarding/sections/', {
+        session_token: sessionToken,
+        project_id: projectId || undefined,
+        action: 'add_section',
+        section_type: sectionType,
+      })
+      if (res.data.success) {
+        const typeDef = SECTION_TYPES.find(t => t.type === sectionType)
+        const newSection: Section = {
+          id: res.data.section_id,
+          type: res.data.section_type,
+          label: typeDef?.label || sectionType.charAt(0).toUpperCase() + sectionType.slice(1),
+          html: res.data.generated_html,
+        }
+        setSections(prev => [...prev, newSection])
+      }
+      setSectionLibraryOpen(false)
+      setIframeKey(prev => prev + 1)
+      addSystemMessage(`Added ${sectionType} section`)
+    } catch (err) {
+      console.error('Failed to add section:', err)
+      addErrorMessage('Failed to add section. Please try again.')
+    }
+  }, [sessionToken, projectId, addSystemMessage, addErrorMessage])
+
+  const handleRemoveSection = useCallback(async (sectionId: string) => {
+    const section = sections.find(s => s.id === sectionId)
+    try {
+      const res = await api.post('/api/onboarding/sections/', {
+        session_token: sessionToken,
+        project_id: projectId || undefined,
+        action: 'remove_section',
+        section_id: sectionId,
+      })
+      if (res.data.success) {
+        setSections(prev => prev.filter(s => s.id !== sectionId))
+      }
+      setIframeKey(prev => prev + 1)
+      addSystemMessage(`Removed ${section?.label || 'section'}`)
+    } catch (err) {
+      console.error('Failed to remove section:', err)
+      addErrorMessage('Failed to remove section. Please try again.')
+    }
+  }, [sessionToken, projectId, sections, addSystemMessage, addErrorMessage])
+
+  const handleReorderSections = useCallback(async (fromIndex: number, toIndex: number) => {
+    const reordered = [...sections]
+    const [moved] = reordered.splice(fromIndex, 1)
+    reordered.splice(toIndex, 0, moved)
+    setSections(reordered)
+    try {
+      await api.post('/api/onboarding/sections/', {
+        session_token: sessionToken,
+        project_id: projectId || undefined,
+        action: 'reorder_sections',
+        section_ids: reordered.map(s => s.id),
+      })
+      setIframeKey(prev => prev + 1)
+      addSystemMessage('Reordered sections')
+    } catch (err) {
+      console.error('Failed to reorder sections:', err)
+      addErrorMessage('Failed to reorder sections. Please try again.')
+    }
+  }, [sessionToken, projectId, sections, addSystemMessage, addErrorMessage])
+
+  const handleDuplicateSection = useCallback(async (sectionId: string) => {
+    const section = sections.find(s => s.id === sectionId)
+    try {
+      const res = await api.post('/api/onboarding/sections/', {
+        session_token: sessionToken,
+        project_id: projectId || undefined,
+        action: 'duplicate_section',
+        section_id: sectionId,
+      })
+      if (res.data.success && section) {
+        const newSection: Section = {
+          id: res.data.new_section_id,
+          type: section.type,
+          label: `${section.label} (Copy)`,
+        }
+        const idx = sections.findIndex(s => s.id === sectionId)
+        setSections(prev => {
+          const updated = [...prev]
+          updated.splice(idx + 1, 0, newSection)
+          return updated
+        })
+      }
+      setIframeKey(prev => prev + 1)
+      addSystemMessage(`Duplicated ${section?.label || 'section'}`)
+    } catch (err) {
+      console.error('Failed to duplicate section:', err)
+      addErrorMessage('Failed to duplicate section. Please try again.')
+    }
+  }, [sessionToken, projectId, sections, addSystemMessage, addErrorMessage])
+
   // Retry handler - resends the last user request
   const handleRetry = useCallback(async () => {
     // Find the last user message (before any errors)
@@ -186,9 +294,9 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
         buildPhase={buildPhase}
         initialRequest={initialRequest}
         iframeKey={iframeKey}
+        aiUnavailable={aiUnavailable}
         onRefresh={handleRefresh}
         onEditRequest={(editRequest) => {
-          // Use visual edit request as input and send it
           addUserMessage(editRequest)
           api.post('/api/onboarding/modify/', {
             session_token: sessionToken,
@@ -206,6 +314,43 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
             addErrorMessage('Failed to apply visual edit. Please try again.')
           })
         }}
+        sections={sections}
+        sectionEditorOpen={sectionEditorOpen}
+        onToggleSectionEditor={() => setSectionEditorOpen(prev => !prev)}
+      />
+      {sectionEditorOpen && (
+        <Box sx={{
+          width: 280,
+          flexShrink: 0,
+          borderLeft: '1px solid #e5e7eb',
+          backgroundColor: '#ffffff',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}>
+          <Box sx={{
+            p: 2,
+            borderBottom: '1px solid #e5e7eb',
+          }}>
+            <Typography variant="subtitle2" fontWeight={600}>
+              Sections
+            </Typography>
+          </Box>
+          <Box sx={{ flex: 1, overflow: 'auto' }}>
+            <DragDropSectionEditor
+              sections={sections}
+              onReorder={handleReorderSections}
+              onDuplicate={handleDuplicateSection}
+              onDelete={handleRemoveSection}
+              onAddSection={() => setSectionLibraryOpen(true)}
+            />
+          </Box>
+        </Box>
+      )}
+      <SectionLibrary
+        open={sectionLibraryOpen}
+        onClose={() => setSectionLibraryOpen(false)}
+        onAddSection={handleAddSection}
       />
     </Box>
   )

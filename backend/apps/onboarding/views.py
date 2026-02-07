@@ -943,7 +943,28 @@ class TriggerBuildView(APIView):
             session = LandingSession.objects.get(session_token=session_token)
         except LandingSession.DoesNotExist:
             return Response({'error': 'Session not found'}, status=404)
-        
+
+        # Paywall check: enforce app limits before allowing build
+        if session.converted_to_tenant:
+            from apps.billing.models import Subscription
+            tenant = session.converted_to_tenant
+            subscription = Subscription.objects.filter(tenant=tenant).first()
+            app_count = tenant.projects.count()
+            if subscription:
+                if subscription.plan != 'enterprise' and app_count >= subscription.max_apps:
+                    return Response({
+                        'error': 'upgrade_required',
+                        'message': f'{subscription.get_plan_display()} plan limited to {subscription.max_apps} apps. Upgrade to continue.',
+                        'upgrade_url': '/pricing',
+                    }, status=402)
+            else:
+                if app_count >= 3:
+                    return Response({
+                        'error': 'upgrade_required',
+                        'message': 'Free plan limited to 3 apps. Upgrade to continue.',
+                        'upgrade_url': '/pricing',
+                    }, status=402)
+
         # Update session status immediately
         session.status = 'building'
         session.save()
@@ -1296,6 +1317,344 @@ class VisualEditView(APIView):
             'message': 'Edit applied',
             'edit_prompt': edit_prompt,
         })
+
+
+class SectionOperationsView(APIView):
+    """
+    Handle section-level operations for drag-and-drop page editor.
+    Supports adding, removing, reordering, and duplicating page sections.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Perform section operations on existing page HTML.
+
+        Accepts:
+        - session_token: Session identifier (optional if project_id provided)
+        - project_id: Project ID (optional if session_token provided)
+        - action: One of add_section, remove_section, reorder_sections, duplicate_section
+        - section_type: (for add_section) Type of section to add
+        - position: (for add_section) Position index for the new section
+        - section_id: (for remove_section, duplicate_section) ID of the target section
+        - section_ids: (for reorder_sections) Ordered list of section IDs
+        """
+        import json
+        import logging
+        import uuid
+        import anthropic
+        from django.conf import settings
+        from apps.projects.models import Project
+        from apps.ai_engine.v3.prompts import (
+            GENERATE_SECTION_PROMPT,
+            REMOVE_SECTION_PROMPT,
+            REORDER_SECTIONS_PROMPT,
+            SECTION_TYPES,
+        )
+
+        logger = logging.getLogger(__name__)
+
+        session_token = request.data.get('session_token')
+        project_id = request.data.get('project_id')
+        action = request.data.get('action')
+
+        if not action:
+            return Response({
+                'success': False,
+                'error': 'action is required.',
+            }, status=400)
+
+        if not session_token and not project_id:
+            return Response({
+                'success': False,
+                'error': 'Either session_token or project_id is required.',
+            }, status=400)
+
+        valid_actions = ['add_section', 'remove_section', 'reorder_sections', 'duplicate_section']
+        if action not in valid_actions:
+            return Response({
+                'success': False,
+                'error': f'Invalid action. Must be one of: {", ".join(valid_actions)}',
+            }, status=400)
+
+        # Resolve project from session_token or project_id
+        session = None
+        project = None
+
+        if project_id:
+            try:
+                project = Project.objects.get(id=project_id)
+            except Project.DoesNotExist:
+                return Response({
+                    'success': False,
+                    'error': 'Project not found.',
+                }, status=404)
+            # Try to find associated session for event logging
+            session = LandingSession.objects.filter(
+                converted_to_project=project
+            ).first()
+        elif session_token:
+            try:
+                session = LandingSession.objects.get(session_token=session_token)
+            except LandingSession.DoesNotExist:
+                return Response({
+                    'success': False,
+                    'error': 'Session not found.',
+                }, status=404)
+            project = session.converted_to_project
+
+        if not project and session:
+            # Auto-create a project for the session so the Section Editor
+            # works even when the AI build service never ran.
+            from django.contrib.auth import get_user_model as _get_user_model
+            from apps.tenants.models import Tenant, TenantMembership
+            import secrets as _secrets
+
+            if not session.converted_to_user:
+                _User = _get_user_model()
+                _username = f"user_{_secrets.token_hex(4)}"
+                _email = session.email or f"{_username}@faibric.app"
+                _user = _User.objects.create_user(
+                    username=_username, email=_email, password=None,
+                )
+                _tenant = Tenant.objects.create(
+                    name=f"{_username}'s Workspace",
+                    slug=f"ws-{_secrets.token_hex(4)}",
+                    owner=_user,
+                )
+                TenantMembership.objects.create(
+                    tenant=_tenant, user=_user, role='owner', is_active=True,
+                )
+                session.converted_to_user = _user
+                session.converted_to_tenant = _tenant
+                session.save()
+
+            _clean_name = (session.initial_request or 'Untitled')[:40].replace(':', '').replace('/', ' ')
+            _unique_suffix = _secrets.token_hex(4)
+            project = Project.objects.create(
+                tenant=session.converted_to_tenant,
+                user=session.converted_to_user,
+                name=f"{_clean_name}_{_unique_suffix}",
+                description=session.initial_request or '',
+                user_prompt=session.initial_request or '',
+                status='draft',
+            )
+            session.converted_to_project = project
+            session.save()
+
+        if not project:
+            return Response({
+                'success': False,
+                'error': 'No project found. Provide a valid session_token or project_id.',
+            }, status=404)
+
+        # Allow section operations even without existing frontend_code
+        # This enables building pages from scratch via the Section Editor
+
+        # Get existing code (may be empty if building from scratch)
+        current_html = ''
+        if project.frontend_code:
+            try:
+                code_data = json.loads(project.frontend_code)
+                if isinstance(code_data, dict) and 'App.tsx' in code_data:
+                    current_html = code_data['App.tsx']
+                else:
+                    current_html = str(project.frontend_code)
+            except (json.JSONDecodeError, TypeError):
+                current_html = str(project.frontend_code)
+
+        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+        try:
+            if action == 'add_section':
+                section_type = request.data.get('section_type', '')
+                position = request.data.get('position', -1)
+
+                if section_type not in SECTION_TYPES:
+                    return Response({
+                        'success': False,
+                        'error': f'Invalid section_type. Must be one of: {", ".join(SECTION_TYPES)}',
+                    }, status=400)
+
+                section_id = f'{section_type}-{uuid.uuid4().hex[:8]}'
+                context = f'This section will be inserted at position {position} in the page.'
+                if current_html:
+                    context += f'\n\nEXISTING PAGE (for style consistency):\n{current_html[:2000]}'
+
+                prompt = GENERATE_SECTION_PROMPT.format(
+                    section_type=section_type,
+                    section_id=section_id,
+                    context=context,
+                )
+
+                response = client.messages.create(
+                    model='claude-sonnet-4-20250514',
+                    max_tokens=2048,
+                    messages=[{'role': 'user', 'content': prompt}],
+                )
+                new_section_html = response.content[0].text
+
+                if session:
+                    SessionEvent.objects.create(
+                        session=session,
+                        event_type='section_operation',
+                        event_data={
+                            'action': 'add_section',
+                            'section_type': section_type,
+                            'section_id': section_id,
+                            'position': position,
+                        }
+                    )
+
+                return Response({
+                    'success': True,
+                    'action': 'add_section',
+                    'section_id': section_id,
+                    'section_type': section_type,
+                    'generated_html': new_section_html,
+                    'position': position,
+                })
+
+            elif action == 'remove_section':
+                section_id = request.data.get('section_id', '')
+                if not section_id:
+                    return Response({
+                        'success': False,
+                        'error': 'section_id is required for remove_section.',
+                    }, status=400)
+
+                prompt = REMOVE_SECTION_PROMPT.format(
+                    current_html=current_html,
+                    section_id=section_id,
+                )
+
+                response = client.messages.create(
+                    model='claude-sonnet-4-20250514',
+                    max_tokens=4096,
+                    messages=[{'role': 'user', 'content': prompt}],
+                )
+                updated_html = response.content[0].text
+
+                project.frontend_code = json.dumps({'App.tsx': updated_html})
+                project.save()
+
+                if session:
+                    SessionEvent.objects.create(
+                        session=session,
+                        event_type='section_operation',
+                        event_data={
+                            'action': 'remove_section',
+                            'section_id': section_id,
+                        }
+                    )
+
+                return Response({
+                    'success': True,
+                    'action': 'remove_section',
+                    'section_id': section_id,
+                    'updated_html': updated_html,
+                })
+
+            elif action == 'reorder_sections':
+                section_ids = request.data.get('section_ids', [])
+                if not section_ids or not isinstance(section_ids, list):
+                    return Response({
+                        'success': False,
+                        'error': 'section_ids (list) is required for reorder_sections.',
+                    }, status=400)
+
+                section_order = '\n'.join(f'{i+1}. {sid}' for i, sid in enumerate(section_ids))
+                prompt = REORDER_SECTIONS_PROMPT.format(
+                    current_html=current_html,
+                    section_order=section_order,
+                )
+
+                response = client.messages.create(
+                    model='claude-sonnet-4-20250514',
+                    max_tokens=4096,
+                    messages=[{'role': 'user', 'content': prompt}],
+                )
+                updated_html = response.content[0].text
+
+                project.frontend_code = json.dumps({'App.tsx': updated_html})
+                project.save()
+
+                if session:
+                    SessionEvent.objects.create(
+                        session=session,
+                        event_type='section_operation',
+                        event_data={
+                            'action': 'reorder_sections',
+                            'section_ids': section_ids,
+                        }
+                    )
+
+                return Response({
+                    'success': True,
+                    'action': 'reorder_sections',
+                    'section_ids': section_ids,
+                    'updated_html': updated_html,
+                })
+
+            elif action == 'duplicate_section':
+                section_id = request.data.get('section_id', '')
+                if not section_id:
+                    return Response({
+                        'success': False,
+                        'error': 'section_id is required for duplicate_section.',
+                    }, status=400)
+
+                new_section_id = f'{section_id}-copy-{uuid.uuid4().hex[:6]}'
+
+                prompt = f"""You are modifying an existing HTML page for a website builder.
+The user wants to duplicate a section.
+
+CURRENT PAGE HTML:
+{current_html}
+
+SECTION TO DUPLICATE: The section with id="{section_id}"
+
+Create an exact copy of this section and insert it immediately after the original.
+Change the id of the copy to "{new_section_id}".
+Keep everything else exactly as-is.
+
+Return the complete HTML with the duplicated section. No markdown, no backticks, no explanations."""
+
+                response = client.messages.create(
+                    model='claude-sonnet-4-20250514',
+                    max_tokens=4096,
+                    messages=[{'role': 'user', 'content': prompt}],
+                )
+                updated_html = response.content[0].text
+
+                project.frontend_code = json.dumps({'App.tsx': updated_html})
+                project.save()
+
+                if session:
+                    SessionEvent.objects.create(
+                        session=session,
+                        event_type='section_operation',
+                        event_data={
+                            'action': 'duplicate_section',
+                            'original_section_id': section_id,
+                            'new_section_id': new_section_id,
+                        }
+                    )
+
+                return Response({
+                    'success': True,
+                    'action': 'duplicate_section',
+                    'original_section_id': section_id,
+                    'new_section_id': new_section_id,
+                    'updated_html': updated_html,
+                })
+
+        except Exception as e:
+            logger.exception(f'Section operation failed: {e}')
+            return Response({
+                'success': False,
+                'error': f'Section operation failed: {str(e)}',
+            }, status=500)
 
 
 class AgentModeView(APIView):

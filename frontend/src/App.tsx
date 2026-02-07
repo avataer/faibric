@@ -15,6 +15,8 @@ import CustomerDashboard from './pages/CustomerDashboard'
 import AdminPanelBuilder from './pages/AdminPanelBuilder'
 import ServiceStatus from './pages/ServiceStatus'
 import Features from './pages/Features'
+import Pricing from './pages/Pricing'
+import TemplateGallery from './pages/TemplateGallery'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 
@@ -29,6 +31,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/features" element={<Features />} />
+          <Route path="/pricing" element={<Pricing />} />
 
           {/* Protected Routes - Full Screen */}
           <Route element={<ProtectedRoute />}>
@@ -44,6 +47,7 @@ function App() {
               <Route path="/projects/:id" element={<ProjectDetail />} />
               <Route path="/account" element={<CustomerDashboard />} />
               <Route path="/panel-builder" element={<AdminPanelBuilder />} />
+              <Route path="/templates" element={<TemplateGallery />} />
             </Route>
           </Route>
 

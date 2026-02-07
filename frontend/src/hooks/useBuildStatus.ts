@@ -14,7 +14,9 @@ interface UseBuildStatusReturn {
   buildStatus: string
   buildPhase: string
   deploymentUrl: string | null
+  projectId: string | null
   targetProgress: number
+  aiUnavailable: boolean
   stopBuilding: () => Promise<void>
   resetForNewBuild: (mode: 'modify' | 'new') => void
 }
@@ -29,11 +31,16 @@ export function useBuildStatus({
   const [buildStatus, setBuildStatus] = useState<string>('initializing')
   const [buildPhase, setBuildPhase] = useState<string>('Starting...')
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null)
+  const [projectId, setProjectId] = useState<string | null>(null)
   const [targetProgress, setTargetProgress] = useState(3)
+  const [aiUnavailable, setAiUnavailable] = useState(false)
 
   // Track processed events to avoid duplicates
   const processedEventIds = useRef<Set<string>>(new Set())
   const buildStartTime = useRef<number | null>(null)
+
+  // Track whether any real progress has been received
+  const hasReceivedProgress = useRef(false)
 
   // Use refs for callbacks to avoid stale closures
   const onDeployedRef = useRef(onDeployed)
@@ -88,8 +95,9 @@ export function useBuildStatus({
   useEffect(() => {
     if (!sessionToken) return
 
-    // Don't poll if we're deployed and not rebuilding
+    // Don't poll if we're deployed and not rebuilding, or if AI is unavailable
     if (!isBuilding && deploymentUrl) return
+    if (aiUnavailable) return
 
     // Track build start time for timeout
     if (isBuilding && !buildStartTime.current) {
@@ -113,6 +121,11 @@ export function useBuildStatus({
           setTargetProgress(prev => Math.max(prev, data.build_progress!))
         }
         setBuildStatus(data.status)
+
+        // Capture project ID from status response
+        if (data.project_id) {
+          setProjectId(data.project_id)
+        }
 
         // Handle deployment URL
         if (data.deployment_url && data.deployment_url.trim() && data.deployment_url !== deploymentUrl) {
@@ -152,10 +165,13 @@ export function useBuildStatus({
             }
 
             // Notify parent of new events (with deduplication)
+            // Only mark progress as received when genuinely NEW events arrive
+            // This prevents stale events from a previous build blocking the timeout
             for (const event of progressEvents) {
               const eventId = event.id || `event-${event.timestamp}`
               if (!processedEventIds.current.has(eventId)) {
                 processedEventIds.current.add(eventId)
+                hasReceivedProgress.current = true
                 onProgressEventRef.current?.(event.event_data.message!, eventId)
               }
             }
@@ -172,15 +188,32 @@ export function useBuildStatus({
             }
           }
         }
+
+        // AI unavailable detection: if no progress events after 5 seconds
+        // and no deployment URL, the AI service is likely down
+        const elapsed = Date.now() - buildStartTime.current
+        if (elapsed > 5000 && !hasReceivedProgress.current && !data.deployment_url) {
+          setAiUnavailable(true)
+          setIsBuilding(false)
+          setBuildPhase('AI service unavailable - you can use the Section Editor to build your page manually')
+          setTargetProgress(0)
+        }
       } catch {
-        // Status poll failed - will retry on next interval
+        // Status poll failed - check if AI might be unavailable
+        const elapsed = Date.now() - buildStartTime.current
+        if (elapsed > 5000 && !hasReceivedProgress.current) {
+          setAiUnavailable(true)
+          setIsBuilding(false)
+          setBuildPhase('AI service unavailable - you can use the Section Editor to build your page manually')
+          setTargetProgress(0)
+        }
       }
     }
 
     pollStatus()
     const interval = setInterval(pollStatus, 2000)
     return () => clearInterval(interval)
-  }, [sessionToken, deploymentUrl, isBuilding, calculateTargetProgress])
+  }, [sessionToken, deploymentUrl, isBuilding, aiUnavailable, calculateTargetProgress])
 
   const stopBuilding = useCallback(async () => {
     try {
@@ -194,11 +227,15 @@ export function useBuildStatus({
 
   const resetForNewBuild = useCallback((mode: 'modify' | 'new') => {
     setIsBuilding(true)
+    setAiUnavailable(false)
     setTargetProgress(mode === 'modify' ? 50 : 5)
     setBuildPhase(mode === 'modify' ? 'Modifying code...' : 'Starting new build...')
     // Keep showing old deployment until new one is ready (prevents blank screen)
     // setDeploymentUrl(null)  // REMOVED - preserves preview during modifications
     processedEventIds.current.clear()
+
+    hasReceivedProgress.current = false
+
     buildStartTime.current = Date.now()
   }, [])
 
@@ -207,7 +244,9 @@ export function useBuildStatus({
     buildStatus,
     buildPhase,
     deploymentUrl,
+    projectId,
     targetProgress,
+    aiUnavailable,
     stopBuilding,
     resetForNewBuild,
   }

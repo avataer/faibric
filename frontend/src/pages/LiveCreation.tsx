@@ -26,6 +26,7 @@ const LiveCreation = () => {
   const [buildProgress, setBuildProgress] = useState<number>(0)
   const [displayProgress, setBuildProgressSmooth] = useState<number>(0)
   const [currentPhase, setCurrentPhase] = useState<string>('Initializing...')
+  const [aiTimedOut, setAiTimedOut] = useState(false)
   
   // Smoothly interpolate progress
   useEffect(() => {
@@ -41,9 +42,24 @@ const LiveCreation = () => {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const pollCountRef = useRef(0)
+  const buildStartTimeRef = useRef<number>(Date.now())
 
   // Track previous status for detecting transitions
   const prevStatusRef = useRef<string>('')
+
+  // AI timeout: if no progress after 10 seconds, show fallback
+  // Reduced from 15s to detect AI unavailability faster
+  useEffect(() => {
+    if (!isBuilding || aiTimedOut) return
+    const timer = setTimeout(() => {
+      if (isBuilding && messages.length === 0 && buildProgress === 0 && !deploymentUrl) {
+        setAiTimedOut(true)
+        setIsBuilding(false)
+        setCurrentPhase('AI service unavailable - showing project preview')
+      }
+    }, 10000)
+    return () => clearTimeout(timer)
+  }, [isBuilding, aiTimedOut, messages.length, buildProgress, deploymentUrl])
 
   // Polling function - separated to avoid dependency issues
   const pollProject = useCallback(async () => {
@@ -116,13 +132,16 @@ const LiveCreation = () => {
       // Update building status based on project status
       if (project.status === 'deployed') {
         setIsBuilding(false)
+        setAiTimedOut(false)
         // Auto-refresh iframe if just finished deploying
         if (wasDeploying && iframeRef.current && project.deployment_url) {
           const cacheBuster = `?t=${Date.now()}`
           iframeRef.current.src = project.deployment_url + cacheBuster
         }
       } else if (['deploying', 'generating', 'building'].includes(project.status as string)) {
-        setIsBuilding(true)
+        if (!aiTimedOut) {
+          setIsBuilding(true)
+        }
       } else if (project.status === 'ready') {
         setIsBuilding(false)
       } else if (project.status === 'failed') {
@@ -298,21 +317,47 @@ const LiveCreation = () => {
                   )}
                 </Box>
               </>
+            ) : aiTimedOut ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'white', bgcolor: '#1a1a2e', alignItems: 'center', justifyContent: 'center' }}>
+                <Box sx={{ textAlign: 'center', p: 4, maxWidth: 500 }}>
+                  <Typography variant="h5" sx={{ mb: 2, color: '#667eea', fontWeight: 600 }}>
+                    AI Service Unavailable
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 3, opacity: 0.8 }}>
+                    The AI building service is not responding. Your project exists but no preview is available yet.
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 3, opacity: 0.6 }}>
+                    You can send chat messages and they will be processed once the AI service comes back online.
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setAiTimedOut(false)
+                      setIsBuilding(true)
+                      buildStartTimeRef.current = Date.now()
+                      pollCountRef.current = 0
+                    }}
+                    sx={{ color: 'white', borderColor: '#667eea', '&:hover': { borderColor: '#5a67d8', bgcolor: 'rgba(102, 126, 234, 0.1)' } }}
+                  >
+                    Retry Connection
+                  </Button>
+                </Box>
+              </Box>
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'white', position: 'relative' }}>
                 <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-                  <ProgressivePreview 
-                    progress={displayProgress} 
-                    phase={currentPhase} 
-                    projectName={id} 
-                    userRequest={messages.find(m => m.id.startsWith('user_'))?.content || ''} 
+                  <ProgressivePreview
+                    progress={displayProgress}
+                    phase={currentPhase}
+                    projectName={id}
+                    userRequest={messages.find(m => m.id.startsWith('user_'))?.content || ''}
                   />
-                  
+
                   {/* Overlay progress info */}
-                  <Box sx={{ 
-                    position: 'absolute', 
-                    top: 24, 
-                    left: '50%', 
+                  <Box sx={{
+                    position: 'absolute',
+                    top: 24,
+                    left: '50%',
                     transform: 'translateX(-50%)',
                     bgcolor: 'rgba(0,0,0,0.8)',
                     backdropFilter: 'blur(10px)',
@@ -329,10 +374,10 @@ const LiveCreation = () => {
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <Box sx={{ flex: 1, height: 4, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
-                        <Box sx={{ 
-                          width: `${displayProgress}%`, 
-                          height: '100%', 
-                          bgcolor: '#667eea', 
+                        <Box sx={{
+                          width: `${displayProgress}%`,
+                          height: '100%',
+                          bgcolor: '#667eea',
                           borderRadius: 2,
                           transition: 'width 0.1s linear'
                         }} />
@@ -356,10 +401,21 @@ const LiveCreation = () => {
             </Box>
 
             <Box sx={{ flex: 1, overflowY: 'auto', p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {messages.length === 0 && (
+              {messages.length === 0 && !aiTimedOut && (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                   <CircularProgress size={24} sx={{ mb: 2 }} />
                   <Typography variant="body2" color="text.secondary">Waiting for AI...</Typography>
+                </Box>
+              )}
+
+              {aiTimedOut && messages.length === 0 && (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    AI service is not responding. The builder is available without AI.
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    You can still send messages once the AI service is back online.
+                  </Typography>
                 </Box>
               )}
 

@@ -8,6 +8,9 @@ export interface Template {
   category: string
   thumbnail?: string
   usage_count: number
+  schema_template?: Record<string, any>
+  api_template?: Record<string, any>
+  ui_template?: Record<string, any>
 }
 
 export const templatesService = {

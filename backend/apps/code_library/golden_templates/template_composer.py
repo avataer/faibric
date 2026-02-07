@@ -191,8 +191,14 @@ def compose_from_templates(
 
     logger.info(f"[COMPOSE] Building app with {len(components)} template components")
 
+    # Step 1.5: Detect hero variant BEFORE data generation
+    # This ensures the correct schema (with cards, etc.) is sent to the AI
+    hero_variant = detect_hero_variant(prompt)
+    logger.info(f"[COMPOSE] Detected hero variant: {hero_variant}")
+
     # Step 2: Generate data for all components (single AI call)
-    all_data = generate_all_component_data(prompt, components)
+    # Pass hero_variant so correct schema is used
+    all_data = generate_all_component_data(prompt, components, hero_variant=hero_variant)
 
     # Extract business info for consistency
     nav_data = all_data.get("navigation", {})
@@ -207,11 +213,8 @@ def compose_from_templates(
     metadata = {
         "components_used": [],
         "template_system": True,
+        "hero_variant": hero_variant,
     }
-
-    # Detect hero variant based on industry
-    hero_variant = detect_hero_variant(prompt)
-    metadata["hero_variant"] = hero_variant
 
     for comp_type in components:
         # Use industry-specific variant for hero, default for others

@@ -134,12 +134,19 @@ Start with {{ and end with }}
 
 def generate_all_component_data(
     business_description: str,
-    components: List[str]
+    components: List[str],
+    hero_variant: str = None
 ) -> Dict[str, Dict]:
     """
     Generate data for multiple components in one call.
 
     More efficient than calling generate_component_data multiple times.
+
+    Args:
+        business_description: User's prompt/description
+        components: List of component types to generate data for
+        hero_variant: Specific hero variant to use (e.g., "cards", "split", "centered")
+                     This ensures the correct schema is used for data generation.
     """
     from .template_registry import get_template
 
@@ -148,7 +155,12 @@ def generate_all_component_data(
     # Build schema for all components
     all_schemas = {}
     for comp_type in components:
-        template = get_template(comp_type)
+        # Use specific variant for hero, default for others
+        if comp_type == "hero" and hero_variant:
+            template = get_template(comp_type, variant=hero_variant)
+            logger.info(f"[DATA GEN] Using hero variant '{hero_variant}' for schema")
+        else:
+            template = get_template(comp_type)
         if template:
             all_schemas[comp_type] = template.schema
 
@@ -222,7 +234,7 @@ Format: {{ "component_type": {{ ...data... }}, ... }}
 def _ensure_required_fields(data: Dict[str, Dict], business_description: str) -> Dict[str, Dict]:
     """
     Ensure all template variables will be filled.
-    This prevents {{phone}}, {{address}} etc from appearing in production.
+    This prevents {{phone}}, {{address}}, {{@cards}} etc from appearing in production.
     """
     # Contact section must have phone, email, address
     if "contact" in data:
@@ -240,12 +252,81 @@ def _ensure_required_fields(data: Dict[str, Dict], business_description: str) ->
             contact["submit_text"] = "Send Message"
         data["contact"] = contact
 
-    # Hero section must have background_seed
+    # Hero section must have background_seed and cards if needed
     if "hero" in data:
         hero = data["hero"]
         if not hero.get("background_seed"):
             hero["background_seed"] = "professional"
+        if not hero.get("image_seed"):
+            hero["image_seed"] = "business"
+        # Ensure cards array exists for hero_cards variant
+        # Check if cards is expected (schema requires it) but missing or empty
+        if not hero.get("cards") or not isinstance(hero.get("cards"), list):
+            # Only add default cards if headline contains certain keywords
+            # or if cards field exists but is empty/invalid
+            hero["cards"] = [
+                {"title": "Quality First", "description": "We deliver excellence in everything we do", "cta": "Learn More"},
+                {"title": "Expert Team", "description": "Our professionals bring years of experience", "cta": "Meet Us"},
+                {"title": "Customer Focus", "description": "Your satisfaction is our top priority", "cta": "Get Started"},
+            ]
         data["hero"] = hero
+
+    # Navigation must have nav_items
+    if "navigation" in data:
+        nav = data["navigation"]
+        if not nav.get("nav_items") or not isinstance(nav.get("nav_items"), list):
+            nav["nav_items"] = [
+                {"id": "home", "label": "Home"},
+                {"id": "services", "label": "Services"},
+                {"id": "about", "label": "About"},
+                {"id": "contact", "label": "Contact"},
+            ]
+        data["navigation"] = nav
+
+    # Features must have features array
+    if "features" in data:
+        features = data["features"]
+        if not features.get("features") or not isinstance(features.get("features"), list):
+            features["features"] = [
+                {"title": "Quality Service", "description": "We deliver excellence in everything we do", "icon_letter": "Q"},
+                {"title": "Expert Team", "description": "Our professionals bring years of experience", "icon_letter": "E"},
+                {"title": "Customer Focus", "description": "Your satisfaction is our top priority", "icon_letter": "C"},
+            ]
+        data["features"] = features
+
+    # Services must have services array
+    if "services" in data:
+        services = data["services"]
+        if not services.get("services") or not isinstance(services.get("services"), list):
+            services["services"] = [
+                {"name": "Consultation", "description": "Expert advice tailored to your needs", "price": "Contact us"},
+                {"name": "Implementation", "description": "Professional execution of your projects", "price": "Contact us"},
+                {"name": "Support", "description": "Ongoing assistance when you need it", "price": "Contact us"},
+            ]
+        data["services"] = services
+
+    # About must have paragraphs array
+    if "about" in data:
+        about = data["about"]
+        if not about.get("paragraphs") or not isinstance(about.get("paragraphs"), list):
+            about["paragraphs"] = [
+                "We are dedicated professionals committed to delivering exceptional results.",
+                "With years of experience in our field, we bring expertise and passion to every project.",
+            ]
+        if not about.get("image_seed"):
+            about["image_seed"] = "team"
+        data["about"] = about
+
+    # Testimonials must have testimonials array
+    if "testimonials" in data:
+        testimonials = data["testimonials"]
+        if not testimonials.get("testimonials") or not isinstance(testimonials.get("testimonials"), list):
+            testimonials["testimonials"] = [
+                {"quote": "Exceptional service and outstanding results. Highly recommended.", "name": "John Smith", "role": "CEO, Tech Corp"},
+                {"quote": "Professional, reliable, and a pleasure to work with.", "name": "Sarah Johnson", "role": "Director, ABC Inc"},
+                {"quote": "They exceeded our expectations in every way.", "name": "Michael Brown", "role": "Owner, Local Business"},
+            ]
+        data["testimonials"] = testimonials
 
     return data
 
@@ -263,6 +344,12 @@ def _fallback_data(component_type: str, business_description: str) -> Dict:
             "subheadline": "Professional services tailored to your needs",
             "cta_text": "Get Started",
             "background_seed": "business1",
+            "image_seed": "business",
+            "cards": [
+                {"title": "Quality First", "description": "We deliver excellence in everything we do", "cta": "Learn More"},
+                {"title": "Expert Team", "description": "Our professionals bring years of experience", "cta": "Meet Us"},
+                {"title": "Customer Focus", "description": "Your satisfaction is our top priority", "cta": "Get Started"},
+            ],
         },
         "navigation": {
             "business_name": business_name,

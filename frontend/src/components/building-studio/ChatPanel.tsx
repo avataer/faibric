@@ -16,6 +16,7 @@ import SendIcon from '@mui/icons-material/Send'
 import StopIcon from '@mui/icons-material/Stop'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
+import ViewQuiltIcon from '@mui/icons-material/ViewQuilt'
 import { Message } from './types'
 
 interface ModelOption {
@@ -187,9 +188,18 @@ export function ChatPanel({
                     )}
                   </Box>
                 ) : msg.role === 'system' ? (
-                  <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#6b7280' }}>
-                    {msg.content}
-                  </Typography>
+                  msg.content.toLowerCase().includes('section') ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <ViewQuiltIcon sx={{ fontSize: 16, color: '#7c3aed' }} />
+                      <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#7c3aed' }}>
+                        {msg.content}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#6b7280' }}>
+                      {msg.content}
+                    </Typography>
+                  )
                 ) : (
                   <Typography variant="body1">{msg.content}</Typography>
                 )}
