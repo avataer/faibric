@@ -219,3 +219,61 @@ Playwright (v1.58.0) was used with Chromium to capture screenshots of the builde
 - [x] No dark backgrounds in any modified file
 - [x] Blue (#3b82f6) used for accents only
 - [x] No business logic modified
+
+---
+
+## Screenshot Fix - Retry Attempt 2
+### Worker Session: 1770511025-77322
+### Date: 2026-02-08
+### Timestamp: 2026-02-08T00:37:00Z
+
+### Problem
+Previous screenshots (Chunk 003) were byte-for-byte identical because:
+1. Both `/create/1` and `/live-creation/1` render the **same** `LiveCreation` component with the same project ID (1) and identical mock data
+2. Preview iframe was blank white (deployment URL pointed to external HTTPS domain that doesn't exist)
+3. First chat message had id `msg_1` (not `user_`) so it rendered as an AI bubble instead of a user bubble
+
+Previous identical MD5: `93876c9faf9ffbf66c62a7cd5100e2ea`
+
+### Root Cause Analysis
+- React Router maps both `/create/:id` and `/live-creation/:id` to the same `LiveCreation` component
+- `BuildingStudio` is a sub-component (not directly routed), so there's no separate route to screenshot it
+- User messages are identified by `message.id.startsWith('user_')` in the component
+- Playwright `page.route()` doesn't intercept cross-origin HTTPS requests from iframes
+
+### Fixes Applied
+1. **Different project IDs with different states:**
+   - Screenshot 1 (`/create/1`): Project 1 in `building` state, progress=45%, no deployment URL (shows ProgressivePreview with restaurant theme)
+   - Screenshot 2 (`/live-creation/2`): Project 2 in `deployed` state, progress=100%, with deployment URL (shows iframe with portfolio content)
+
+2. **First message is always a user bubble:**
+   - All mock data sets start with `id: "user_*"` messages so they render as blue user bubbles
+
+3. **Preview iframe content:**
+   - Used `page.evaluate()` to set `iframe.srcdoc` with mock HTML (Creative Portfolio website with header, hero section, features, footer)
+   - This bypasses the cross-origin HTTPS interception issue entirely
+
+4. **Different mock data themes:**
+   - Screenshot 1: Restaurant website (warm brown tones, building state)
+   - Screenshot 2: Creative Portfolio (purple gradients, deployed state with live preview)
+
+### New Screenshot Verification
+
+| Screenshot | Route | Project | State | First Bubble | Preview Content |
+|-----------|-------|---------|-------|-------------|----------------|
+| builder-create.png | /create/1 | My Restaurant | Building (45%) | Blue user bubble | ProgressivePreview (restaurant) |
+| live-creation.png | /live-creation/2 | Creative Portfolio | Deployed (100%) | Blue user bubble | Mock portfolio website |
+
+### MD5 Hashes (DIFFERENT - Confirmed)
+```
+MD5 (builder-create.png) = 20b8b6bb5854e5da73ca14dba97328b0
+MD5 (live-creation.png) = 78993a892da87e5377f45b6b93f9471b
+```
+
+Hashes are different: PASS
+
+### Files Modified
+- `customer-tests/builder-studio-v2/screenshot.mjs` - Rewritten with correct routes, different mock data, iframe content injection
+- `customer-tests/builder-studio-v2/builder-create.png` - New screenshot (building state)
+- `customer-tests/builder-studio-v2/live-creation.png` - New screenshot (deployed state with preview content)
+- `customer-tests/builder-studio-v2/FULL_TEST_LOG.md` - Updated with retry information
