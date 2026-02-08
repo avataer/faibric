@@ -276,6 +276,7 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
       width: '100vw',
       overflow: 'hidden',
       backgroundColor: '#ffffff',
+      fontFamily: '"Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
       <ChatPanel
         messages={messages}
@@ -333,18 +334,18 @@ const BuildingStudio = ({ sessionToken, initialRequest, onDeployed, onNewProject
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          boxShadow: '-2px 0 8px rgba(0,0,0,0.04)',
+          boxShadow: '-4px 0 16px rgba(0,0,0,0.06)',
         }}>
           <Box sx={{
             p: 2,
             borderBottom: '1px solid #e5e7eb',
             backgroundColor: '#ffffff',
           }}>
-            <Typography variant="subtitle2" fontWeight={600} sx={{ color: '#111827' }}>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#111827', fontSize: '0.875rem', letterSpacing: '-0.01em' }}>
               Sections
             </Typography>
           </Box>
-          <Box sx={{ flex: 1, overflow: 'auto', backgroundColor: '#f8f9fa' }}>
+          <Box sx={{ flex: 1, overflow: 'auto', backgroundColor: '#f5f5f5' }}>
             <DragDropSectionEditor
               sections={sections}
               onReorder={handleReorderSections}

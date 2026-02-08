@@ -253,7 +253,13 @@ const LiveCreation = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#ffffff' }}>
+    <Box sx={{
+      display: 'flex',
+      height: '100vh',
+      overflow: 'hidden',
+      backgroundColor: '#ffffff',
+      fontFamily: '"Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    }}>
       {error ? (
         <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#ffffff' }}>
           <Paper elevation={0} sx={{
@@ -291,21 +297,22 @@ const LiveCreation = () => {
             flex: 1.5,
             display: 'flex',
             flexDirection: 'column',
-            backgroundColor: '#f9fafb',
+            backgroundColor: '#f5f5f5',
             position: 'relative',
           }}>
             {/* Browser Chrome */}
             <Box sx={{
-              backgroundColor: '#f8f9fa',
-              borderBottom: '1px solid #e0e0e0',
+              backgroundColor: '#ffffff',
+              borderBottom: '1px solid #e5e7eb',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}>
               {/* Top bar with traffic lights, URL bar, and actions */}
               <Box sx={{
-                px: 2,
-                py: 1,
+                px: 2.5,
+                py: 1.25,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1.5,
+                gap: 2,
               }}>
                 {/* Traffic light dots */}
                 <Box sx={{ display: 'flex', gap: 0.75, flexShrink: 0 }}>
@@ -319,13 +326,15 @@ const LiveCreation = () => {
                   flex: 1,
                   display: 'flex',
                   alignItems: 'center',
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #e0e0e0',
+                  backgroundColor: '#f5f5f5',
+                  border: '1px solid #e5e7eb',
                   borderRadius: 2,
                   px: 1.5,
-                  py: 0.5,
+                  py: 0.625,
                   gap: 1,
                   minWidth: 0,
+                  transition: 'border-color 0.2s',
+                  '&:hover': { borderColor: '#d1d5db' },
                 }}>
                   <LanguageIcon sx={{ fontSize: 14, color: '#9ca3af', flexShrink: 0 }} />
                   <Typography
@@ -381,10 +390,10 @@ const LiveCreation = () => {
               flex: 1,
               position: 'relative',
               overflow: 'hidden',
-              m: 1.5,
-              borderRadius: '0 0 10px 10px',
-              border: '1px solid #e0e0e0',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              m: 2,
+              borderRadius: 2.5,
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)',
               backgroundColor: '#ffffff',
             }}>
               {deploymentUrl ? (
@@ -406,7 +415,7 @@ const LiveCreation = () => {
                       zIndex: 100,
                     }}>
                       <Box sx={{ textAlign: 'center', maxWidth: 320 }}>
-                        <CircularProgress sx={{ color: '#1976d2', mb: 2 }} size={40} />
+                        <CircularProgress sx={{ color: '#3b82f6', mb: 2 }} size={40} />
                         <Typography variant="h6" sx={{ color: '#111827', fontWeight: 600 }}>
                           Updating your app...
                         </Typography>
@@ -426,7 +435,7 @@ const LiveCreation = () => {
                   height: '100%',
                   gap: 3,
                   p: 4,
-                  backgroundColor: '#fafafa',
+                  backgroundColor: '#f5f5f5',
                 }}>
                   <ErrorOutlineIcon sx={{ fontSize: 56, color: '#94a3b8' }} />
                   <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827' }}>
@@ -448,10 +457,10 @@ const LiveCreation = () => {
                       pollCountRef.current = 0
                     }}
                     sx={{
-                      backgroundColor: '#1976d2',
+                      backgroundColor: '#3b82f6',
                       textTransform: 'none',
                       borderRadius: 2,
-                      '&:hover': { backgroundColor: '#1565c0' },
+                      '&:hover': { backgroundColor: '#2563eb' },
                     }}
                   >
                     Retry Connection
@@ -473,18 +482,18 @@ const LiveCreation = () => {
                       top: 24,
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      bgcolor: 'rgba(255,255,255,0.95)',
-                      backdropFilter: 'blur(10px)',
+                      bgcolor: 'rgba(255,255,255,0.97)',
+                      backdropFilter: 'blur(12px)',
                       px: 3,
-                      py: 1.5,
+                      py: 2,
                       borderRadius: 3,
-                      border: '1px solid #e0e0e0',
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                      border: '1px solid #e5e7eb',
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
                       zIndex: 10,
                       textAlign: 'center',
-                      minWidth: 300,
+                      minWidth: 320,
                     }}>
-                      <Typography variant="subtitle2" sx={{ color: '#1976d2', fontWeight: 700, mb: 0.5, fontSize: '0.7rem', letterSpacing: '0.05em' }}>
+                      <Typography variant="subtitle2" sx={{ color: '#3b82f6', fontWeight: 700, mb: 0.5, fontSize: '0.7rem', letterSpacing: '0.05em' }}>
                         BUILDING YOUR CUSTOM PROJECT
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -498,12 +507,12 @@ const LiveCreation = () => {
                             backgroundColor: '#e5e7eb',
                             '& .MuiLinearProgress-bar': {
                               borderRadius: 2,
-                              backgroundColor: '#1976d2',
+                              backgroundColor: '#3b82f6',
                               transition: 'transform 0.1s linear',
                             },
                           }}
                         />
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#1976d2' }}>
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#3b82f6' }}>
                           {Math.round(displayProgress)}%
                         </Typography>
                       </Box>
@@ -525,6 +534,7 @@ const LiveCreation = () => {
             display: 'flex',
             flexDirection: 'column',
             backgroundColor: '#ffffff',
+            boxShadow: '-2px 0 12px rgba(0,0,0,0.03)',
           }}>
             {/* Chat Header */}
             <Box sx={{
@@ -536,9 +546,9 @@ const LiveCreation = () => {
               justifyContent: 'space-between',
               backgroundColor: '#ffffff',
             }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <AutoAwesomeIcon sx={{ color: '#1976d2', fontSize: 22 }} />
-                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                <AutoAwesomeIcon sx={{ color: '#3b82f6', fontSize: 22 }} />
+                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.05rem', color: '#111827', letterSpacing: '-0.01em' }}>
                   AI Builder
                 </Typography>
               </Box>
@@ -549,7 +559,7 @@ const LiveCreation = () => {
                     size="small"
                     sx={{
                       backgroundColor: '#eff6ff',
-                      color: '#1976d2',
+                      color: '#3b82f6',
                       fontWeight: 600,
                       fontSize: '0.75rem',
                       '@keyframes pulse-dot': {
@@ -562,7 +572,7 @@ const LiveCreation = () => {
                         width: 6,
                         height: 6,
                         borderRadius: '50%',
-                        backgroundColor: '#1976d2',
+                        backgroundColor: '#3b82f6',
                         marginRight: '6px',
                         animation: 'pulse-dot 1.2s ease-in-out infinite',
                       },
@@ -585,12 +595,12 @@ const LiveCreation = () => {
 
             {/* Build Progress Bar */}
             {isBuilding && (
-              <Box sx={{ px: 2.5, py: 1.5, backgroundColor: '#f8f9fa' }}>
+              <Box sx={{ px: 2.5, py: 1.5, backgroundColor: '#f5f5f5' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                   <Typography variant="caption" sx={{ color: '#6b7280', fontWeight: 500 }}>
                     {currentPhase || 'Building your website...'}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 600 }}>
+                  <Typography variant="caption" sx={{ color: '#3b82f6', fontWeight: 600 }}>
                     {Math.round(displayProgress)}%
                   </Typography>
                 </Box>
@@ -603,7 +613,7 @@ const LiveCreation = () => {
                     backgroundColor: '#e5e7eb',
                     '& .MuiLinearProgress-bar': {
                       borderRadius: 2,
-                      backgroundColor: '#1976d2',
+                      backgroundColor: '#3b82f6',
                       '@keyframes shimmer': {
                         '0%': { opacity: 1 },
                         '50%': { opacity: 0.7 },
@@ -620,16 +630,16 @@ const LiveCreation = () => {
             <Box sx={{
               flex: 1,
               overflowY: 'auto',
-              px: 2,
-              py: 2,
+              px: 2.5,
+              py: 2.5,
               display: 'flex',
               flexDirection: 'column',
-              gap: 1,
-              backgroundColor: '#f8f9fa',
+              gap: 1.25,
+              backgroundColor: '#f5f5f5',
             }}>
               {messages.length === 0 && !aiTimedOut && (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <CircularProgress size={24} sx={{ mb: 2, color: '#1976d2' }} />
+                  <CircularProgress size={24} sx={{ mb: 2, color: '#3b82f6' }} />
                   <Typography variant="body2" color="text.secondary">Waiting for AI...</Typography>
                 </Box>
               )}
@@ -709,22 +719,22 @@ const LiveCreation = () => {
                         py: 1.5,
                         maxWidth: '80%',
                         borderRadius: isUserMessage
-                          ? '16px 16px 4px 16px'
-                          : '16px 16px 16px 4px',
-                        backgroundColor: isUserMessage ? '#1976d2' : '#f5f5f5',
+                          ? '18px 18px 4px 18px'
+                          : '18px 18px 18px 4px',
+                        backgroundColor: isUserMessage ? '#3b82f6' : '#ffffff',
                         color: isUserMessage ? '#ffffff' : '#1f2937',
-                        border: isUserMessage ? 'none' : '1px solid #ebebeb',
+                        border: isUserMessage ? 'none' : '1px solid #e5e7eb',
                         boxShadow: isUserMessage
-                          ? '0 1px 3px rgba(25,118,210,0.2)'
-                          : '0 1px 3px rgba(0,0,0,0.04)',
+                          ? '0 2px 8px rgba(59,130,246,0.25)'
+                          : '0 1px 4px rgba(0,0,0,0.04)',
                       }}
                     >
-                      <Typography variant="body2" sx={{ lineHeight: 1.5, fontSize: '0.875rem' }}>
+                      <Typography variant="body2" sx={{ lineHeight: 1.6, fontSize: '0.875rem' }}>
                         {message.content}
                       </Typography>
                       <Typography variant="caption" sx={{
                         display: 'block',
-                        mt: 0.5,
+                        mt: 0.75,
                         color: isUserMessage ? 'rgba(255,255,255,0.7)' : '#9ca3af',
                         fontSize: '0.65rem',
                       }}>
@@ -740,7 +750,7 @@ const LiveCreation = () => {
 
             {/* Input Area */}
             <Box sx={{
-              p: 2,
+              p: 2.5,
               borderTop: '1px solid #e5e7eb',
               backgroundColor: '#ffffff',
               display: 'flex',
@@ -751,16 +761,17 @@ const LiveCreation = () => {
                 display: 'flex',
                 gap: 1,
                 alignItems: 'flex-end',
-                backgroundColor: '#f9fafb',
+                backgroundColor: '#f5f5f5',
                 borderRadius: 3,
                 border: '1px solid #e5e7eb',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                 px: 2,
                 py: 1,
                 transition: 'border-color 0.2s, box-shadow 0.2s',
                 '&:focus-within': {
-                  borderColor: '#1976d2',
-                  boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
+                  borderColor: '#3b82f6',
+                  boxShadow: '0 2px 12px rgba(59,130,246,0.12)',
+                  backgroundColor: '#ffffff',
                 },
               }}>
                 <TextField
@@ -792,14 +803,16 @@ const LiveCreation = () => {
                   onClick={handleSendMessage}
                   disabled={!userMessage.trim() || isSending}
                   sx={{
-                    backgroundColor: !userMessage.trim() || isSending ? '#e5e7eb' : '#1976d2',
+                    backgroundColor: !userMessage.trim() || isSending ? '#e5e7eb' : '#3b82f6',
                     color: !userMessage.trim() || isSending ? '#9ca3af' : '#ffffff',
                     width: 36,
                     height: 36,
                     borderRadius: 2,
                     flexShrink: 0,
+                    transition: 'background-color 0.2s, transform 0.1s',
                     '&:hover': {
-                      backgroundColor: !userMessage.trim() || isSending ? '#e5e7eb' : '#1565c0',
+                      backgroundColor: !userMessage.trim() || isSending ? '#e5e7eb' : '#2563eb',
+                      transform: !userMessage.trim() || isSending ? 'none' : 'scale(1.05)',
                     },
                     '&.Mui-disabled': {
                       backgroundColor: '#e5e7eb',
