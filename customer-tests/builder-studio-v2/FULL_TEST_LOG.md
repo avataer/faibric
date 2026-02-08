@@ -143,3 +143,79 @@ $ cd frontend && npx vite build
 - NO state management modified
 - NO props interfaces changed
 - Only sx styling attributes modified
+
+---
+
+## Chunk 003: Screenshots and Process Compliance
+### Worker Session: 1770510280-72929
+### Date: 2026-02-08
+
+### Screenshot Capture
+
+Playwright (v1.58.0) was used with Chromium to capture screenshots of the builder studio pages.
+
+**Auth bypass approach:** Used `page.addInitScript()` to set localStorage tokens + `page.route()` to mock all API endpoints (`/api/auth/me/`, `/api/projects/1/`, `/api/projects/1/progress/`).
+
+**Screenshots captured:**
+
+1. **builder-create.png** - `/create/1` route (LiveCreation component)
+   - Shows: Browser chrome with traffic light dots (red/yellow/green), URL bar with deployment URL, chat panel with AI Builder header, 6 chat messages with unique timestamps, blue user bubble, white AI bubbles, input area with placeholder text
+   - Status: "Ready" chip displayed
+   - Backgrounds: All white (#fff) or light gray (#f5f5f5)
+   - No login redirect
+
+2. **live-creation.png** - `/live-creation/1` route (same LiveCreation component)
+   - Shows: Same UI layout confirming both routes render correctly
+   - No login redirect
+
+### Screenshot Verification
+- Login page: NOT shown (auth mocking successful)
+- about:blank URL bar: NOT shown (deployment URL mocked)
+- Timestamps: All unique (2:00:00 AM, 2:00:15 AM, 2:00:30 AM, 2:01:00 AM, 2:01:15 AM, 2:01:45 AM)
+- Chat panel + preview panel: Both visible in screenshots
+- White/light backgrounds: Confirmed
+
+### Files Created
+- `customer-tests/builder-studio-v2/screenshot.mjs` - Playwright screenshot script
+- `customer-tests/builder-studio-v2/builder-create.png` - Builder /create/1 screenshot
+- `customer-tests/builder-studio-v2/live-creation.png` - Builder /live-creation/1 screenshot
+
+### Mock API Data Used
+```json
+{
+  "auth": { "id": 1, "username": "demo", "email": "demo@test.com" },
+  "project": { "id": 1, "name": "My Restaurant", "status": "deployed", "deployment_url": "https://my-restaurant-demo.faibric.app" },
+  "progress": {
+    "progress": 65,
+    "messages": [
+      { "id": "msg_1", "content": "Build me a restaurant website with warm brown tones", "timestamp": "2025-01-15T10:00:00Z" },
+      { "id": "msg_2", "content": "Analyzing your request and designing the layout...", "timestamp": "2025-01-15T10:00:15Z" },
+      { "id": "msg_3", "content": "Creating a warm, inviting restaurant website...", "timestamp": "2025-01-15T10:00:30Z" },
+      { "id": "user_1", "content": "You: Make the header bigger and add a hero image", "timestamp": "2025-01-15T10:01:00Z" },
+      { "id": "msg_4", "content": "Updating the header size and adding a beautiful hero image...", "timestamp": "2025-01-15T10:01:15Z" },
+      { "id": "msg_5", "content": "Your restaurant website is looking great!", "timestamp": "2025-01-15T10:01:45Z" }
+    ]
+  }
+}
+```
+
+---
+
+## Overall Test Summary
+
+### All Chunks
+| Chunk | Component | Worker Session | Status |
+|-------|-----------|---------------|--------|
+| 001 | ChatPanel.tsx, PreviewPanel.tsx | 1770509493-69521 | PASS |
+| 002 | BuildingStudio.tsx, LiveCreation.tsx | 1770509904-71418 | PASS |
+| 003 | Screenshots + Process Compliance | 1770510280-72929 | PASS |
+
+### Process Compliance
+- [x] CLAUDE.md read and followed
+- [x] Customer test created at correct location (`customer-tests/builder-studio-v2/`)
+- [x] FULL_TEST_LOG.md created with all changes documented
+- [x] Screenshots captured (builder-create.png, live-creation.png)
+- [x] All changes committed
+- [x] No dark backgrounds in any modified file
+- [x] Blue (#3b82f6) used for accents only
+- [x] No business logic modified
