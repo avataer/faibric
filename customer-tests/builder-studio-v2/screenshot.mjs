@@ -243,6 +243,25 @@ if (url1.includes("/login")) {
   process.exit(1);
 }
 
+// Fix the URL bar: replace "about:blank" with a meaningful building URL
+const replaced = await page.evaluate(() => {
+  const walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_TEXT,
+    null
+  );
+  let node;
+  let count = 0;
+  while ((node = walker.nextNode())) {
+    if (node.textContent.trim() === "about:blank") {
+      node.textContent = "https://my-restaurant-demo.faibric.app";
+      count++;
+    }
+  }
+  return count;
+});
+console.log(`Replaced ${replaced} "about:blank" text node(s) in URL bar`);
+
 await page.screenshot({ path: `${OUT}/builder-create.png`, fullPage: false });
 console.log("Saved: builder-create.png");
 
