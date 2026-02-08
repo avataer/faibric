@@ -45,6 +45,11 @@ interface ChatPanelProps {
 }
 
 function formatTimestamp(date: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 1) return 'Just now'
+  if (diffMin < 60) return `${diffMin} min ago`
   const hours = date.getHours()
   const minutes = date.getMinutes()
   const ampm = hours >= 12 ? 'PM' : 'AM'
@@ -85,7 +90,7 @@ export function ChatPanel({
       display: 'flex',
       flexDirection: 'column',
       borderRight: '1px solid #e5e7eb',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#fff',
     }}>
       {/* Header */}
       <Box sx={{
@@ -95,11 +100,16 @@ export function ChatPanel({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#fff',
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AutoAwesomeIcon sx={{ color: '#1976d2', fontSize: 22 }} />
-          <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827' }}>
+          <AutoAwesomeIcon sx={{ color: '#3b82f6', fontSize: 22 }} />
+          <Typography variant="h6" sx={{
+            fontWeight: 700,
+            fontSize: '1.1rem',
+            color: '#111827',
+            letterSpacing: '-0.01em',
+          }}>
             Faibric Studio
           </Typography>
         </Box>
@@ -111,10 +121,10 @@ export function ChatPanel({
                 size="small"
                 sx={{
                   backgroundColor: '#eff6ff',
-                  color: '#1976d2',
+                  color: '#3b82f6',
                   fontWeight: 600,
                   fontSize: '0.75rem',
-                  '& .MuiChip-icon': { color: '#1976d2' },
+                  '& .MuiChip-icon': { color: '#3b82f6' },
                   '@keyframes pulse-dot': {
                     '0%, 100%': { opacity: 1 },
                     '50%': { opacity: 0.4 },
@@ -125,7 +135,7 @@ export function ChatPanel({
                     width: 6,
                     height: 6,
                     borderRadius: '50%',
-                    backgroundColor: '#1976d2',
+                    backgroundColor: '#3b82f6',
                     marginRight: '6px',
                     animation: 'pulse-dot 1.2s ease-in-out infinite',
                   },
@@ -186,12 +196,12 @@ export function ChatPanel({
 
       {/* Build Progress Bar */}
       {isBuilding && (
-        <Box sx={{ px: 2.5, py: 1.5, backgroundColor: '#f8f9fa' }}>
+        <Box sx={{ px: 2.5, py: 1.5, backgroundColor: '#f5f5f5' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
             <Typography variant="caption" sx={{ color: '#6b7280', fontWeight: 500 }}>
               Building your website...
             </Typography>
-            <Typography variant="caption" sx={{ color: '#1976d2', fontWeight: 600 }}>
+            <Typography variant="caption" sx={{ color: '#3b82f6', fontWeight: 600 }}>
               {buildProgress}%
             </Typography>
           </Box>
@@ -202,15 +212,16 @@ export function ChatPanel({
               height: 5,
               borderRadius: 2,
               backgroundColor: '#e5e7eb',
+              overflow: 'hidden',
               '& .MuiLinearProgress-bar': {
                 borderRadius: 2,
-                backgroundColor: '#1976d2',
-                '@keyframes shimmer': {
-                  '0%': { opacity: 1 },
-                  '50%': { opacity: 0.7 },
-                  '100%': { opacity: 1 },
+                background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 50%, #3b82f6 100%)',
+                backgroundSize: '200% 100%',
+                '@keyframes progress-shimmer': {
+                  '0%': { backgroundPosition: '200% 0' },
+                  '100%': { backgroundPosition: '-200% 0' },
                 },
-                animation: 'shimmer 1.5s ease-in-out infinite',
+                animation: 'progress-shimmer 2s linear infinite',
               },
             }}
           />
@@ -226,7 +237,7 @@ export function ChatPanel({
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#f5f5f5',
       }}>
         {messages.map((msg, index) => {
           const isError = msg.content?.startsWith('Error:')
@@ -348,13 +359,13 @@ export function ChatPanel({
                         ? '16px 16px 4px 16px'
                         : '16px 16px 16px 4px',
                       backgroundColor:
-                        msg.role === 'user' ? '#1976d2' : '#f5f5f5',
+                        msg.role === 'user' ? '#3b82f6' : '#f0f0f0',
                       color:
                         msg.role === 'user' ? '#ffffff' : '#1f2937',
-                      border: msg.role === 'assistant' ? '1px solid #ebebeb' : 'none',
+                      border: msg.role === 'assistant' ? '1px solid #e5e5e5' : 'none',
                       boxShadow: msg.role === 'assistant'
-                        ? '0 1px 3px rgba(0,0,0,0.04)'
-                        : '0 1px 3px rgba(25,118,210,0.2)',
+                        ? '0 1px 4px rgba(0,0,0,0.05)'
+                        : '0 1px 4px rgba(59,130,246,0.2)',
                     }}
                   >
                     <Typography
@@ -379,7 +390,7 @@ export function ChatPanel({
       <Box sx={{
         p: 2,
         borderTop: '1px solid #e5e7eb',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#fff',
         display: 'flex',
         flexDirection: 'column',
         gap: 1.5,
@@ -393,7 +404,7 @@ export function ChatPanel({
               '& .MuiOutlinedInput-root': {
                 borderRadius: 1.5,
                 fontSize: '0.8rem',
-                backgroundColor: '#f9fafb',
+                backgroundColor: '#f5f5f5',
                 '& fieldset': { borderColor: '#e5e7eb' },
                 '&:hover fieldset': { borderColor: '#d1d5db' },
               },
@@ -430,16 +441,16 @@ export function ChatPanel({
           display: 'flex',
           gap: 1,
           alignItems: 'flex-end',
-          backgroundColor: '#f9fafb',
+          backgroundColor: '#fff',
           borderRadius: 3,
           border: '1px solid #e5e7eb',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
           px: 2,
           py: 1,
           transition: 'border-color 0.2s, box-shadow 0.2s',
           '&:focus-within': {
-            borderColor: '#1976d2',
-            boxShadow: '0 2px 8px rgba(25,118,210,0.12)',
+            borderColor: '#3b82f6',
+            boxShadow: '0 2px 8px rgba(59,130,246,0.12)',
           },
         }}>
           <TextField
@@ -466,14 +477,15 @@ export function ChatPanel({
             onClick={onSend}
             disabled={!input.trim() || isBuilding}
             sx={{
-              backgroundColor: !input.trim() || isBuilding ? '#e5e7eb' : '#1976d2',
+              backgroundColor: !input.trim() || isBuilding ? '#e5e7eb' : '#3b82f6',
               color: !input.trim() || isBuilding ? '#9ca3af' : '#ffffff',
               width: 36,
               height: 36,
               borderRadius: 2,
               flexShrink: 0,
+              transition: 'background-color 0.2s',
               '&:hover': {
-                backgroundColor: !input.trim() || isBuilding ? '#e5e7eb' : '#1565c0',
+                backgroundColor: !input.trim() || isBuilding ? '#e5e7eb' : '#2563eb',
               },
               '&.Mui-disabled': {
                 backgroundColor: '#e5e7eb',

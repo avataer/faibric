@@ -218,12 +218,13 @@ export function PreviewPanel({
       flex: 1,
       display: 'flex',
       flexDirection: 'column',
-      backgroundColor: '#f9fafb',
+      backgroundColor: '#f5f5f5',
     }}>
       {/* Browser Chrome */}
       <Box sx={{
-        backgroundColor: '#f8f9fa',
-        borderBottom: '1px solid #e0e0e0',
+        backgroundColor: '#fff',
+        borderBottom: '1px solid #e5e7eb',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}>
         {/* Top bar with traffic lights, URL bar, and actions */}
         <Box sx={{
@@ -234,10 +235,10 @@ export function PreviewPanel({
           gap: 1.5,
         }}>
           {/* Traffic light dots */}
-          <Box sx={{ display: 'flex', gap: 0.75, flexShrink: 0 }}>
-            <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#ff5f57' }} />
-            <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#febc2e' }} />
-            <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#28c840' }} />
+          <Box sx={{ display: 'flex', gap: 0.75, flexShrink: 0, alignItems: 'center' }}>
+            <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#ff5f57', border: '0.5px solid rgba(0,0,0,0.12)' }} />
+            <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#febc2e', border: '0.5px solid rgba(0,0,0,0.12)' }} />
+            <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#28c840', border: '0.5px solid rgba(0,0,0,0.12)' }} />
           </Box>
 
           {/* URL bar */}
@@ -245,8 +246,8 @@ export function PreviewPanel({
             flex: 1,
             display: 'flex',
             alignItems: 'center',
-            backgroundColor: '#ffffff',
-            border: '1px solid #e0e0e0',
+            backgroundColor: '#f5f5f5',
+            border: '1px solid #e5e7eb',
             borderRadius: 2,
             px: 1.5,
             py: 0.5,
@@ -397,9 +398,9 @@ export function PreviewPanel({
                   py: 0.25,
                   height: 30,
                   ...(sectionEditorOpen ? {
-                    backgroundColor: '#1976d2',
+                    backgroundColor: '#3b82f6',
                     color: '#ffffff',
-                    '&:hover': { backgroundColor: '#1565c0' },
+                    '&:hover': { backgroundColor: '#2563eb' },
                   } : {
                     borderColor: '#d1d5db',
                     color: '#6b7280',
@@ -421,9 +422,9 @@ export function PreviewPanel({
           position: 'relative',
           overflow: 'hidden',
           m: 1.5,
-          borderRadius: '0 0 10px 10px',
-          border: '1px solid #e0e0e0',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          borderRadius: 2.5,
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)',
           backgroundColor: '#fff',
           cursor: editMode ? 'crosshair' : 'default',
         }}
@@ -521,7 +522,7 @@ export function PreviewPanel({
             height: '100%',
             gap: 3,
             p: 4,
-            backgroundColor: '#fafafa',
+            backgroundColor: '#fff',
           }}>
             <DashboardCustomizeIcon sx={{ fontSize: 64, color: '#94a3b8' }} />
             <Typography variant="h5" fontWeight={600} color="text.primary" textAlign="center">
@@ -550,9 +551,17 @@ export function PreviewPanel({
             height: '100%',
             gap: 2.5,
             p: 4,
-            backgroundColor: '#fafafa',
+            backgroundColor: '#fff',
           }}>
-            <WebIcon sx={{ fontSize: 56, color: '#d1d5db' }} />
+            <WebIcon sx={{
+              fontSize: 56,
+              color: '#d1d5db',
+              '@keyframes gentle-pulse': {
+                '0%, 100%': { opacity: 0.6 },
+                '50%': { opacity: 1 },
+              },
+              animation: 'gentle-pulse 2.5s ease-in-out infinite',
+            }} />
             <Typography variant="h6" sx={{ fontWeight: 500, color: '#6b7280' }} textAlign="center">
               Your website preview will appear here
             </Typography>
