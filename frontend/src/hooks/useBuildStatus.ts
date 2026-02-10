@@ -191,7 +191,7 @@ export function useBuildStatus({
 
         // AI unavailable detection: if no progress events after 5 seconds
         // and no deployment URL, the AI service is likely down
-        const elapsed = Date.now() - buildStartTime.current
+        const elapsed = Date.now() - (buildStartTime.current ?? Date.now())
         if (elapsed > 5000 && !hasReceivedProgress.current && !data.deployment_url) {
           setAiUnavailable(true)
           setIsBuilding(false)
@@ -200,7 +200,7 @@ export function useBuildStatus({
         }
       } catch {
         // Status poll failed - check if AI might be unavailable
-        const elapsed = Date.now() - buildStartTime.current
+        const elapsed = Date.now() - (buildStartTime.current ?? Date.now())
         if (elapsed > 5000 && !hasReceivedProgress.current) {
           setAiUnavailable(true)
           setIsBuilding(false)
