@@ -630,6 +630,11 @@ def detect_intent(user_request: str) -> str:
         'not sure', 'maybe ', 'perhaps ', 'seems ', 'feels ',
         'i prefer', 'i wish', 'i want to understand', 'curious about',
         'wondering ', 'thoughts on', 'opinion on', 'feedback on',
+        'still nothing', 'still not', 'not working', 'doesnt work',
+        "doesn't work", 'broken', 'blank', 'empty', 'nothing happens',
+        'nothing changed', 'same thing', 'no change', 'didnt work',
+        "didn't work", 'still the same', 'still broken', 'still blank',
+        'still empty',
     ]
 
     # Check for question mark at end
@@ -645,6 +650,15 @@ def detect_intent(user_request: str) -> str:
     for indicator in feedback_indicators:
         if indicator in request_lower:
             return 'feedback'
+
+    # Short messages (under 15 chars) that don't match command patterns
+    # are likely feedback/typos, not intentional rebuild requests
+    command_patterns = ['add ', 'change ', 'make ', 'remove ', 'delete ', 'update ', 'fix ', 'move ', 'replace ']
+    if len(request_lower) < 15:
+        for pattern in command_patterns:
+            if request_lower.startswith(pattern):
+                return 'command'
+        return 'feedback'
 
     # Default to command (modification request)
     return 'command'
@@ -779,12 +793,6 @@ Keep responses under 3 sentences unless they need more detail."""
             session.status = 'building'
             session.build_progress = 50  # Start at 50% since we already have code
 
-            # CRITICAL: Clear the old deployment URL so frontend keeps polling
-            # Otherwise the poll returns old URL immediately and polling stops
-            project = session.converted_to_project
-            if project:
-                project.deployment_url = ''
-                project.save()
             session.save()
             
             SessionEvent.objects.create(
