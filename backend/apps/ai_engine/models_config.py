@@ -3,24 +3,24 @@ logger = logging.getLogger(__name__)
 
 AI_MODELS = {
     "claude-opus": {
-        "id": "claude-opus-4-5-20251101",
-        "name": "Claude Opus 4.5",
+        "id": "claude-opus-4-6",
+        "name": "Claude Opus 4.6",
         "provider": "anthropic",
         "description": "Most powerful, best for complex apps",
         "credits_per_request": 3,
         "max_tokens": 8192,
     },
     "claude-sonnet": {
-        "id": "claude-sonnet-4-20250514",
-        "name": "Claude Sonnet 4",
+        "id": "claude-sonnet-4-5-20250929",
+        "name": "Claude Sonnet 4.5",
         "provider": "anthropic",
         "description": "Balanced power and speed",
         "credits_per_request": 2,
         "max_tokens": 8192,
     },
     "claude-haiku": {
-        "id": "claude-3-5-haiku-20241022",
-        "name": "Claude Haiku 3.5",
+        "id": "claude-haiku-4-5-20251001",
+        "name": "Claude Haiku 4.5",
         "provider": "anthropic",
         "description": "Fast and economical",
         "credits_per_request": 1,

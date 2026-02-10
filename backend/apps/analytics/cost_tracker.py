@@ -11,27 +11,27 @@ logger = logging.getLogger(__name__)
 
 # Anthropic Pricing (per million tokens) - Updated Dec 2024
 ANTHROPIC_PRICING = {
-    'claude-sonnet-4-20250514': {  # Claude Opus 4.5
+    'claude-opus-4-6': {  # Claude Opus 4.6
         'input': Decimal('15.00'),   # $15 per million input tokens
         'output': Decimal('75.00'),  # $75 per million output tokens
     },
-    'claude-sonnet-4-20250514': {  # Claude Sonnet 4
+    'claude-sonnet-4-5-20250929': {  # Claude Sonnet 4.5
         'input': Decimal('3.00'),
         'output': Decimal('15.00'),
     },
-    'claude-3-5-haiku-20241022': {  # Claude Haiku 3.5
+    'claude-haiku-4-5-20251001': {  # Claude Haiku 4.5
         'input': Decimal('0.80'),
         'output': Decimal('4.00'),
     },
-    'claude-3-haiku-20240307': {  # Claude Haiku 3
+    'claude-3-haiku-20240307': {  # Claude Haiku 3 (legacy)
         'input': Decimal('0.25'),
         'output': Decimal('1.25'),
     },
 }
 
 # Model tiers
-EXPENSIVE_MODEL = 'claude-sonnet-4-20250514'  # For new code generation
-CHEAP_MODEL = 'claude-3-5-haiku-20241022'      # For summaries, reuse, analysis
+EXPENSIVE_MODEL = 'claude-opus-4-6'          # For new code generation
+CHEAP_MODEL = 'claude-haiku-4-5-20251001'    # For summaries, reuse, analysis
 
 
 def calculate_cost(model: str, input_tokens: int, output_tokens: int) -> Decimal:

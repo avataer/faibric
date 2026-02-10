@@ -139,7 +139,7 @@ class AgentModeService:
     def _call_ai(self) -> str:
         """Call Claude API with conversation history."""
         response = self.client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5-20250929",
             max_tokens=8192,
             system=AGENT_SYSTEM_PROMPT,
             messages=self.conversation_history

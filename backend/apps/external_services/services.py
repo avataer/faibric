@@ -51,7 +51,7 @@ class LLMService:
         return not (anthropic_key or openai_key)
     
     @classmethod
-    def generate_code(cls, prompt: str, model: str = "claude-3-opus-20240229") -> Dict[str, Any]:
+    def generate_code(cls, prompt: str, model: str = "claude-opus-4-6") -> Dict[str, Any]:
         """Generate code using LLM or mock."""
         if cls.is_mock_mode():
             logger.info(f"[MOCK] Generating code for: {prompt[:50]}...")
@@ -85,7 +85,7 @@ class LLMService:
             return MockLLMResponse.generate_code(prompt, model)
     
     @classmethod
-    def chat(cls, messages: List[Dict], model: str = "claude-3-sonnet-20240229") -> Dict[str, Any]:
+    def chat(cls, messages: List[Dict], model: str = "claude-sonnet-4-5-20250929") -> Dict[str, Any]:
         """Chat completion using LLM or mock."""
         if cls.is_mock_mode():
             return MockLLMResponse.chat(messages, model)

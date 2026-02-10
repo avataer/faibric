@@ -198,11 +198,11 @@ class LLMRequest(models.Model):
     # Model used
     MODEL_CHOICES = [
         # Primary - Code Generation
-        ('claude-opus-4.5', 'Claude Opus 4.5'),
+        ('claude-opus-4.6', 'Claude Opus 4.6'),
         # Secondary - Chat
-        ('claude-sonnet-4', 'Claude Sonnet 4'),
+        ('claude-sonnet-4.5', 'Claude Sonnet 4.5'),
         # Fast tasks
-        ('claude-haiku-3.5', 'Claude Haiku 3.5'),
+        ('claude-haiku-4.5', 'Claude Haiku 4.5'),
         # Embeddings
         ('text-embedding-3-small', 'OpenAI Embeddings'),
         # Legacy (for old records)

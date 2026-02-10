@@ -23,12 +23,12 @@ logger = logging.getLogger(__name__)
 
 # LLM cost per 1000 tokens (Faibric's cost)
 LLM_COSTS = {
-    # Primary - Claude Opus 4.5 for code generation
-    'claude-opus-4.5': {'input': 0.015, 'output': 0.075},
-    # Secondary - Claude Sonnet 4 for chat
-    'claude-sonnet-4': {'input': 0.003, 'output': 0.015},
-    # Fast tasks - Claude Haiku 3.5
-    'claude-haiku-3.5': {'input': 0.0008, 'output': 0.004},
+    # Primary - Claude Opus 4.6 for code generation
+    'claude-opus-4.6': {'input': 0.015, 'output': 0.075},
+    # Secondary - Claude Sonnet 4.5 for chat
+    'claude-sonnet-4.5': {'input': 0.003, 'output': 0.015},
+    # Fast tasks - Claude Haiku 4.5
+    'claude-haiku-4.5': {'input': 0.0008, 'output': 0.004},
     # Embeddings - OpenAI
     'text-embedding-3-small': {'input': 0.00002, 'output': 0},
     # Legacy models (for old records)

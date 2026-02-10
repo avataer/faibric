@@ -685,7 +685,7 @@ class CostService:
 class AISummaryService:
     """Generate AI-powered summaries and insights."""
     
-    CHEAP_MODEL = "claude-3-5-haiku-20241022"
+    CHEAP_MODEL = "claude-haiku-4-5-20251001"
     
     @staticmethod
     def generate_daily_summary(date=None):

@@ -86,7 +86,7 @@ class ItemViewSet(viewsets.ModelViewSet):
 '''
 
     @classmethod
-    def generate_code(cls, prompt: str, model: str = "claude-3-opus") -> Dict[str, Any]:
+    def generate_code(cls, prompt: str, model: str = "claude-opus-4-6") -> Dict[str, Any]:
         """Generate mock code response."""
         time.sleep(random.uniform(0.5, 2.0))  # Simulate API latency
         
@@ -114,7 +114,7 @@ class ItemViewSet(viewsets.ModelViewSet):
         }
     
     @classmethod
-    def chat(cls, messages: List[Dict], model: str = "claude-3-sonnet") -> Dict[str, Any]:
+    def chat(cls, messages: List[Dict], model: str = "claude-sonnet-4-5-20250929") -> Dict[str, Any]:
         """Generate mock chat response."""
         time.sleep(random.uniform(0.3, 1.0))
         
