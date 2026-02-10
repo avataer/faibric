@@ -524,7 +524,7 @@ const {comp_name} = ({{ children, ...props }}) => (
         full_prompt: str
     ) -> str:
         """
-        Generate a NEW component using Opus 4.5.
+        Generate a NEW component using Opus 4.6.
 
         This component should be:
         - Self-contained
@@ -784,11 +784,11 @@ Return ONLY the component code, nothing else.
         """
         Adapt an existing component for the specific use case.
 
-        Uses Opus 4.5 to customize the component with business-specific content.
+        Uses Opus 4.6 to customize the component with business-specific content.
         This is the key to making reused components feel custom.
 
         NOTE: Previously used Haiku but it was generating invalid JSX (missing closing tags).
-        Opus 4.5 is more reliable for code generation.
+        Opus 4.6 is more reliable for code generation.
         """
         # Sanitize the code first
         code = self._sanitize_code(code)
@@ -995,7 +995,7 @@ Do NOT say "Here's..." or explain anything. ONLY output the code starting with t
         1. Try Connector V2 first (deterministic, 130,000x faster)
         2. Fall back to AI if Connector V2 is unhealthy
 
-        Uses Opus 4.5 to intelligently combine components.
+        Uses Opus 4.6 to intelligently combine components.
         """
         global _connector_v2_status
 

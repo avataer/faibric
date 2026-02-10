@@ -33,6 +33,7 @@ export function useBuildStatus({
 
   // Track processed events to avoid duplicates
   const processedEventIds = useRef<Set<string>>(new Set())
+  const buildStartTime = useRef<number | null>(null)
 
   // Use refs for callbacks to avoid stale closures
   const onDeployedRef = useRef(onDeployed)
@@ -90,7 +91,19 @@ export function useBuildStatus({
     // Don't poll if we're deployed and not rebuilding
     if (!isBuilding && deploymentUrl) return
 
+    // Track build start time for timeout
+    if (isBuilding && !buildStartTime.current) {
+      buildStartTime.current = Date.now()
+    }
+
     const pollStatus = async () => {
+      // Timeout fallback: if building for more than 3 minutes, force stop
+      if (isBuilding && buildStartTime.current && (Date.now() - buildStartTime.current) > 180_000) {
+        setIsBuilding(false)
+        setTargetProgress(100)
+        buildStartTime.current = null
+        return
+      }
       try {
         const res = await api.get(`/api/onboarding/status/${sessionToken}/`)
         const data: BuildStatusResponse = res.data
@@ -102,11 +115,22 @@ export function useBuildStatus({
         setBuildStatus(data.status)
 
         // Handle deployment URL
-        if (data.deployment_url && data.deployment_url !== deploymentUrl) {
+        if (data.deployment_url && data.deployment_url.trim() && data.deployment_url !== deploymentUrl) {
           setDeploymentUrl(data.deployment_url)
           setIsBuilding(false)
           setTargetProgress(100)
           onDeployedRef.current?.(data.deployment_url)
+        }
+
+        // Fallback: if build is done but URL hasn't arrived yet, still stop the spinner
+        if (data.status && ['completed', 'deployed', 'ready', 'live'].includes(data.status.toLowerCase()) && isBuilding) {
+          setIsBuilding(false)
+          setTargetProgress(100)
+          // If URL exists in data but was empty before, try again
+          if (data.deployment_url && data.deployment_url.trim()) {
+            setDeploymentUrl(data.deployment_url)
+            onDeployedRef.current?.(data.deployment_url)
+          }
         }
 
         // Process build progress events
@@ -175,6 +199,7 @@ export function useBuildStatus({
     // Keep showing old deployment until new one is ready (prevents blank screen)
     // setDeploymentUrl(null)  // REMOVED - preserves preview during modifications
     processedEventIds.current.clear()
+    buildStartTime.current = Date.now()
   }, [])
 
   return {

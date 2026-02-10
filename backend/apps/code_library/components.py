@@ -23,7 +23,7 @@ Generation Flow:
 2. For EACH component:
    - Search library for existing block
    - If found → Reuse
-   - If not found → Generate with Opus 4.5 → Save to library
+   - If not found → Generate with Opus 4.6 → Save to library
 3. Compose app from blocks
 4. If customer modifies → Version the block WITH NOTES
 """

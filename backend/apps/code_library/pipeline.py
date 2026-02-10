@@ -220,16 +220,16 @@ class LibraryFirstPipeline:
     Flow:
     1. Extract requirements from user prompt
     2. MANDATORY: Search library for matches
-    3. If good matches found → adapt existing code (Opus 4.5)
-    4. If no matches → generate new code (Opus 4.5) → auto-save to library
+    3. If good matches found → adapt existing code (Opus 4.6)
+    4. If no matches → generate new code (Opus 4.6) → auto-save to library
     5. Verify the AI actually used library (if it should have)
     
-    ALL code generation uses Opus 4.5 - no exceptions.
+    ALL code generation uses Opus 4.6 - no exceptions.
     Items are auto-approved for immediate reuse.
     Admin reviews happen AFTER, not as a gate.
     """
     
-    # ALL code generation uses Opus 4.5
+    # ALL code generation uses Opus 4.6
     GENERATION_MODEL = constants.GENERATION_MODEL
     UTILITY_MODEL = constants.UTILITY_MODEL
     
@@ -382,7 +382,7 @@ INSTRUCTIONS:
 Return ONLY the code, no markdown, no explanation. Start with import, end with export default."""
 
         response = client.messages.create(
-            model=self.GENERATION_MODEL,  # Opus 4.5 for ALL code generation
+            model=self.GENERATION_MODEL,  # Opus 4.6 for ALL code generation
             max_tokens=12000,
             messages=[{"role": "user", "content": prompt}]
         )
@@ -424,7 +424,7 @@ CRITICAL RULES:
 Return the complete App.jsx code (plain JavaScript, NO TypeScript). Start with import, end with export default App;"""
 
         response = client.messages.create(
-            model=self.GENERATION_MODEL,  # Opus 4.5 for ALL code generation
+            model=self.GENERATION_MODEL,  # Opus 4.6 for ALL code generation
             max_tokens=12000,
             messages=[{"role": "user", "content": prompt}]
         )

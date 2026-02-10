@@ -4,7 +4,7 @@ Generate all components needed for 19 Lovable-style use cases.
 
 This script:
 1. Defines all component specifications
-2. Generates code for each using Opus 4.5
+2. Generates code for each using Opus 4.6
 3. Saves to Faibric's code library
 """
 
@@ -268,7 +268,7 @@ COMPONENTS_TO_GENERATE = [
 
 
 def generate_component_code(spec):
-    """Generate component code using Opus 4.5."""
+    """Generate component code using Opus 4.6."""
     
     prompt = f"""
 Generate a REUSABLE React TypeScript component for the following:
