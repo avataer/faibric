@@ -608,28 +608,46 @@ class FollowUpInputView(APIView):
         return Response({'status': 'logged'})
 
 
-def detect_intent(user_request: str) -> str:
+def _keyword_detect_intent(user_request: str, has_pending_change: bool = False) -> str:
     """
-    Detect intent from user message.
-    Returns: 'question', 'feedback', or 'command'
+    Keyword-based intent detection fallback.
+    Returns: 'conversation', 'change_request', or 'confirmation'
     """
     request_lower = user_request.lower().strip()
 
-    # Question patterns - asking for information
-    question_indicators = [
+    # Confirmation patterns - short affirmative responses
+    confirmation_words = [
+        'yes', 'yeah', 'yep', 'yup', 'sure', 'ok', 'okay', 'go ahead',
+        'do it', 'confirm', 'confirmed', 'proceed', 'approved', 'looks good',
+        'go for it', 'absolutely', 'definitely', 'please do', 'make it so',
+        'sounds good', 'lets go', "let's go", 'ship it', 'perfect',
+    ]
+    if has_pending_change:
+        for word in confirmation_words:
+            if request_lower == word or request_lower.rstrip('.!') == word:
+                return 'confirmation'
+
+    # Conversation patterns - greetings, thanks, questions, feedback
+    conversation_indicators = [
+        # Greetings
+        'hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening',
+        # Thanks/positive feedback
+        'thanks', 'thank you', 'great', 'awesome', 'nice', 'perfect',
+        'love it', 'looks good', 'cool', 'sounds good', 'ok', 'got it',
+        'amazing', 'wonderful', 'fantastic', 'brilliant', 'excellent',
+        'nice work', 'good job', 'well done',
+        # Questions
         'what ', 'which ', 'how ', 'can you ', 'could you ', 'would you ',
         'is it ', 'are there ', 'do you ', 'does ', 'why ', 'where ', 'when ',
         'tell me ', 'explain ', 'show me ', 'list ', 'suggestions',
         'options', 'ideas', 'recommend', 'what are', 'what is', 'how do',
         'can i ', 'should i ', 'what if', 'is there', 'are you able',
-    ]
-
-    # Feedback patterns - opinions without action request
-    feedback_indicators = [
+        # Feedback/opinions
         'i dont like', "i don't like", 'i think', 'looks ', 'too ',
         'not sure', 'maybe ', 'perhaps ', 'seems ', 'feels ',
         'i prefer', 'i wish', 'i want to understand', 'curious about',
         'wondering ', 'thoughts on', 'opinion on', 'feedback on',
+        # Bug reports (conversational, not change requests)
         'still nothing', 'still not', 'not working', 'doesnt work',
         "doesn't work", 'broken', 'blank', 'empty', 'nothing happens',
         'nothing changed', 'same thing', 'no change', 'didnt work',
@@ -637,31 +655,70 @@ def detect_intent(user_request: str) -> str:
         'still empty',
     ]
 
-    # Check for question mark at end
+    # Question mark = conversation
     if request_lower.rstrip().endswith('?'):
-        return 'question'
+        return 'conversation'
 
-    # Check question indicators
-    for indicator in question_indicators:
-        if request_lower.startswith(indicator) or f' {indicator}' in request_lower:
-            return 'question'
+    # Check conversation indicators
+    for indicator in conversation_indicators:
+        if request_lower.startswith(indicator) or request_lower == indicator or f' {indicator}' in request_lower:
+            return 'conversation'
 
-    # Check feedback indicators
-    for indicator in feedback_indicators:
-        if indicator in request_lower:
-            return 'feedback'
-
-    # Short messages (under 15 chars) that don't match command patterns
-    # are likely feedback/typos, not intentional rebuild requests
-    command_patterns = ['add ', 'change ', 'make ', 'remove ', 'delete ', 'update ', 'fix ', 'move ', 'replace ']
+    # Short messages without explicit change verbs are likely conversational
+    change_verbs = ['add ', 'change ', 'make ', 'remove ', 'delete ', 'update ', 'fix ', 'move ', 'replace ', 'put ', 'set ', 'create ']
     if len(request_lower) < 15:
-        for pattern in command_patterns:
-            if request_lower.startswith(pattern):
-                return 'command'
-        return 'feedback'
+        for verb in change_verbs:
+            if request_lower.startswith(verb):
+                return 'change_request'
+        return 'conversation'
 
-    # Default to command (modification request)
-    return 'command'
+    # Default to change_request for longer messages with no conversation match
+    return 'change_request'
+
+
+def detect_intent(user_request: str, has_pending_change: bool = False) -> str:
+    """
+    Detect intent from user message using AI classification (Haiku).
+    Falls back to keyword-based detection if AI call fails.
+    Returns: 'conversation', 'change_request', or 'confirmation'
+    """
+    try:
+        from apps.ai_engine.ai_client import AIClient
+
+        pending_context = ""
+        if has_pending_change:
+            pending_context = "IMPORTANT: There is currently a PENDING CHANGE proposal that the user has not yet confirmed or rejected."
+
+        classification_prompt = f"""Classify this website builder chat message into exactly one category.
+
+{pending_context}
+
+Categories:
+- conversation: greetings, thanks, feedback, questions, general chat, compliments, opinions
+- change_request: explicit request to modify, add, remove, or change something in the website
+- confirmation: user confirming/approving a previously proposed change (yes, go ahead, do it, sure, ok, confirmed)
+
+Message: "{user_request}"
+
+Reply with ONLY the category name (conversation, change_request, or confirmation). Nothing else."""
+
+        client = AIClient("claude-haiku")
+        messages = [
+            {"role": "user", "content": classification_prompt}
+        ]
+        result = client.chat_completion(messages, temperature=0.0, max_tokens=20)
+        intent = result.strip().lower().replace('"', '').replace("'", "")
+
+        # Validate the AI response is one of our categories
+        if intent in ('conversation', 'change_request', 'confirmation'):
+            return intent
+
+        # AI returned unexpected value - fall back to keywords
+        return _keyword_detect_intent(user_request, has_pending_change)
+
+    except Exception:
+        # AI call failed - use keyword fallback
+        return _keyword_detect_intent(user_request, has_pending_change)
 
 
 class ModifyBuildView(APIView):
@@ -720,29 +777,113 @@ Keep responses under 3 sentences unless they need more detail."""
                 'error': str(e),
             }
 
+    def handle_change_confirmation(self, session, project, user_request: str):
+        """
+        Generate a confirmation message for a change request.
+        Stores the pending change and returns a confirmation prompt.
+        """
+        from apps.ai_engine.ai_client import AIClient
+
+        # Store the pending modification
+        try:
+            project.pending_modification = user_request
+            project.save(update_fields=['pending_modification'])
+        except Exception:
+            # If storing fails, let the build proceed directly
+            return None
+
+        # Generate a confirmation message using Haiku
+        project_context = ""
+        if project:
+            project_context = f"Project: {project.name}\nDescription: {project.description}\n"
+
+        confirmation_prompt = f"""You are a helpful assistant for Faibric, an AI website builder.
+The user wants to make a change to their website. Before making it, confirm what will happen.
+
+{project_context}
+
+User's request: "{user_request}"
+
+Write a SHORT confirmation message (2-3 sentences) that:
+1. Acknowledges what they want changed
+2. Briefly describes what will be modified
+3. Asks them to confirm (e.g. "Should I go ahead?")
+
+Be concise and friendly. Do NOT generate any code."""
+
+        try:
+            client = AIClient("claude-haiku")
+            messages = [
+                {"role": "user", "content": confirmation_prompt}
+            ]
+            response = client.chat_completion(messages, temperature=0.7, max_tokens=300)
+            return {
+                'mode': 'conversation',
+                'response': response,
+                'intent': 'change_confirmation',
+                'pending_change': True,
+            }
+        except Exception:
+            # If AI fails, use a simple template
+            return {
+                'mode': 'conversation',
+                'response': f'I\'ll make this change: "{user_request[:100]}". Should I go ahead?',
+                'intent': 'change_confirmation',
+                'pending_change': True,
+            }
+
     def post(self, request):
         """Modify existing code or rebuild if needed."""
         import logging
         import threading
         import json
         logger = logging.getLogger(__name__)
-        
+
         session_token = request.data.get('session_token')
         user_request = request.data.get('request')
-        
+
         if not session_token or not user_request:
             return Response({'error': 'Session token and request required'}, status=400)
-        
+
         try:
             session = LandingSession.objects.get(session_token=session_token)
         except LandingSession.DoesNotExist:
             return Response({'error': 'Session not found'}, status=404)
 
-        # INTENT DETECTION: Handle questions and feedback conversationally
-        intent = detect_intent(user_request)
-        if intent in ('question', 'feedback'):
+        # Check if there's a pending modification for context
+        has_pending_change = False
+        project = session.converted_to_project
+        if project and project.pending_modification:
+            has_pending_change = True
+
+        # INTENT DETECTION: AI-based with keyword fallback
+        intent = detect_intent(user_request, has_pending_change)
+
+        # Handle conversation intent (questions, thanks, greetings, feedback)
+        if intent == 'conversation':
             result = self.handle_conversation(session, user_request, intent)
             return Response(result)
+
+        # Handle confirmation intent
+        if intent == 'confirmation':
+            if has_pending_change and project:
+                # Retrieve the pending change and trigger the actual build
+                pending_request = project.pending_modification
+                project.pending_modification = None
+                project.save(update_fields=['pending_modification'])
+                # Use the stored pending request as the actual modification
+                user_request = pending_request
+                # Fall through to the modification/rebuild logic below
+            else:
+                # No pending change - treat as conversation
+                result = self.handle_conversation(session, user_request, 'conversation')
+                return Response(result)
+
+        # Handle change_request intent - ask for confirmation first
+        if intent == 'change_request' and project:
+            confirmation_result = self.handle_change_confirmation(session, project, user_request)
+            if confirmation_result:
+                return Response(confirmation_result)
 
         # Check if this is a modification or new project request
         is_new_project = any(phrase in user_request.lower() for phrase in [

@@ -61,6 +61,12 @@ class Project(models.Model):
     api_code = models.TextField(blank=True)
     frontend_code = models.TextField(blank=True)
     
+    # Builder chat - pending modification awaiting confirmation
+    pending_modification = models.TextField(
+        null=True, blank=True,
+        help_text="Pending modification request awaiting user confirmation"
+    )
+
     # Deployment info
     subdomain = models.CharField(max_length=100, unique=True, null=True, blank=True)
     deployment_url = models.URLField(blank=True)
