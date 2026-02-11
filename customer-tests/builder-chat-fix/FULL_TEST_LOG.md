@@ -390,3 +390,25 @@ All 4 screenshots were re-captured at 2026-02-11T00:36Z using the Playwright scr
 - The core fix is verified: conversational messages (questions, greetings, feedback) no longer trigger unnecessary builds.
 - Token usage: Not directly available from the API response, but each intent classification uses ~50 tokens via Claude Haiku, and conversation responses use ~200-500 tokens.
 - Re-verification on 2026-02-11T00:36Z confirmed the keyword-based fallback works correctly when Anthropic API credits are low. The fallback provides reliable intent classification for all tested message types.
+
+---
+
+## Re-Verification Run 2 (2026-02-11T00:38Z)
+
+### Fresh Session Test
+- Created new session via `POST /api/onboarding/start/`
+- Request: "Build me a coffee shop website with warm brown and cream colors"
+- Session token: `WawkGJir1TdJhghsLVi7K7cdffGFl24CtdnLuYe4teg`
+
+### Test Results
+
+| # | Input | Mode | Intent | Build? | Result |
+|---|-------|------|--------|--------|--------|
+| 1 | "how long will this take?" | conversation | question | NO | PASS |
+| 2 | "make the header blue" | rebuild | - | YES | PASS |
+| 3 | "thanks, looks great!" | conversation | feedback | NO | PASS |
+| 4 | "hello" | conversation | feedback | NO | PASS |
+
+**4/4 tests passed.** All conversational messages returned mode=conversation. Change request correctly triggered rebuild.
+
+Note: AI-based classification falls back to keyword-based detection (Anthropic API credits exhausted). Keyword fallback correctly handles all tested message types. Screenshots re-captured with fresh data.
