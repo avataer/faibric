@@ -446,3 +446,8 @@ Status changed to `deployed` after ~1 min. But the Render site was NOT updated (
 | 01:32:30 | New modification sent (test with unfixed backend) |
 | 01:33:44 | Status: deployed (still to Vercel - backend not redeployed) |
 | 01:38:36 | After screenshot taken - IDENTICAL to before (confirms bug) |
+| 01:39:20 | Worker3: Additional color fix request sent |
+| 01:39:58 | Deploying changes... |
+| 01:41:47 | Changes deployed (API says deployed, Render still shows old bundle) |
+| 01:43:09 | Final Playwright screenshot taken - Render site unchanged |
+| 01:43:30 | Final color verification completed (API code: PASS, Rendered DOM: old build) |
