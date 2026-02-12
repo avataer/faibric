@@ -1014,12 +1014,20 @@ Be concise and friendly. Do NOT generate any code."""
                     # CRITICAL: session_token must be passed so it's injected into the deployed HTML
                     # This allows future modifications to work (Builder uses session_token to call /api/onboarding/modify/)
                     hybrid = get_hybrid_deployer()
-                    deploy_result = hybrid.deploy(
+
+                    # Detect if originally deployed to Render - modifications must go to same provider
+                    deploy_kwargs = dict(
                         project_name=project.name,
                         app_code=new_code,
                         project_id=str(project.id),
-                        session_token=session_token
+                        session_token=session_token,
                     )
+                    current_url = getattr(project, 'deployment_url', '') or ''
+                    if 'onrender.com' in current_url:
+                        deploy_kwargs['force_provider'] = 'render'
+                        deploy_kwargs['needs_backend'] = True
+
+                    deploy_result = hybrid.deploy(**deploy_kwargs)
                     
                     # Update URLs (deploy_result is a DeploymentResult dataclass)
                     if deploy_result.success:

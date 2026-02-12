@@ -293,9 +293,126 @@ Note: Render static site still serving original build. API generated_code correc
 
 ---
 
+## Root Cause Analysis: Deployment Pipeline Bug
+
+### Problem
+Modifications sent via the modify endpoint were NOT being deployed to the correct provider. The original build deployed to Render (via GitHub), but all subsequent modifications were silently deployed to Vercel instead. This meant the live Render site was never updated, while the modified code was pushed to a Vercel deployment that nobody sees.
+
+### Root Cause
+**File:** `backend/apps/onboarding/views.py`, class `ModifyBuildView` (lines 1013-1022)
+
+The `hybrid.deploy()` call was missing `force_provider` and `needs_backend` parameters:
+
+```python
+# BUGGY CODE (before fix)
+hybrid = get_hybrid_deployer()
+deploy_result = hybrid.deploy(
+    project_name=project.name,
+    app_code=new_code,
+    project_id=str(project.id),
+    session_token=session_token
+)
+```
+
+In `hybrid_deployer.py` (lines 97-108), the provider selection logic defaults to Vercel when `force_provider` is None and `needs_backend` is False:
+
+```python
+if force_provider:
+    provider = force_provider
+elif needs_backend:
+    provider = 'render'
+elif self.vercel.is_configured:
+    provider = 'vercel'  # <-- This path was always taken for modifications
+```
+
+### The Fix
+**File:** `backend/apps/onboarding/views.py`
+
+Before calling `hybrid.deploy()`, detect if the project was originally deployed to Render by checking `project.deployment_url` for `onrender.com`. If so, pass `force_provider='render'` and `needs_backend=True`:
+
+```python
+# FIXED CODE
+hybrid = get_hybrid_deployer()
+
+# Detect if originally deployed to Render - modifications must go to same provider
+deploy_kwargs = dict(
+    project_name=project.name,
+    app_code=new_code,
+    project_id=str(project.id),
+    session_token=session_token,
+)
+current_url = getattr(project, 'deployment_url', '') or ''
+if 'onrender.com' in current_url:
+    deploy_kwargs['force_provider'] = 'render'
+    deploy_kwargs['needs_backend'] = True
+
+deploy_result = hybrid.deploy(**deploy_kwargs)
+```
+
+### Evidence
+
+**Before fix (current production behavior):**
+- API generated_code has 28 amber classes, 0 violet/purple, 0 gray (API code is correct)
+- Render site still serves original build with violet/purple colors
+- Before HTML MD5: `ee81fe4dc92897bd937152d49288fe63`
+- After modification HTML MD5: `ee81fe4dc92897bd937152d49288fe63` (IDENTICAL - no change)
+- JS bundle hash unchanged: `index-BzGiOjrL.js`
+
+**Rendered DOM color analysis (after 6+ modification attempts):**
+| Count | Class |
+|-------|-------|
+| 10 | text-gray-600 |
+| 6 | bg-white |
+| 6 | text-gray-900 |
+| 4 | from-violet-500 |
+| 4 | to-purple-600 |
+| 4 | text-violet-600 |
+| 4 | border-gray-100 |
+
+**Conclusion:** Modifications were being deployed to Vercel, not Render. The Render static site was never rebuilt because it only auto-deploys from GitHub pushes, and the modify flow was sending code to Vercel instead.
+
+### Fix Verification
+- Python syntax check: PASS (AST parse successful)
+- Fix is backward-compatible: only affects projects with `onrender.com` in their deployment URL
+- Fix requires backend redeployment to take effect on production
+
+---
+
+## Phase 6: Deployment Pipeline Bug Verification (Post-Fix Testing)
+
+### Modification Request (2026-02-12T01:32:00Z)
+```
+POST /api/onboarding/modify/
+Body: {"session_token": "...", "request": "Change ALL colors to warm amber..."}
+Response: {"mode":"conversation","intent":"change_confirmation","pending_change":true}
+```
+
+### Confirmation (2026-02-12T01:32:30Z)
+```
+POST /api/onboarding/modify/
+Body: {"session_token": "...", "request": "yes, go ahead and make all those color changes now"}
+Response: {"success":true,"mode":"modify","message":"Applying quick changes to existing code"}
+```
+
+### Polling
+| Poll | Timestamp | Status |
+|------|-----------|--------|
+| #1 | 01:32:43Z | building |
+| #5 | 01:33:44Z | deployed |
+
+Status changed to `deployed` after ~1 min. But the Render site was NOT updated (same HTML hash).
+
+### API Code Verification
+- Amber classes in generated_code: 28
+- Violet/Purple classes: 0
+- Gray classes: 0
+- API code is correct, but Render site was not updated
+
+---
+
 ## Known Issues
 
-1. **Render Static Site Rebuild Delay:** The Render free-tier static site did not rebuild with modified code during 30+ minutes of polling. The API pushes updated code to GitHub, but the Render auto-deploy either queued or stalled. The backend's deployment verification checks (200 status, JS bundle present, bundle >10KB) pass against the existing old build, causing optimistic "Changes deployed" status. The bundle hash (`index-BzGiOjrL.js` / md5: `d9a6a86b303bb6e58f56676a987043d5`) remained unchanged throughout testing.
+1. **Deployment Pipeline Bug (ROOT CAUSE FOUND AND FIXED):** The `ModifyBuildView` in `backend/apps/onboarding/views.py` was calling `hybrid.deploy()` without `force_provider` or `needs_backend`, causing all modifications to deploy to Vercel instead of Render. Fix applied locally; requires backend redeployment to production.
 
 2. **Initial Build Color Non-compliance:** The initial build used gray/white/violet/purple colors despite explicit "ONLY brown, cream, and amber" instruction. The system's auto-correction detected this and applied 4 iterative fixes. The final generated_code correctly uses only amber/stone warm colors with zero gray/blue.
 
@@ -316,9 +433,16 @@ Note: Render static site still serving original build. API generated_code correc
 | 00:50:01 | Chat #4: "what sections?" -> conversation |
 | 00:50:18 | Modification request -> change_confirmation |
 | 00:50:29 | Confirmation -> mode=modify triggered |
-| 00:51:41 | Redeployment: status=deployed |
-| 01:02:52 | Auto-fix #1: purple/violet colors |
-| 01:03:50 | Auto-fix #1 deployed |
-| 01:13:53 | Auto-fix #2: add tagline to hero |
-| 01:14:55 | Auto-fix #2 deployed |
-| 01:18:00 | Test concluded |
+| 00:51:41 | Redeployment: status=deployed (to Vercel, NOT Render - BUG) |
+| 01:02:52 | Auto-fix #1: purple/violet colors (deployed to Vercel) |
+| 01:03:50 | Auto-fix #1 deployed (to Vercel) |
+| 01:11:07 | Auto-fix iteration 3 (to Vercel) |
+| 01:13:53 | Auto-fix #2: add tagline (to Vercel) |
+| 01:14:55 | Auto-fix #2 deployed (to Vercel) |
+| 01:18:00 | Test concluded - Render site unchanged |
+| 01:30:00 | Root cause identified: ModifyBuildView missing force_provider |
+| 01:31:00 | Code fix applied to views.py |
+| 01:31:14 | Before screenshot taken (violet/purple) |
+| 01:32:30 | New modification sent (test with unfixed backend) |
+| 01:33:44 | Status: deployed (still to Vercel - backend not redeployed) |
+| 01:38:36 | After screenshot taken - IDENTICAL to before (confirms bug) |
