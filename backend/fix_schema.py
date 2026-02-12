@@ -118,12 +118,41 @@ def fix_projects_schema():
             traceback.print_exc()
 
 
+
+
+def fix_pending_modification():
+    """Add pending_modification column to projects_project if missing."""
+    with connection.cursor() as cursor:
+        try:
+            cursor.execute("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'projects_project'
+                        AND column_name = 'pending_modification'
+                    ) THEN
+                        ALTER TABLE projects_project
+                        ADD COLUMN pending_modification TEXT NULL;
+                        RAISE NOTICE 'Added column: pending_modification';
+                    ELSE
+                        RAISE NOTICE 'Column already exists: pending_modification';
+                    END IF;
+                END $$;
+            """)
+            print("[fix_schema] projects_project.pending_modification fix complete")
+        except Exception as e:
+            print(f"[fix_schema] Error fixing pending_modification: {e}")
+            traceback.print_exc()
+
+
 if __name__ == '__main__':
     print("[fix_schema] Running pre-migration schema fixes...")
     print(f"[fix_schema] DATABASE_URL: {os.environ.get('DATABASE_URL', 'NOT SET')[:50]}...")
     try:
         fix_onboarding_schema()
         fix_projects_schema()
+        fix_pending_modification()
         print("[fix_schema] Schema fixes complete.")
     except Exception as e:
         print(f"[fix_schema] Error: {e}")
