@@ -820,6 +820,7 @@ Be concise and friendly. Do NOT generate any code."""
             ]
             response = client.chat_completion(messages, temperature=0.7, max_tokens=300)
             return {
+                'success': True,
                 'mode': 'conversation',
                 'response': response,
                 'intent': 'change_confirmation',
@@ -828,6 +829,7 @@ Be concise and friendly. Do NOT generate any code."""
         except Exception:
             # If AI fails, use a simple template
             return {
+                'success': True,
                 'mode': 'conversation',
                 'response': f'I\'ll make this change: "{user_request[:100]}". Should I go ahead?',
                 'intent': 'change_confirmation',
@@ -845,12 +847,12 @@ Be concise and friendly. Do NOT generate any code."""
         user_request = request.data.get('request')
 
         if not session_token or not user_request:
-            return Response({'error': 'Session token and request required'}, status=400)
+            return Response({'success': False, 'error': 'Session token and request required'}, status=400)
 
         try:
             session = LandingSession.objects.get(session_token=session_token)
         except LandingSession.DoesNotExist:
-            return Response({'error': 'Session not found'}, status=404)
+            return Response({'success': False, 'error': 'Session not found'}, status=404)
 
         # Check if there's a pending modification for context
         has_pending_change = False
