@@ -1,0 +1,17 @@
+BEFORE COLOR VERIFICATION (from JS bundle)
+Date: 2026-02-12T02:04:00Z
+URL: https://app-229-a-cozy-artisan-coffe.onrender.com
+JS Bundle: index-BzGiOjrL.js
+HTML MD5: 4e2e1defb49c6d520b4fd56676344cff
+
+Color classes found:
+   5 bg-gray-100
+   5 bg-blue-600
+   3 bg-gray-900
+   2 bg-gray-50
+   2 bg-blue-700
+   1 bg-indigo-50
+   1 bg-gray-700
+   1 bg-blue-100
+
+Summary: Site uses gray and blue color scheme. No amber/brown/earth tones present.

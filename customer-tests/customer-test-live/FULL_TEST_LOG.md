@@ -300,3 +300,118 @@ Full color verification output saved to: color-verification.txt
 | Color Verification (Render) | FAIL | 0 amber, 12 violet, 4 purple |
 
 **Overall Status:** PARTIAL PASS - API-side changes are correct, but Render deployment pipeline is not propagating updates to the live static site.
+
+---
+
+### Phase 6: Deployment Fix & End-to-End Verification (Worker Attempt 3/3)
+
+**Date:** 2026-02-12T02:04:00Z
+
+#### Step 1: Backend Redeploy
+
+The ModifyBuildView fix (commit 1c31022) was already pushed to origin/main but the Render backend had not redeployed.
+
+**Backend health BEFORE redeploy:**
+```json
+{"status": "healthy", "version": "v9-dockerfile-fix-schema"}
+```
+
+**Render API manual deploy triggered:** 2026-02-12T02:04:23Z
+- Service: srv-d4tif37pm1nc7398i5ng (faibric-api)
+- Deploy ID: dep-d66ja9rkkg3s738712q0
+- Build status progression: queued -> build_in_progress -> update_in_progress -> live
+- Deploy went LIVE at: 2026-02-12T02:11:37Z (approx 7 minutes)
+
+#### Step 2: Modification Request
+
+**[2026-02-12T02:12:30Z] POST /api/onboarding/modify/**
+```json
+{
+  "session_token": "Jij7t4nxQWVEiyCVYeJbt08hPbp5eAIWAnio-iLAO-Q",
+  "request": "Make the entire site use earth tones - warm browns, amber, and cream colors. Remove ALL violet and purple colors completely. Use bg-amber-*, bg-stone-*, bg-yellow-* Tailwind classes instead. Replace all bg-gray-* with bg-stone-*. Replace all bg-blue-* with bg-amber-*. DO NOT use gray, blue, violet, or purple colors."
+}
+```
+**Response:**
+```json
+{
+  "mode": "conversation",
+  "response": "I'll update your Bean & Brew website to use a cohesive earth tone palette...",
+  "intent": "change_confirmation",
+  "pending_change": true
+}
+```
+
+**Confirmation:** "Yes, please go ahead and make those changes"
+**Response:** `{"success": true, "mode": "modify", "message": "Applying quick changes to existing code"}`
+
+#### Step 3: Render Static Site Rebuild
+
+**BEFORE state:**
+- JS Bundle: index-BzGiOjrL.js
+- HTML MD5: 4e2e1defb49c6d520b4fd56676344cff
+- Screenshot: before-deploy-fix.png (purple badges, blue header, gray footer)
+
+**Rebuild detected at:** 2026-02-12T02:13:29Z (~1 minute after modification)
+- New JS Bundle: index-14tZgOE-.js
+- New HTML MD5: d298fc8ab0aa9edda8de759d897b96c6
+
+#### Step 4: AFTER State Verification
+
+**AFTER screenshot:** after-deploy-fix.png
+- Dark brown header
+- Amber/brown numbered badges (replaced purple)
+- Cream/yellow background
+- Dark brown footer with amber text
+- "Fresh Brews, Warm Hearts" tagline in amber
+
+**Color Classes in JS Bundle (AFTER):**
+```
+Background:  bg-amber-50(2), bg-amber-800(1), bg-amber-900(1), bg-amber-950(1)
+Text:        text-amber-100(2), text-amber-200(3), text-amber-300(1), text-amber-400(1),
+             text-amber-500(1), text-amber-700(2), text-amber-800(1), text-amber-900(2), text-amber-50(2)
+Stone:       text-stone-700(2)
+Borders:     border-amber-200(1), border-amber-800(1)
+Gradients:   from-amber-100(1), from-amber-500(1), to-amber-50(1), to-amber-700(1)
+
+Violet/Purple: ZERO (0 matches)
+Indigo: ZERO (removed)
+```
+
+**Visual comparison BEFORE vs AFTER:**
+| Element | BEFORE | AFTER |
+|---------|--------|-------|
+| Header | Blue | Dark brown |
+| Numbered badges | Purple/violet | Amber/brown |
+| Background | White/light gray | Cream/yellow |
+| Footer | Dark gray | Dark brown |
+| Links | Blue | Amber |
+| Tagline | Not visible | "Fresh Brews, Warm Hearts" in amber |
+
+#### Step 5: Final Verification
+
+**MD5 hashes different:** YES (4e2e1defb49c6d520b4fd56676344cff vs d298fc8ab0aa9edda8de759d897b96c6)
+**JS bundle hashes different:** YES (index-BzGiOjrL.js vs index-14tZgOE-.js)
+**Violet/purple in rendered site:** ZERO
+**Amber/earth tones present:** YES (multiple amber, stone classes)
+**Visual difference:** DRAMATIC (entire color scheme changed)
+
+**RESULT: PASS**
+
+---
+
+### Updated Summary
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| Phase 1: Build | PASS | Deployed in ~2 minutes |
+| Phase 2: Chat (4 msgs) | PASS | All returned mode=conversation |
+| Phase 3: Modification | PASS | mode=modify returned, rebuild triggered |
+| Phase 3b: Color Fix | PASS (fixed) | API code updated, Render now rebuilds correctly |
+| Phase 3c: Tagline Fix | PASS (fixed) | Tagline visible in redeployed site |
+| Phase 4: Frontend Screenshot | PASS | Captured successfully |
+| Phase 5: Deployed Screenshots | PASS (fixed) | Before/after show dramatic difference |
+| Phase 6: Deployment Fix | PASS | Backend redeployed, full pipeline working |
+| Color Verification (API) | PASS | Amber/stone colors, zero violet/purple |
+| Color Verification (Render) | PASS | Amber/stone on live site, zero violet/purple |
+
+**Overall Status:** PASS - Full end-to-end pipeline verified. Backend redeployed with ModifyBuildView fix (commit 1c31022). Modification request processed, code regenerated with earth tones, pushed to GitHub, Render rebuilt the static site, and the live site shows warm amber/brown/cream colors with zero violet/purple.

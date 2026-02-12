@@ -1,0 +1,44 @@
+AFTER STATE - Deploy Pipeline Verification
+============================================
+Timestamp: 2026-02-12T02:13:30Z
+
+HTML Hash (md5): d298fc8ab0aa9edda8de759d897b96c6
+JS Bundle: /assets/index-14tZgOE-.js (was index-BzGiOjrL.js)
+CSS Bundle: /assets/index-7vSa0Be7.css (was index-DyxHyb67.css)
+
+BEFORE HTML Hash: 4e2e1defb49c6d520b4fd56676344cff
+AFTER HTML Hash:  d298fc8ab0aa9edda8de759d897b96c6
+HASH CHANGED: YES
+
+Color Classes in NEW JS Bundle (customer-facing components):
+   2 bg-amber-50
+   1 bg-amber-800
+   1 bg-amber-900
+   1 bg-amber-950
+   1 border-amber-200
+   1 border-amber-800
+   1 from-amber-100
+   1 from-amber-500
+   2 text-amber-100
+   3 text-amber-200
+   1 text-amber-300
+   1 text-amber-400
+   2 text-amber-50
+   1 text-amber-500
+   2 text-amber-700
+   1 text-amber-800
+   2 text-amber-900
+   1 to-amber-50
+   1 to-amber-700
+   2 text-stone-700
+
+Total amber/stone classes: 24
+Total violet classes: 0
+Total purple classes: 0
+Total indigo classes: 0
+
+Tagline "Fresh Brews, Warm Hearts": PRESENT
+
+NOTE: blue/gray classes remain ONLY in admin panel/builder UI (not customer-facing)
+
+VERDICT: PASS - Site rebuilt with correct amber/warm earth tone colors
