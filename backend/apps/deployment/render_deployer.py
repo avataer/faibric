@@ -634,7 +634,10 @@ function FaibricBuilder() {{
 
       const data = await res.json();
 
-      if (data.success) {{
+      if (data.success && data.mode === "conversation") {{
+        setMessages(prev => [...prev, {{ role: "assistant", content: data.response }}]);
+        setIsBuilding(false);
+      }} else if (data.success) {{
         setMessages(prev => [...prev, {{
           role: "assistant",
           content: data.mode === "modify"

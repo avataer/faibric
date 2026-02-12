@@ -765,12 +765,14 @@ Keep responses under 3 sentences unless they need more detail."""
             ]
             response = client.chat_completion(messages, temperature=0.7, max_tokens=500)
             return {
+                'success': True,
                 'mode': 'conversation',
                 'response': response,
                 'intent': intent,
             }
         except Exception as e:
             return {
+                'success': True,
                 'mode': 'conversation',
                 'response': "I'd be happy to help! Could you tell me more about what you'd like to know?",
                 'intent': intent,
