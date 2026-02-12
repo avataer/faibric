@@ -54,8 +54,13 @@ class RenderDeployer:
     def deploy_react_app(self, project):
         """Deploy React app to Render.com"""
         try:
-            # Generate unique branch name for this project
-            branch_name = self._get_branch_name(project)
+            # Check if a Render service already exists for this project
+            # If so, use its branch to push updates (not a new random branch)
+            existing_branch = self._get_existing_service_branch(project)
+            if existing_branch:
+                branch_name = existing_branch
+            else:
+                branch_name = self._get_branch_name(project)
             
             # Extract and prepare the code
             frontend_code = self._extract_frontend_code(project)
@@ -855,6 +860,45 @@ export default App;
         print("[ADMIN] Injected admin panel wrapper with Builder")
         return code
     
+    def _get_existing_service_branch(self, project):
+        """Get the GitHub branch of an existing Render service for this project.
+
+        Returns the branch name if the service exists, None otherwise.
+        This ensures modifications push to the SAME branch the Render service
+        is watching, not a new random branch.
+        """
+        if not self.render_api_key:
+            return None
+
+        headers = {
+            'Authorization': f'Bearer {self.render_api_key}',
+            'Content-Type': 'application/json'
+        }
+
+        import re
+        slug = project.name[:20].lower().replace(' ', '-')
+        slug = re.sub(r'[^a-z0-9-]', '', slug)
+        slug = re.sub(r'-+', '-', slug)
+        slug = slug.strip('-')
+        service_name = f"app-{project.id}-{slug}"
+
+        resp = requests.get(
+            f"{self.render_api}/services?name={service_name}&limit=1",
+            headers=headers
+        )
+
+        if resp.status_code == 200:
+            services = resp.json()
+            for item in services:
+                svc = item.get('service', {})
+                if svc.get('name') == service_name:
+                    branch = svc.get('branch')
+                    if branch:
+                        print(f"[RENDER] Found existing service branch: {branch}")
+                        return branch
+
+        return None
+
     def _create_render_site(self, branch_name, project):
         """Create Render static site for the app"""
         if not self.render_api_key:
