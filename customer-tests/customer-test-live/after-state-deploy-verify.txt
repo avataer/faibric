@@ -1,0 +1,37 @@
+AFTER STATE - Deploy Pipeline Verification
+Timestamp: 2026-02-12T02:14:00Z
+URL: https://app-229-a-cozy-artisan-coffe.onrender.com
+
+HTML MD5: d298fc8ab0aa9edda8de759d897b96c6
+CSS file: /assets/index-7vSa0Be7.css (CHANGED from index-DyxHyb67.css)
+JS file: /assets/index-14tZgOE-.js (CHANGED from index-BzGiOjrL.js)
+
+Color classes in CSS:
+   1 bg-amber-50
+   1 bg-amber-800
+   1 bg-amber-900
+   1 bg-amber-950
+   (blue/gray from admin panel injection)
+
+Color classes in JS (App.jsx):
+   2 bg-amber-50
+   1 bg-amber-800
+   1 bg-amber-900
+   1 bg-amber-950
+   (blue/gray from admin panel injection)
+
+GitHub branch appi706gzgptk App.jsx colors (PURE):
+   6 bg-amber-50
+   2 bg-amber-600
+   2 bg-amber-700
+   1 bg-amber-800
+   1 bg-amber-900
+   0 blue/gray/indigo
+
+Summary: Site CHANGED. Main app uses amber-only colors. Admin panel
+(injected at /faibric route) retains blue/gray for its own UI.
+
+BEFORE vs AFTER Hash Comparison:
+  BEFORE: 4e2e1defb49c6d520b4fd56676344cff
+  AFTER:  d298fc8ab0aa9edda8de759d897b96c6
+  RESULT: DIFFERENT - site rebuilt successfully
