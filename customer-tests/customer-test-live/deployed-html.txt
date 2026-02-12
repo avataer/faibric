@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A Cozy Artisan Coffee Shop Called Bean &_8069470C</title>
+    <style>* { margin: 0; padding: 0; box-sizing: border-box; }</style>
+    <script>
+      // Handle SPA redirect from 404.html
+      (function(){
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {
+          history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-BzGiOjrL.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DyxHyb67.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

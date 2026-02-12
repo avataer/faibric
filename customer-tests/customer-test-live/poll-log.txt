@@ -1,0 +1,1177 @@
+=== POLLING STATUS ===
+Token: Jij7t4nxQWVEiyCVYeJbt08hPbp5eAIWAnio-iLAO-Q
+
+Poll #1 [2026-02-12T00:45:20Z] HTTP=200
+{"status":"verified","email":"dev@faibric.local","is_converted":true,"project_id":"229","deployment_url":"","build_progress":70,"generated_code":"// LIBRARY COMPONENTS - Golden Templates (pre-validated, do not transform)
+
+const Navigation = ({ currentView, onNavigate }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const navItems = [{\"id\": \"menu\", \"label\": \"Our Menu\"}, {\"id\": \"about\", \"label\": \"Our Story\"}, {\"id\": \"brunch\", \"label\": \"Brunch\"}, {\"id\": \"visit\", \"label\": \"Visit Us\"}];
+
+  return (
+    <nav className=\"bg-white shadow-md sticky top-0 z-50\">
+      <div className=\"max-w-7xl mx-auto px-4\">
+        <div className=\"flex justify-between items-center h-16\">
+          <span className=\"text-xl font-bold text-gray-900\">Bean & Brew</span>
+
+          <div className=\"hidden md:flex items-center gap-8\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                className={`text-sm font-medium transition-colors ${
+                  currentView === item.id
+                    ? \"text-indigo-600\"
+                    : \"text-gray-600 hover:text-indigo-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className=\"md:hidden p-2\"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+              {isOpen
+                ? <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />
+                : <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 6h16M4 12h16M4 18h16\" />
+              }
+            </svg>
+          </button>
+        </div>
+
+        {isOpen && (
+          <div className=\"md:hidden pb-4\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => { onNavigate(item.id); setIsOpen(false); }}
+                className={`block w-full text-left py-2 px-4 ${
+                  currentView === item.id ? \"text-indigo-600 bg-indigo-50\" : \"text-gray-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+const HeroSection = ({ onNavigate }) => {
+  const cards = [{\"title\": \"Specialty Espresso\", \"description\": \"Single-origin beans roasted in small batches and pulled to perfection by our skilled baristas. From velvety lattes to bold ristrettos, every sip is an experience.\", \"cta\": \"Explore Our Coffees\"}, {\"title\": \"Artisan Pastries\", \"description\": \"Baked fresh each morning using locally sourced ingredients. Enjoy buttery croissants, almond tarts, and seasonal creations that pair beautifully with your favorite brew.\", \"cta\": \"See the Pastry Case\"}, {\"title\": \"Light Brunch\", \"description\": \"Savor wholesome brunch plates designed to complement your coffee ritual. From avocado toast to eggs Benedict, our kitchen serves comfort with every plate.\", \"cta\": \"View Brunch Menu\"}, {\"title\": \"A Warm Welcome\", \"description\": \"Settle into our inviting atmosphere with exposed wood, soft lighting, and the rich aroma of freshly ground coffee. Bean & Brew is your home away from home.\", \"cta\": \"Plan Your Visit\"}];
+  return (
+    <section className=\"min-h-screen bg-gradient-to-b from-gray-50 to-white py-20\">
+      <div className=\"max-w-7xl mx-auto px-6\">
+        <div className=\"text-center mb-16\">
+          <h1 className=\"text-5xl md:text-6xl font-bold text-gray-900 mb-6\">
+            Where Every Cup Tells a Story
+          </h1>
+          <p className=\"text-xl text-gray-600 max-w-2xl mx-auto\">
+            Handcrafted espresso, freshly baked pastries, and a warm brunch experience crafted with care in our cozy corner of the neighborhood.
+          </p>
+        </div>
+        <div className=\"grid md:grid-cols-3 gap-8\">
+          {(cards || []).map((card, index) => (
+            <div
+              key={index}
+              className=\"bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2\"
+            >
+              <div className=\"w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform\">
+                <span className=\"text-2xl font-bold text-white\">{index + 1}</span>
+              </div>
+              <h3 className=\"text-2xl font-bold text-gray-900 mb-3\">{card.title}</h3>
+              <p className=\"text-gray-600 mb-6\">{card.description}</p>
+              <button
+                onClick={() => onNavigate && onNavigate(\"contact\")}
+                className=\"text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center\"
+              >
+                {card.cta || \"Learn more\"} →
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FooterSection = () => {
+  return (
+    <footer className=\"bg-gray-900 text-white py-12\">
+      <div className=\"max-w-6xl mx-auto px-4\">
+        <div className=\"text-center\">
+          <h3 className=\"text-2xl font-bold mb-2\">Bean & Brew</h3>
+          <p className=\"text-gray-400 mb-6\">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>
+          <div className=\"border-t border-gray-800 pt-6\">
+            <p className=\"text-gray-500 text-sm\">
+              2024 Bean & Brew. All rights reserved.
+            </p>
+            <p className=\"text-gray-600 text-xs mt-2\">Built with Faibric</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+
+// Main App Component
+function App() {
+  const [currentView, setCurrentView] = React.useState(\"hero\");
+
+  const handleNavigate = (viewId) => {
+    setCurrentView(viewId);
+    window.scrollTo({ top: 0, behavior: \"smooth\" });
+  };
+
+  return (
+    <div className=\"min-h-screen bg-white\">
+      <Navigation currentView={currentView} onNavigate={handleNavigate} />
+
+      <main>
+        
+        {currentView === \"hero\" && <HeroSection onNavigate={handleNavigate} />}
+      </main>
+
+      <FooterSection />
+    </div>
+  );
+}
+
+export default App;
+","events":[{"id":"8ad8f447-6564-4a89-9c85-a1599daf3355","event_type":"build_progress","event_data":{"message":"Verifying code locally...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.700755Z"},{"id":"31b33ccb-cf36-46ca-b121-b8c2a884a6ac","event_type":"build_progress","event_data":{"message":"Provisioning database...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.686780Z"},{"id":"d1ae0f2a-a87c-4796-a678-d73c7e9beb88","event_type":"build_progress","event_data":{"message":"Finalizing code...","progress":95},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.684574Z"},{"id":"f4f2d995-28c1-4d49-82a2-2e341e41952f","event_type":"build_progress","event_data":{"message":"Generating content...","progress":15},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.140076Z"},{"id":"6f4c7796-c556-4ced-9ac1-18fe60524fcf","event_type":"build_progress","event_data":{"message":"Analyzing your requirements...","progress":5},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.137670Z"},{"id":"dd30cb30-986d-4e54-9e57-1c1352ad6704","event_type":"build_progress","event_data":{"message":"Created project: A cozy artisan coffee shop cal","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.127881Z"},{"id":"2b9019d0-1793-43c3-8955-9f72c0a318a5","event_type":"request_submitted","event_data":{"request":"A cozy artisan coffee shop called Bean & Brew. I love warm brown and cream colors. We serve specialty espresso, pastries, and light brunch. I want coffee cup imagery and a warm inviting feel. Use ONLY brown, cream, and amber colors. DO NOT use gray, blue, or any other colors. Replace all bg-gray-* with bg-amber-* or bg-stone-*. Replace all bg-white with bg-amber-50."},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.024986Z"}]}
+---
+Poll #2 [2026-02-12T00:45:35Z] HTTP=200
+{"status":"verified","email":"dev@faibric.local","is_converted":true,"project_id":"229","deployment_url":"","build_progress":70,"generated_code":"// LIBRARY COMPONENTS - Golden Templates (pre-validated, do not transform)
+
+const Navigation = ({ currentView, onNavigate }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const navItems = [{\"id\": \"menu\", \"label\": \"Our Menu\"}, {\"id\": \"about\", \"label\": \"Our Story\"}, {\"id\": \"brunch\", \"label\": \"Brunch\"}, {\"id\": \"visit\", \"label\": \"Visit Us\"}];
+
+  return (
+    <nav className=\"bg-white shadow-md sticky top-0 z-50\">
+      <div className=\"max-w-7xl mx-auto px-4\">
+        <div className=\"flex justify-between items-center h-16\">
+          <span className=\"text-xl font-bold text-gray-900\">Bean & Brew</span>
+
+          <div className=\"hidden md:flex items-center gap-8\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                className={`text-sm font-medium transition-colors ${
+                  currentView === item.id
+                    ? \"text-indigo-600\"
+                    : \"text-gray-600 hover:text-indigo-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className=\"md:hidden p-2\"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+              {isOpen
+                ? <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />
+                : <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 6h16M4 12h16M4 18h16\" />
+              }
+            </svg>
+          </button>
+        </div>
+
+        {isOpen && (
+          <div className=\"md:hidden pb-4\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => { onNavigate(item.id); setIsOpen(false); }}
+                className={`block w-full text-left py-2 px-4 ${
+                  currentView === item.id ? \"text-indigo-600 bg-indigo-50\" : \"text-gray-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+const HeroSection = ({ onNavigate }) => {
+  const cards = [{\"title\": \"Specialty Espresso\", \"description\": \"Single-origin beans roasted in small batches and pulled to perfection by our skilled baristas. From velvety lattes to bold ristrettos, every sip is an experience.\", \"cta\": \"Explore Our Coffees\"}, {\"title\": \"Artisan Pastries\", \"description\": \"Baked fresh each morning using locally sourced ingredients. Enjoy buttery croissants, almond tarts, and seasonal creations that pair beautifully with your favorite brew.\", \"cta\": \"See the Pastry Case\"}, {\"title\": \"Light Brunch\", \"description\": \"Savor wholesome brunch plates designed to complement your coffee ritual. From avocado toast to eggs Benedict, our kitchen serves comfort with every plate.\", \"cta\": \"View Brunch Menu\"}, {\"title\": \"A Warm Welcome\", \"description\": \"Settle into our inviting atmosphere with exposed wood, soft lighting, and the rich aroma of freshly ground coffee. Bean & Brew is your home away from home.\", \"cta\": \"Plan Your Visit\"}];
+  return (
+    <section className=\"min-h-screen bg-gradient-to-b from-gray-50 to-white py-20\">
+      <div className=\"max-w-7xl mx-auto px-6\">
+        <div className=\"text-center mb-16\">
+          <h1 className=\"text-5xl md:text-6xl font-bold text-gray-900 mb-6\">
+            Where Every Cup Tells a Story
+          </h1>
+          <p className=\"text-xl text-gray-600 max-w-2xl mx-auto\">
+            Handcrafted espresso, freshly baked pastries, and a warm brunch experience crafted with care in our cozy corner of the neighborhood.
+          </p>
+        </div>
+        <div className=\"grid md:grid-cols-3 gap-8\">
+          {(cards || []).map((card, index) => (
+            <div
+              key={index}
+              className=\"bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2\"
+            >
+              <div className=\"w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform\">
+                <span className=\"text-2xl font-bold text-white\">{index + 1}</span>
+              </div>
+              <h3 className=\"text-2xl font-bold text-gray-900 mb-3\">{card.title}</h3>
+              <p className=\"text-gray-600 mb-6\">{card.description}</p>
+              <button
+                onClick={() => onNavigate && onNavigate(\"contact\")}
+                className=\"text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center\"
+              >
+                {card.cta || \"Learn more\"} →
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FooterSection = () => {
+  return (
+    <footer className=\"bg-gray-900 text-white py-12\">
+      <div className=\"max-w-6xl mx-auto px-4\">
+        <div className=\"text-center\">
+          <h3 className=\"text-2xl font-bold mb-2\">Bean & Brew</h3>
+          <p className=\"text-gray-400 mb-6\">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>
+          <div className=\"border-t border-gray-800 pt-6\">
+            <p className=\"text-gray-500 text-sm\">
+              2024 Bean & Brew. All rights reserved.
+            </p>
+            <p className=\"text-gray-600 text-xs mt-2\">Built with Faibric</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+
+// Main App Component
+function App() {
+  const [currentView, setCurrentView] = React.useState(\"hero\");
+
+  const handleNavigate = (viewId) => {
+    setCurrentView(viewId);
+    window.scrollTo({ top: 0, behavior: \"smooth\" });
+  };
+
+  return (
+    <div className=\"min-h-screen bg-white\">
+      <Navigation currentView={currentView} onNavigate={handleNavigate} />
+
+      <main>
+        
+        {currentView === \"hero\" && <HeroSection onNavigate={handleNavigate} />}
+      </main>
+
+      <FooterSection />
+    </div>
+  );
+}
+
+export default App;
+","events":[{"id":"8ad8f447-6564-4a89-9c85-a1599daf3355","event_type":"build_progress","event_data":{"message":"Verifying code locally...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.700755Z"},{"id":"31b33ccb-cf36-46ca-b121-b8c2a884a6ac","event_type":"build_progress","event_data":{"message":"Provisioning database...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.686780Z"},{"id":"d1ae0f2a-a87c-4796-a678-d73c7e9beb88","event_type":"build_progress","event_data":{"message":"Finalizing code...","progress":95},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.684574Z"},{"id":"f4f2d995-28c1-4d49-82a2-2e341e41952f","event_type":"build_progress","event_data":{"message":"Generating content...","progress":15},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.140076Z"},{"id":"6f4c7796-c556-4ced-9ac1-18fe60524fcf","event_type":"build_progress","event_data":{"message":"Analyzing your requirements...","progress":5},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.137670Z"},{"id":"dd30cb30-986d-4e54-9e57-1c1352ad6704","event_type":"build_progress","event_data":{"message":"Created project: A cozy artisan coffee shop cal","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.127881Z"},{"id":"2b9019d0-1793-43c3-8955-9f72c0a318a5","event_type":"request_submitted","event_data":{"request":"A cozy artisan coffee shop called Bean & Brew. I love warm brown and cream colors. We serve specialty espresso, pastries, and light brunch. I want coffee cup imagery and a warm inviting feel. Use ONLY brown, cream, and amber colors. DO NOT use gray, blue, or any other colors. Replace all bg-gray-* with bg-amber-* or bg-stone-*. Replace all bg-white with bg-amber-50."},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.024986Z"}]}
+---
+Poll #3 [2026-02-12T00:45:50Z] HTTP=200
+{"status":"verified","email":"dev@faibric.local","is_converted":true,"project_id":"229","deployment_url":"","build_progress":70,"generated_code":"// LIBRARY COMPONENTS - Golden Templates (pre-validated, do not transform)
+
+const Navigation = ({ currentView, onNavigate }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const navItems = [{\"id\": \"menu\", \"label\": \"Our Menu\"}, {\"id\": \"about\", \"label\": \"Our Story\"}, {\"id\": \"brunch\", \"label\": \"Brunch\"}, {\"id\": \"visit\", \"label\": \"Visit Us\"}];
+
+  return (
+    <nav className=\"bg-white shadow-md sticky top-0 z-50\">
+      <div className=\"max-w-7xl mx-auto px-4\">
+        <div className=\"flex justify-between items-center h-16\">
+          <span className=\"text-xl font-bold text-gray-900\">Bean & Brew</span>
+
+          <div className=\"hidden md:flex items-center gap-8\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                className={`text-sm font-medium transition-colors ${
+                  currentView === item.id
+                    ? \"text-indigo-600\"
+                    : \"text-gray-600 hover:text-indigo-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className=\"md:hidden p-2\"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+              {isOpen
+                ? <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />
+                : <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 6h16M4 12h16M4 18h16\" />
+              }
+            </svg>
+          </button>
+        </div>
+
+        {isOpen && (
+          <div className=\"md:hidden pb-4\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => { onNavigate(item.id); setIsOpen(false); }}
+                className={`block w-full text-left py-2 px-4 ${
+                  currentView === item.id ? \"text-indigo-600 bg-indigo-50\" : \"text-gray-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+const HeroSection = ({ onNavigate }) => {
+  const cards = [{\"title\": \"Specialty Espresso\", \"description\": \"Single-origin beans roasted in small batches and pulled to perfection by our skilled baristas. From velvety lattes to bold ristrettos, every sip is an experience.\", \"cta\": \"Explore Our Coffees\"}, {\"title\": \"Artisan Pastries\", \"description\": \"Baked fresh each morning using locally sourced ingredients. Enjoy buttery croissants, almond tarts, and seasonal creations that pair beautifully with your favorite brew.\", \"cta\": \"See the Pastry Case\"}, {\"title\": \"Light Brunch\", \"description\": \"Savor wholesome brunch plates designed to complement your coffee ritual. From avocado toast to eggs Benedict, our kitchen serves comfort with every plate.\", \"cta\": \"View Brunch Menu\"}, {\"title\": \"A Warm Welcome\", \"description\": \"Settle into our inviting atmosphere with exposed wood, soft lighting, and the rich aroma of freshly ground coffee. Bean & Brew is your home away from home.\", \"cta\": \"Plan Your Visit\"}];
+  return (
+    <section className=\"min-h-screen bg-gradient-to-b from-gray-50 to-white py-20\">
+      <div className=\"max-w-7xl mx-auto px-6\">
+        <div className=\"text-center mb-16\">
+          <h1 className=\"text-5xl md:text-6xl font-bold text-gray-900 mb-6\">
+            Where Every Cup Tells a Story
+          </h1>
+          <p className=\"text-xl text-gray-600 max-w-2xl mx-auto\">
+            Handcrafted espresso, freshly baked pastries, and a warm brunch experience crafted with care in our cozy corner of the neighborhood.
+          </p>
+        </div>
+        <div className=\"grid md:grid-cols-3 gap-8\">
+          {(cards || []).map((card, index) => (
+            <div
+              key={index}
+              className=\"bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2\"
+            >
+              <div className=\"w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform\">
+                <span className=\"text-2xl font-bold text-white\">{index + 1}</span>
+              </div>
+              <h3 className=\"text-2xl font-bold text-gray-900 mb-3\">{card.title}</h3>
+              <p className=\"text-gray-600 mb-6\">{card.description}</p>
+              <button
+                onClick={() => onNavigate && onNavigate(\"contact\")}
+                className=\"text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center\"
+              >
+                {card.cta || \"Learn more\"} →
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FooterSection = () => {
+  return (
+    <footer className=\"bg-gray-900 text-white py-12\">
+      <div className=\"max-w-6xl mx-auto px-4\">
+        <div className=\"text-center\">
+          <h3 className=\"text-2xl font-bold mb-2\">Bean & Brew</h3>
+          <p className=\"text-gray-400 mb-6\">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>
+          <div className=\"border-t border-gray-800 pt-6\">
+            <p className=\"text-gray-500 text-sm\">
+              2024 Bean & Brew. All rights reserved.
+            </p>
+            <p className=\"text-gray-600 text-xs mt-2\">Built with Faibric</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+
+// Main App Component
+function App() {
+  const [currentView, setCurrentView] = React.useState(\"hero\");
+
+  const handleNavigate = (viewId) => {
+    setCurrentView(viewId);
+    window.scrollTo({ top: 0, behavior: \"smooth\" });
+  };
+
+  return (
+    <div className=\"min-h-screen bg-white\">
+      <Navigation currentView={currentView} onNavigate={handleNavigate} />
+
+      <main>
+        
+        {currentView === \"hero\" && <HeroSection onNavigate={handleNavigate} />}
+      </main>
+
+      <FooterSection />
+    </div>
+  );
+}
+
+export default App;
+","events":[{"id":"994177e3-8d03-4ef8-99e6-90529a427d1b","event_type":"build_progress","event_data":{"message":"Code validated - deploying...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.945194Z"},{"id":"4fcb1688-ae76-4c9b-9d17-f813bbae2d69","event_type":"build_progress","event_data":{"message":"Preview warning - attempting deployment...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.932212Z"},{"id":"8ad8f447-6564-4a89-9c85-a1599daf3355","event_type":"build_progress","event_data":{"message":"Verifying code locally...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.700755Z"},{"id":"31b33ccb-cf36-46ca-b121-b8c2a884a6ac","event_type":"build_progress","event_data":{"message":"Provisioning database...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.686780Z"},{"id":"d1ae0f2a-a87c-4796-a678-d73c7e9beb88","event_type":"build_progress","event_data":{"message":"Finalizing code...","progress":95},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.684574Z"},{"id":"f4f2d995-28c1-4d49-82a2-2e341e41952f","event_type":"build_progress","event_data":{"message":"Generating content...","progress":15},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.140076Z"},{"id":"6f4c7796-c556-4ced-9ac1-18fe60524fcf","event_type":"build_progress","event_data":{"message":"Analyzing your requirements...","progress":5},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.137670Z"},{"id":"dd30cb30-986d-4e54-9e57-1c1352ad6704","event_type":"build_progress","event_data":{"message":"Created project: A cozy artisan coffee shop cal","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.127881Z"},{"id":"2b9019d0-1793-43c3-8955-9f72c0a318a5","event_type":"request_submitted","event_data":{"request":"A cozy artisan coffee shop called Bean & Brew. I love warm brown and cream colors. We serve specialty espresso, pastries, and light brunch. I want coffee cup imagery and a warm inviting feel. Use ONLY brown, cream, and amber colors. DO NOT use gray, blue, or any other colors. Replace all bg-gray-* with bg-amber-* or bg-stone-*. Replace all bg-white with bg-amber-50."},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.024986Z"}]}
+---
+Poll #4 [2026-02-12T00:46:06Z] HTTP=200
+{"status":"verified","email":"dev@faibric.local","is_converted":true,"project_id":"229","deployment_url":"","build_progress":70,"generated_code":"// LIBRARY COMPONENTS - Golden Templates (pre-validated, do not transform)
+
+const Navigation = ({ currentView, onNavigate }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const navItems = [{\"id\": \"menu\", \"label\": \"Our Menu\"}, {\"id\": \"about\", \"label\": \"Our Story\"}, {\"id\": \"brunch\", \"label\": \"Brunch\"}, {\"id\": \"visit\", \"label\": \"Visit Us\"}];
+
+  return (
+    <nav className=\"bg-white shadow-md sticky top-0 z-50\">
+      <div className=\"max-w-7xl mx-auto px-4\">
+        <div className=\"flex justify-between items-center h-16\">
+          <span className=\"text-xl font-bold text-gray-900\">Bean & Brew</span>
+
+          <div className=\"hidden md:flex items-center gap-8\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                className={`text-sm font-medium transition-colors ${
+                  currentView === item.id
+                    ? \"text-indigo-600\"
+                    : \"text-gray-600 hover:text-indigo-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className=\"md:hidden p-2\"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+              {isOpen
+                ? <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />
+                : <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 6h16M4 12h16M4 18h16\" />
+              }
+            </svg>
+          </button>
+        </div>
+
+        {isOpen && (
+          <div className=\"md:hidden pb-4\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => { onNavigate(item.id); setIsOpen(false); }}
+                className={`block w-full text-left py-2 px-4 ${
+                  currentView === item.id ? \"text-indigo-600 bg-indigo-50\" : \"text-gray-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+const HeroSection = ({ onNavigate }) => {
+  const cards = [{\"title\": \"Specialty Espresso\", \"description\": \"Single-origin beans roasted in small batches and pulled to perfection by our skilled baristas. From velvety lattes to bold ristrettos, every sip is an experience.\", \"cta\": \"Explore Our Coffees\"}, {\"title\": \"Artisan Pastries\", \"description\": \"Baked fresh each morning using locally sourced ingredients. Enjoy buttery croissants, almond tarts, and seasonal creations that pair beautifully with your favorite brew.\", \"cta\": \"See the Pastry Case\"}, {\"title\": \"Light Brunch\", \"description\": \"Savor wholesome brunch plates designed to complement your coffee ritual. From avocado toast to eggs Benedict, our kitchen serves comfort with every plate.\", \"cta\": \"View Brunch Menu\"}, {\"title\": \"A Warm Welcome\", \"description\": \"Settle into our inviting atmosphere with exposed wood, soft lighting, and the rich aroma of freshly ground coffee. Bean & Brew is your home away from home.\", \"cta\": \"Plan Your Visit\"}];
+  return (
+    <section className=\"min-h-screen bg-gradient-to-b from-gray-50 to-white py-20\">
+      <div className=\"max-w-7xl mx-auto px-6\">
+        <div className=\"text-center mb-16\">
+          <h1 className=\"text-5xl md:text-6xl font-bold text-gray-900 mb-6\">
+            Where Every Cup Tells a Story
+          </h1>
+          <p className=\"text-xl text-gray-600 max-w-2xl mx-auto\">
+            Handcrafted espresso, freshly baked pastries, and a warm brunch experience crafted with care in our cozy corner of the neighborhood.
+          </p>
+        </div>
+        <div className=\"grid md:grid-cols-3 gap-8\">
+          {(cards || []).map((card, index) => (
+            <div
+              key={index}
+              className=\"bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2\"
+            >
+              <div className=\"w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform\">
+                <span className=\"text-2xl font-bold text-white\">{index + 1}</span>
+              </div>
+              <h3 className=\"text-2xl font-bold text-gray-900 mb-3\">{card.title}</h3>
+              <p className=\"text-gray-600 mb-6\">{card.description}</p>
+              <button
+                onClick={() => onNavigate && onNavigate(\"contact\")}
+                className=\"text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center\"
+              >
+                {card.cta || \"Learn more\"} →
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FooterSection = () => {
+  return (
+    <footer className=\"bg-gray-900 text-white py-12\">
+      <div className=\"max-w-6xl mx-auto px-4\">
+        <div className=\"text-center\">
+          <h3 className=\"text-2xl font-bold mb-2\">Bean & Brew</h3>
+          <p className=\"text-gray-400 mb-6\">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>
+          <div className=\"border-t border-gray-800 pt-6\">
+            <p className=\"text-gray-500 text-sm\">
+              2024 Bean & Brew. All rights reserved.
+            </p>
+            <p className=\"text-gray-600 text-xs mt-2\">Built with Faibric</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+
+// Main App Component
+function App() {
+  const [currentView, setCurrentView] = React.useState(\"hero\");
+
+  const handleNavigate = (viewId) => {
+    setCurrentView(viewId);
+    window.scrollTo({ top: 0, behavior: \"smooth\" });
+  };
+
+  return (
+    <div className=\"min-h-screen bg-white\">
+      <Navigation currentView={currentView} onNavigate={handleNavigate} />
+
+      <main>
+        
+        {currentView === \"hero\" && <HeroSection onNavigate={handleNavigate} />}
+      </main>
+
+      <FooterSection />
+    </div>
+  );
+}
+
+export default App;
+","events":[{"id":"994177e3-8d03-4ef8-99e6-90529a427d1b","event_type":"build_progress","event_data":{"message":"Code validated - deploying...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.945194Z"},{"id":"4fcb1688-ae76-4c9b-9d17-f813bbae2d69","event_type":"build_progress","event_data":{"message":"Preview warning - attempting deployment...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.932212Z"},{"id":"8ad8f447-6564-4a89-9c85-a1599daf3355","event_type":"build_progress","event_data":{"message":"Verifying code locally...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.700755Z"},{"id":"31b33ccb-cf36-46ca-b121-b8c2a884a6ac","event_type":"build_progress","event_data":{"message":"Provisioning database...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.686780Z"},{"id":"d1ae0f2a-a87c-4796-a678-d73c7e9beb88","event_type":"build_progress","event_data":{"message":"Finalizing code...","progress":95},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.684574Z"},{"id":"f4f2d995-28c1-4d49-82a2-2e341e41952f","event_type":"build_progress","event_data":{"message":"Generating content...","progress":15},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.140076Z"},{"id":"6f4c7796-c556-4ced-9ac1-18fe60524fcf","event_type":"build_progress","event_data":{"message":"Analyzing your requirements...","progress":5},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.137670Z"},{"id":"dd30cb30-986d-4e54-9e57-1c1352ad6704","event_type":"build_progress","event_data":{"message":"Created project: A cozy artisan coffee shop cal","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.127881Z"},{"id":"2b9019d0-1793-43c3-8955-9f72c0a318a5","event_type":"request_submitted","event_data":{"request":"A cozy artisan coffee shop called Bean & Brew. I love warm brown and cream colors. We serve specialty espresso, pastries, and light brunch. I want coffee cup imagery and a warm inviting feel. Use ONLY brown, cream, and amber colors. DO NOT use gray, blue, or any other colors. Replace all bg-gray-* with bg-amber-* or bg-stone-*. Replace all bg-white with bg-amber-50."},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.024986Z"}]}
+---
+Poll #5 [2026-02-12T00:46:21Z] HTTP=200
+{"status":"verified","email":"dev@faibric.local","is_converted":true,"project_id":"229","deployment_url":"https://app-229-a-cozy-artisan-coffe.onrender.com","build_progress":85,"generated_code":"// LIBRARY COMPONENTS - Golden Templates (pre-validated, do not transform)
+
+const Navigation = ({ currentView, onNavigate }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const navItems = [{\"id\": \"menu\", \"label\": \"Our Menu\"}, {\"id\": \"about\", \"label\": \"Our Story\"}, {\"id\": \"brunch\", \"label\": \"Brunch\"}, {\"id\": \"visit\", \"label\": \"Visit Us\"}];
+
+  return (
+    <nav className=\"bg-white shadow-md sticky top-0 z-50\">
+      <div className=\"max-w-7xl mx-auto px-4\">
+        <div className=\"flex justify-between items-center h-16\">
+          <span className=\"text-xl font-bold text-gray-900\">Bean & Brew</span>
+
+          <div className=\"hidden md:flex items-center gap-8\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                className={`text-sm font-medium transition-colors ${
+                  currentView === item.id
+                    ? \"text-indigo-600\"
+                    : \"text-gray-600 hover:text-indigo-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className=\"md:hidden p-2\"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+              {isOpen
+                ? <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />
+                : <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 6h16M4 12h16M4 18h16\" />
+              }
+            </svg>
+          </button>
+        </div>
+
+        {isOpen && (
+          <div className=\"md:hidden pb-4\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => { onNavigate(item.id); setIsOpen(false); }}
+                className={`block w-full text-left py-2 px-4 ${
+                  currentView === item.id ? \"text-indigo-600 bg-indigo-50\" : \"text-gray-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+const HeroSection = ({ onNavigate }) => {
+  const cards = [{\"title\": \"Specialty Espresso\", \"description\": \"Single-origin beans roasted in small batches and pulled to perfection by our skilled baristas. From velvety lattes to bold ristrettos, every sip is an experience.\", \"cta\": \"Explore Our Coffees\"}, {\"title\": \"Artisan Pastries\", \"description\": \"Baked fresh each morning using locally sourced ingredients. Enjoy buttery croissants, almond tarts, and seasonal creations that pair beautifully with your favorite brew.\", \"cta\": \"See the Pastry Case\"}, {\"title\": \"Light Brunch\", \"description\": \"Savor wholesome brunch plates designed to complement your coffee ritual. From avocado toast to eggs Benedict, our kitchen serves comfort with every plate.\", \"cta\": \"View Brunch Menu\"}, {\"title\": \"A Warm Welcome\", \"description\": \"Settle into our inviting atmosphere with exposed wood, soft lighting, and the rich aroma of freshly ground coffee. Bean & Brew is your home away from home.\", \"cta\": \"Plan Your Visit\"}];
+  return (
+    <section className=\"min-h-screen bg-gradient-to-b from-gray-50 to-white py-20\">
+      <div className=\"max-w-7xl mx-auto px-6\">
+        <div className=\"text-center mb-16\">
+          <h1 className=\"text-5xl md:text-6xl font-bold text-gray-900 mb-6\">
+            Where Every Cup Tells a Story
+          </h1>
+          <p className=\"text-xl text-gray-600 max-w-2xl mx-auto\">
+            Handcrafted espresso, freshly baked pastries, and a warm brunch experience crafted with care in our cozy corner of the neighborhood.
+          </p>
+        </div>
+        <div className=\"grid md:grid-cols-3 gap-8\">
+          {(cards || []).map((card, index) => (
+            <div
+              key={index}
+              className=\"bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2\"
+            >
+              <div className=\"w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform\">
+                <span className=\"text-2xl font-bold text-white\">{index + 1}</span>
+              </div>
+              <h3 className=\"text-2xl font-bold text-gray-900 mb-3\">{card.title}</h3>
+              <p className=\"text-gray-600 mb-6\">{card.description}</p>
+              <button
+                onClick={() => onNavigate && onNavigate(\"contact\")}
+                className=\"text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center\"
+              >
+                {card.cta || \"Learn more\"} →
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FooterSection = () => {
+  return (
+    <footer className=\"bg-gray-900 text-white py-12\">
+      <div className=\"max-w-6xl mx-auto px-4\">
+        <div className=\"text-center\">
+          <h3 className=\"text-2xl font-bold mb-2\">Bean & Brew</h3>
+          <p className=\"text-gray-400 mb-6\">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>
+          <div className=\"border-t border-gray-800 pt-6\">
+            <p className=\"text-gray-500 text-sm\">
+              2024 Bean & Brew. All rights reserved.
+            </p>
+            <p className=\"text-gray-600 text-xs mt-2\">Built with Faibric</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+
+// Main App Component
+function App() {
+  const [currentView, setCurrentView] = React.useState(\"hero\");
+
+  const handleNavigate = (viewId) => {
+    setCurrentView(viewId);
+    window.scrollTo({ top: 0, behavior: \"smooth\" });
+  };
+
+  return (
+    <div className=\"min-h-screen bg-white\">
+      <Navigation currentView={currentView} onNavigate={handleNavigate} />
+
+      <main>
+        
+        {currentView === \"hero\" && <HeroSection onNavigate={handleNavigate} />}
+      </main>
+
+      <FooterSection />
+    </div>
+  );
+}
+
+export default App;
+","events":[{"id":"19e1710e-0251-41ff-a5dd-b51f168ccf8c","event_type":"build_progress","event_data":{"message":"Building... (0s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.828946Z"},{"id":"6d162634-26f3-4cfc-832a-57158e58b7cd","event_type":"build_progress","event_data":{"message":"Build queued: https://app-229-a-cozy-artisan-coffe.onrender.com - waiting for render...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.712661Z"},{"id":"994177e3-8d03-4ef8-99e6-90529a427d1b","event_type":"build_progress","event_data":{"message":"Code validated - deploying...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.945194Z"},{"id":"4fcb1688-ae76-4c9b-9d17-f813bbae2d69","event_type":"build_progress","event_data":{"message":"Preview warning - attempting deployment...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.932212Z"},{"id":"8ad8f447-6564-4a89-9c85-a1599daf3355","event_type":"build_progress","event_data":{"message":"Verifying code locally...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.700755Z"},{"id":"31b33ccb-cf36-46ca-b121-b8c2a884a6ac","event_type":"build_progress","event_data":{"message":"Provisioning database...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.686780Z"},{"id":"d1ae0f2a-a87c-4796-a678-d73c7e9beb88","event_type":"build_progress","event_data":{"message":"Finalizing code...","progress":95},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.684574Z"},{"id":"f4f2d995-28c1-4d49-82a2-2e341e41952f","event_type":"build_progress","event_data":{"message":"Generating content...","progress":15},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.140076Z"},{"id":"6f4c7796-c556-4ced-9ac1-18fe60524fcf","event_type":"build_progress","event_data":{"message":"Analyzing your requirements...","progress":5},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.137670Z"},{"id":"dd30cb30-986d-4e54-9e57-1c1352ad6704","event_type":"build_progress","event_data":{"message":"Created project: A cozy artisan coffee shop cal","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.127881Z"}]}
+---
+Poll #6 [2026-02-12T00:46:36Z] HTTP=200
+{"status":"verified","email":"dev@faibric.local","is_converted":true,"project_id":"229","deployment_url":"https://app-229-a-cozy-artisan-coffe.onrender.com","build_progress":85,"generated_code":"// LIBRARY COMPONENTS - Golden Templates (pre-validated, do not transform)
+
+const Navigation = ({ currentView, onNavigate }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const navItems = [{\"id\": \"menu\", \"label\": \"Our Menu\"}, {\"id\": \"about\", \"label\": \"Our Story\"}, {\"id\": \"brunch\", \"label\": \"Brunch\"}, {\"id\": \"visit\", \"label\": \"Visit Us\"}];
+
+  return (
+    <nav className=\"bg-white shadow-md sticky top-0 z-50\">
+      <div className=\"max-w-7xl mx-auto px-4\">
+        <div className=\"flex justify-between items-center h-16\">
+          <span className=\"text-xl font-bold text-gray-900\">Bean & Brew</span>
+
+          <div className=\"hidden md:flex items-center gap-8\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                className={`text-sm font-medium transition-colors ${
+                  currentView === item.id
+                    ? \"text-indigo-600\"
+                    : \"text-gray-600 hover:text-indigo-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className=\"md:hidden p-2\"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+              {isOpen
+                ? <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />
+                : <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 6h16M4 12h16M4 18h16\" />
+              }
+            </svg>
+          </button>
+        </div>
+
+        {isOpen && (
+          <div className=\"md:hidden pb-4\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => { onNavigate(item.id); setIsOpen(false); }}
+                className={`block w-full text-left py-2 px-4 ${
+                  currentView === item.id ? \"text-indigo-600 bg-indigo-50\" : \"text-gray-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+const HeroSection = ({ onNavigate }) => {
+  const cards = [{\"title\": \"Specialty Espresso\", \"description\": \"Single-origin beans roasted in small batches and pulled to perfection by our skilled baristas. From velvety lattes to bold ristrettos, every sip is an experience.\", \"cta\": \"Explore Our Coffees\"}, {\"title\": \"Artisan Pastries\", \"description\": \"Baked fresh each morning using locally sourced ingredients. Enjoy buttery croissants, almond tarts, and seasonal creations that pair beautifully with your favorite brew.\", \"cta\": \"See the Pastry Case\"}, {\"title\": \"Light Brunch\", \"description\": \"Savor wholesome brunch plates designed to complement your coffee ritual. From avocado toast to eggs Benedict, our kitchen serves comfort with every plate.\", \"cta\": \"View Brunch Menu\"}, {\"title\": \"A Warm Welcome\", \"description\": \"Settle into our inviting atmosphere with exposed wood, soft lighting, and the rich aroma of freshly ground coffee. Bean & Brew is your home away from home.\", \"cta\": \"Plan Your Visit\"}];
+  return (
+    <section className=\"min-h-screen bg-gradient-to-b from-gray-50 to-white py-20\">
+      <div className=\"max-w-7xl mx-auto px-6\">
+        <div className=\"text-center mb-16\">
+          <h1 className=\"text-5xl md:text-6xl font-bold text-gray-900 mb-6\">
+            Where Every Cup Tells a Story
+          </h1>
+          <p className=\"text-xl text-gray-600 max-w-2xl mx-auto\">
+            Handcrafted espresso, freshly baked pastries, and a warm brunch experience crafted with care in our cozy corner of the neighborhood.
+          </p>
+        </div>
+        <div className=\"grid md:grid-cols-3 gap-8\">
+          {(cards || []).map((card, index) => (
+            <div
+              key={index}
+              className=\"bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2\"
+            >
+              <div className=\"w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform\">
+                <span className=\"text-2xl font-bold text-white\">{index + 1}</span>
+              </div>
+              <h3 className=\"text-2xl font-bold text-gray-900 mb-3\">{card.title}</h3>
+              <p className=\"text-gray-600 mb-6\">{card.description}</p>
+              <button
+                onClick={() => onNavigate && onNavigate(\"contact\")}
+                className=\"text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center\"
+              >
+                {card.cta || \"Learn more\"} →
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FooterSection = () => {
+  return (
+    <footer className=\"bg-gray-900 text-white py-12\">
+      <div className=\"max-w-6xl mx-auto px-4\">
+        <div className=\"text-center\">
+          <h3 className=\"text-2xl font-bold mb-2\">Bean & Brew</h3>
+          <p className=\"text-gray-400 mb-6\">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>
+          <div className=\"border-t border-gray-800 pt-6\">
+            <p className=\"text-gray-500 text-sm\">
+              2024 Bean & Brew. All rights reserved.
+            </p>
+            <p className=\"text-gray-600 text-xs mt-2\">Built with Faibric</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+
+// Main App Component
+function App() {
+  const [currentView, setCurrentView] = React.useState(\"hero\");
+
+  const handleNavigate = (viewId) => {
+    setCurrentView(viewId);
+    window.scrollTo({ top: 0, behavior: \"smooth\" });
+  };
+
+  return (
+    <div className=\"min-h-screen bg-white\">
+      <Navigation currentView={currentView} onNavigate={handleNavigate} />
+
+      <main>
+        
+        {currentView === \"hero\" && <HeroSection onNavigate={handleNavigate} />}
+      </main>
+
+      <FooterSection />
+    </div>
+  );
+}
+
+export default App;
+","events":[{"id":"95cea1c8-ec89-4329-af22-1320938413ce","event_type":"build_progress","event_data":{"message":"Building... (15s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:35.922693Z"},{"id":"19e1710e-0251-41ff-a5dd-b51f168ccf8c","event_type":"build_progress","event_data":{"message":"Building... (0s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.828946Z"},{"id":"6d162634-26f3-4cfc-832a-57158e58b7cd","event_type":"build_progress","event_data":{"message":"Build queued: https://app-229-a-cozy-artisan-coffe.onrender.com - waiting for render...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.712661Z"},{"id":"994177e3-8d03-4ef8-99e6-90529a427d1b","event_type":"build_progress","event_data":{"message":"Code validated - deploying...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.945194Z"},{"id":"4fcb1688-ae76-4c9b-9d17-f813bbae2d69","event_type":"build_progress","event_data":{"message":"Preview warning - attempting deployment...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.932212Z"},{"id":"8ad8f447-6564-4a89-9c85-a1599daf3355","event_type":"build_progress","event_data":{"message":"Verifying code locally...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.700755Z"},{"id":"31b33ccb-cf36-46ca-b121-b8c2a884a6ac","event_type":"build_progress","event_data":{"message":"Provisioning database...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.686780Z"},{"id":"d1ae0f2a-a87c-4796-a678-d73c7e9beb88","event_type":"build_progress","event_data":{"message":"Finalizing code...","progress":95},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.684574Z"},{"id":"f4f2d995-28c1-4d49-82a2-2e341e41952f","event_type":"build_progress","event_data":{"message":"Generating content...","progress":15},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.140076Z"},{"id":"6f4c7796-c556-4ced-9ac1-18fe60524fcf","event_type":"build_progress","event_data":{"message":"Analyzing your requirements...","progress":5},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.137670Z"}]}
+---
+Poll #7 [2026-02-12T00:46:52Z] HTTP=200
+{"status":"verified","email":"dev@faibric.local","is_converted":true,"project_id":"229","deployment_url":"https://app-229-a-cozy-artisan-coffe.onrender.com","build_progress":85,"generated_code":"// LIBRARY COMPONENTS - Golden Templates (pre-validated, do not transform)
+
+const Navigation = ({ currentView, onNavigate }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const navItems = [{\"id\": \"menu\", \"label\": \"Our Menu\"}, {\"id\": \"about\", \"label\": \"Our Story\"}, {\"id\": \"brunch\", \"label\": \"Brunch\"}, {\"id\": \"visit\", \"label\": \"Visit Us\"}];
+
+  return (
+    <nav className=\"bg-white shadow-md sticky top-0 z-50\">
+      <div className=\"max-w-7xl mx-auto px-4\">
+        <div className=\"flex justify-between items-center h-16\">
+          <span className=\"text-xl font-bold text-gray-900\">Bean & Brew</span>
+
+          <div className=\"hidden md:flex items-center gap-8\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                className={`text-sm font-medium transition-colors ${
+                  currentView === item.id
+                    ? \"text-indigo-600\"
+                    : \"text-gray-600 hover:text-indigo-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className=\"md:hidden p-2\"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+              {isOpen
+                ? <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />
+                : <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 6h16M4 12h16M4 18h16\" />
+              }
+            </svg>
+          </button>
+        </div>
+
+        {isOpen && (
+          <div className=\"md:hidden pb-4\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => { onNavigate(item.id); setIsOpen(false); }}
+                className={`block w-full text-left py-2 px-4 ${
+                  currentView === item.id ? \"text-indigo-600 bg-indigo-50\" : \"text-gray-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+const HeroSection = ({ onNavigate }) => {
+  const cards = [{\"title\": \"Specialty Espresso\", \"description\": \"Single-origin beans roasted in small batches and pulled to perfection by our skilled baristas. From velvety lattes to bold ristrettos, every sip is an experience.\", \"cta\": \"Explore Our Coffees\"}, {\"title\": \"Artisan Pastries\", \"description\": \"Baked fresh each morning using locally sourced ingredients. Enjoy buttery croissants, almond tarts, and seasonal creations that pair beautifully with your favorite brew.\", \"cta\": \"See the Pastry Case\"}, {\"title\": \"Light Brunch\", \"description\": \"Savor wholesome brunch plates designed to complement your coffee ritual. From avocado toast to eggs Benedict, our kitchen serves comfort with every plate.\", \"cta\": \"View Brunch Menu\"}, {\"title\": \"A Warm Welcome\", \"description\": \"Settle into our inviting atmosphere with exposed wood, soft lighting, and the rich aroma of freshly ground coffee. Bean & Brew is your home away from home.\", \"cta\": \"Plan Your Visit\"}];
+  return (
+    <section className=\"min-h-screen bg-gradient-to-b from-gray-50 to-white py-20\">
+      <div className=\"max-w-7xl mx-auto px-6\">
+        <div className=\"text-center mb-16\">
+          <h1 className=\"text-5xl md:text-6xl font-bold text-gray-900 mb-6\">
+            Where Every Cup Tells a Story
+          </h1>
+          <p className=\"text-xl text-gray-600 max-w-2xl mx-auto\">
+            Handcrafted espresso, freshly baked pastries, and a warm brunch experience crafted with care in our cozy corner of the neighborhood.
+          </p>
+        </div>
+        <div className=\"grid md:grid-cols-3 gap-8\">
+          {(cards || []).map((card, index) => (
+            <div
+              key={index}
+              className=\"bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2\"
+            >
+              <div className=\"w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform\">
+                <span className=\"text-2xl font-bold text-white\">{index + 1}</span>
+              </div>
+              <h3 className=\"text-2xl font-bold text-gray-900 mb-3\">{card.title}</h3>
+              <p className=\"text-gray-600 mb-6\">{card.description}</p>
+              <button
+                onClick={() => onNavigate && onNavigate(\"contact\")}
+                className=\"text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center\"
+              >
+                {card.cta || \"Learn more\"} →
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FooterSection = () => {
+  return (
+    <footer className=\"bg-gray-900 text-white py-12\">
+      <div className=\"max-w-6xl mx-auto px-4\">
+        <div className=\"text-center\">
+          <h3 className=\"text-2xl font-bold mb-2\">Bean & Brew</h3>
+          <p className=\"text-gray-400 mb-6\">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>
+          <div className=\"border-t border-gray-800 pt-6\">
+            <p className=\"text-gray-500 text-sm\">
+              2024 Bean & Brew. All rights reserved.
+            </p>
+            <p className=\"text-gray-600 text-xs mt-2\">Built with Faibric</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+
+// Main App Component
+function App() {
+  const [currentView, setCurrentView] = React.useState(\"hero\");
+
+  const handleNavigate = (viewId) => {
+    setCurrentView(viewId);
+    window.scrollTo({ top: 0, behavior: \"smooth\" });
+  };
+
+  return (
+    <div className=\"min-h-screen bg-white\">
+      <Navigation currentView={currentView} onNavigate={handleNavigate} />
+
+      <main>
+        
+        {currentView === \"hero\" && <HeroSection onNavigate={handleNavigate} />}
+      </main>
+
+      <FooterSection />
+    </div>
+  );
+}
+
+export default App;
+","events":[{"id":"d117483c-99f0-413d-9c80-0c5d5c324252","event_type":"build_progress","event_data":{"message":"Building... (30s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:51.016941Z"},{"id":"95cea1c8-ec89-4329-af22-1320938413ce","event_type":"build_progress","event_data":{"message":"Building... (15s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:35.922693Z"},{"id":"19e1710e-0251-41ff-a5dd-b51f168ccf8c","event_type":"build_progress","event_data":{"message":"Building... (0s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.828946Z"},{"id":"6d162634-26f3-4cfc-832a-57158e58b7cd","event_type":"build_progress","event_data":{"message":"Build queued: https://app-229-a-cozy-artisan-coffe.onrender.com - waiting for render...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.712661Z"},{"id":"994177e3-8d03-4ef8-99e6-90529a427d1b","event_type":"build_progress","event_data":{"message":"Code validated - deploying...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.945194Z"},{"id":"4fcb1688-ae76-4c9b-9d17-f813bbae2d69","event_type":"build_progress","event_data":{"message":"Preview warning - attempting deployment...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.932212Z"},{"id":"8ad8f447-6564-4a89-9c85-a1599daf3355","event_type":"build_progress","event_data":{"message":"Verifying code locally...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.700755Z"},{"id":"31b33ccb-cf36-46ca-b121-b8c2a884a6ac","event_type":"build_progress","event_data":{"message":"Provisioning database...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.686780Z"},{"id":"d1ae0f2a-a87c-4796-a678-d73c7e9beb88","event_type":"build_progress","event_data":{"message":"Finalizing code...","progress":95},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.684574Z"},{"id":"f4f2d995-28c1-4d49-82a2-2e341e41952f","event_type":"build_progress","event_data":{"message":"Generating content...","progress":15},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:09.140076Z"}]}
+---
+Poll #8 [2026-02-12T00:47:07Z] HTTP=200
+{"status":"verified","email":"dev@faibric.local","is_converted":true,"project_id":"229","deployment_url":"https://app-229-a-cozy-artisan-coffe.onrender.com","build_progress":85,"generated_code":"// LIBRARY COMPONENTS - Golden Templates (pre-validated, do not transform)
+
+const Navigation = ({ currentView, onNavigate }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const navItems = [{\"id\": \"menu\", \"label\": \"Our Menu\"}, {\"id\": \"about\", \"label\": \"Our Story\"}, {\"id\": \"brunch\", \"label\": \"Brunch\"}, {\"id\": \"visit\", \"label\": \"Visit Us\"}];
+
+  return (
+    <nav className=\"bg-white shadow-md sticky top-0 z-50\">
+      <div className=\"max-w-7xl mx-auto px-4\">
+        <div className=\"flex justify-between items-center h-16\">
+          <span className=\"text-xl font-bold text-gray-900\">Bean & Brew</span>
+
+          <div className=\"hidden md:flex items-center gap-8\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                className={`text-sm font-medium transition-colors ${
+                  currentView === item.id
+                    ? \"text-indigo-600\"
+                    : \"text-gray-600 hover:text-indigo-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className=\"md:hidden p-2\"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+              {isOpen
+                ? <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />
+                : <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 6h16M4 12h16M4 18h16\" />
+              }
+            </svg>
+          </button>
+        </div>
+
+        {isOpen && (
+          <div className=\"md:hidden pb-4\">
+            {(navItems || []).map(item => (
+              <button
+                key={item.id}
+                onClick={() => { onNavigate(item.id); setIsOpen(false); }}
+                className={`block w-full text-left py-2 px-4 ${
+                  currentView === item.id ? \"text-indigo-600 bg-indigo-50\" : \"text-gray-600\"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+const HeroSection = ({ onNavigate }) => {
+  const cards = [{\"title\": \"Specialty Espresso\", \"description\": \"Single-origin beans roasted in small batches and pulled to perfection by our skilled baristas. From velvety lattes to bold ristrettos, every sip is an experience.\", \"cta\": \"Explore Our Coffees\"}, {\"title\": \"Artisan Pastries\", \"description\": \"Baked fresh each morning using locally sourced ingredients. Enjoy buttery croissants, almond tarts, and seasonal creations that pair beautifully with your favorite brew.\", \"cta\": \"See the Pastry Case\"}, {\"title\": \"Light Brunch\", \"description\": \"Savor wholesome brunch plates designed to complement your coffee ritual. From avocado toast to eggs Benedict, our kitchen serves comfort with every plate.\", \"cta\": \"View Brunch Menu\"}, {\"title\": \"A Warm Welcome\", \"description\": \"Settle into our inviting atmosphere with exposed wood, soft lighting, and the rich aroma of freshly ground coffee. Bean & Brew is your home away from home.\", \"cta\": \"Plan Your Visit\"}];
+  return (
+    <section className=\"min-h-screen bg-gradient-to-b from-gray-50 to-white py-20\">
+      <div className=\"max-w-7xl mx-auto px-6\">
+        <div className=\"text-center mb-16\">
+          <h1 className=\"text-5xl md:text-6xl font-bold text-gray-900 mb-6\">
+            Where Every Cup Tells a Story
+          </h1>
+          <p className=\"text-xl text-gray-600 max-w-2xl mx-auto\">
+            Handcrafted espresso, freshly baked pastries, and a warm brunch experience crafted with care in our cozy corner of the neighborhood.
+          </p>
+        </div>
+        <div className=\"grid md:grid-cols-3 gap-8\">
+          {(cards || []).map((card, index) => (
+            <div
+              key={index}
+              className=\"bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2\"
+            >
+              <div className=\"w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform\">
+                <span className=\"text-2xl font-bold text-white\">{index + 1}</span>
+              </div>
+              <h3 className=\"text-2xl font-bold text-gray-900 mb-3\">{card.title}</h3>
+              <p className=\"text-gray-600 mb-6\">{card.description}</p>
+              <button
+                onClick={() => onNavigate && onNavigate(\"contact\")}
+                className=\"text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center\"
+              >
+                {card.cta || \"Learn more\"} →
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FooterSection = () => {
+  return (
+    <footer className=\"bg-gray-900 text-white py-12\">
+      <div className=\"max-w-6xl mx-auto px-4\">
+        <div className=\"text-center\">
+          <h3 className=\"text-2xl font-bold mb-2\">Bean & Brew</h3>
+          <p className=\"text-gray-400 mb-6\">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>
+          <div className=\"border-t border-gray-800 pt-6\">
+            <p className=\"text-gray-500 text-sm\">
+              2024 Bean & Brew. All rights reserved.
+            </p>
+            <p className=\"text-gray-600 text-xs mt-2\">Built with Faibric</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+
+// Main App Component
+function App() {
+  const [currentView, setCurrentView] = React.useState(\"hero\");
+
+  const handleNavigate = (viewId) => {
+    setCurrentView(viewId);
+    window.scrollTo({ top: 0, behavior: \"smooth\" });
+  };
+
+  return (
+    <div className=\"min-h-screen bg-white\">
+      <Navigation currentView={currentView} onNavigate={handleNavigate} />
+
+      <main>
+        
+        {currentView === \"hero\" && <HeroSection onNavigate={handleNavigate} />}
+      </main>
+
+      <FooterSection />
+    </div>
+  );
+}
+
+export default App;
+","events":[{"id":"79623540-142d-4929-940b-c94eaff2f0a2","event_type":"build_progress","event_data":{"message":"Building... (45s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:47:06.116522Z"},{"id":"d117483c-99f0-413d-9c80-0c5d5c324252","event_type":"build_progress","event_data":{"message":"Building... (30s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:51.016941Z"},{"id":"95cea1c8-ec89-4329-af22-1320938413ce","event_type":"build_progress","event_data":{"message":"Building... (15s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:35.922693Z"},{"id":"19e1710e-0251-41ff-a5dd-b51f168ccf8c","event_type":"build_progress","event_data":{"message":"Building... (0s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.828946Z"},{"id":"6d162634-26f3-4cfc-832a-57158e58b7cd","event_type":"build_progress","event_data":{"message":"Build queued: https://app-229-a-cozy-artisan-coffe.onrender.com - waiting for render...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.712661Z"},{"id":"994177e3-8d03-4ef8-99e6-90529a427d1b","event_type":"build_progress","event_data":{"message":"Code validated - deploying...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.945194Z"},{"id":"4fcb1688-ae76-4c9b-9d17-f813bbae2d69","event_type":"build_progress","event_data":{"message":"Preview warning - attempting deployment...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.932212Z"},{"id":"8ad8f447-6564-4a89-9c85-a1599daf3355","event_type":"build_progress","event_data":{"message":"Verifying code locally...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.700755Z"},{"id":"31b33ccb-cf36-46ca-b121-b8c2a884a6ac","event_type":"build_progress","event_data":{"message":"Provisioning database...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.686780Z"},{"id":"d1ae0f2a-a87c-4796-a678-d73c7e9beb88","event_type":"build_progress","event_data":{"message":"Finalizing code...","progress":95},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.684574Z"}]}
+---
+Poll #1 [2026-02-12T00:47:20Z] HTTP=200
+{"status":"verified","email":"dev@faibric.local","is_converted":true,"project_id":"229","deployment_url":"https://app-229-a-cozy-artisan-coffe.onrender.com","build_progress":85,"generated_code":"// LIBRARY COMPONENTS - Golden Templates (pre-validated, do not transform)\n\nconst Navigation = ({ currentView, onNavigate }) => {\n  const [isOpen, setIsOpen] = React.useState(false);\n  const navItems = [{\"id\": \"menu\", \"label\": \"Our Menu\"}, {\"id\": \"about\", \"label\": \"Our Story\"}, {\"id\": \"brunch\", \"label\": \"Brunch\"}, {\"id\": \"visit\", \"label\": \"Visit Us\"}];\n\n  return (\n    <nav className=\"bg-white shadow-md sticky top-0 z-50\">\n      <div className=\"max-w-7xl mx-auto px-4\">\n        <div className=\"flex justify-between items-center h-16\">\n          <span className=\"text-xl font-bold text-gray-900\">Bean & Brew</span>\n\n          <div className=\"hidden md:flex items-center gap-8\">\n            {(navItems || []).map(item => (\n              <button\n                key={item.id}\n                onClick={() => onNavigate(item.id)}\n                className={`text-sm font-medium transition-colors ${\n                  currentView === item.id\n                    ? \"text-indigo-600\"\n                    : \"text-gray-600 hover:text-indigo-600\"\n                }`}\n              >\n                {item.label}\n              </button>\n            ))}\n          </div>\n\n          <button\n            className=\"md:hidden p-2\"\n            onClick={() => setIsOpen(!isOpen)}\n          >\n            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n              {isOpen\n                ? <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\n                : <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 6h16M4 12h16M4 18h16\" />\n              }\n            </svg>\n          </button>\n        </div>\n\n        {isOpen && (\n          <div className=\"md:hidden pb-4\">\n            {(navItems || []).map(item => (\n              <button\n                key={item.id}\n                onClick={() => { onNavigate(item.id); setIsOpen(false); }}\n                className={`block w-full text-left py-2 px-4 ${\n                  currentView === item.id ? \"text-indigo-600 bg-indigo-50\" : \"text-gray-600\"\n                }`}\n              >\n                {item.label}\n              </button>\n            ))}\n          </div>\n        )}\n      </div>\n    </nav>\n  );\n};\n\nconst HeroSection = ({ onNavigate }) => {\n  const cards = [{\"title\": \"Specialty Espresso\", \"description\": \"Single-origin beans roasted in small batches and pulled to perfection by our skilled baristas. From velvety lattes to bold ristrettos, every sip is an experience.\", \"cta\": \"Explore Our Coffees\"}, {\"title\": \"Artisan Pastries\", \"description\": \"Baked fresh each morning using locally sourced ingredients. Enjoy buttery croissants, almond tarts, and seasonal creations that pair beautifully with your favorite brew.\", \"cta\": \"See the Pastry Case\"}, {\"title\": \"Light Brunch\", \"description\": \"Savor wholesome brunch plates designed to complement your coffee ritual. From avocado toast to eggs Benedict, our kitchen serves comfort with every plate.\", \"cta\": \"View Brunch Menu\"}, {\"title\": \"A Warm Welcome\", \"description\": \"Settle into our inviting atmosphere with exposed wood, soft lighting, and the rich aroma of freshly ground coffee. Bean & Brew is your home away from home.\", \"cta\": \"Plan Your Visit\"}];\n  return (\n    <section className=\"min-h-screen bg-gradient-to-b from-gray-50 to-white py-20\">\n      <div className=\"max-w-7xl mx-auto px-6\">\n        <div className=\"text-center mb-16\">\n          <h1 className=\"text-5xl md:text-6xl font-bold text-gray-900 mb-6\">\n            Where Every Cup Tells a Story\n          </h1>\n          <p className=\"text-xl text-gray-600 max-w-2xl mx-auto\">\n            Handcrafted espresso, freshly baked pastries, and a warm brunch experience crafted with care in our cozy corner of the neighborhood.\n          </p>\n        </div>\n        <div className=\"grid md:grid-cols-3 gap-8\">\n          {(cards || []).map((card, index) => (\n            <div\n              key={index}\n              className=\"bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2\"\n            >\n              <div className=\"w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform\">\n                <span className=\"text-2xl font-bold text-white\">{index + 1}</span>\n              </div>\n              <h3 className=\"text-2xl font-bold text-gray-900 mb-3\">{card.title}</h3>\n              <p className=\"text-gray-600 mb-6\">{card.description}</p>\n              <button\n                onClick={() => onNavigate && onNavigate(\"contact\")}\n                className=\"text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center\"\n              >\n                {card.cta || \"Learn more\"} →\n              </button>\n            </div>\n          ))}\n        </div>\n      </div>\n    </section>\n  );\n};\n\nconst FooterSection = () => {\n  return (\n    <footer className=\"bg-gray-900 text-white py-12\">\n      <div className=\"max-w-6xl mx-auto px-4\">\n        <div className=\"text-center\">\n          <h3 className=\"text-2xl font-bold mb-2\">Bean & Brew</h3>\n          <p className=\"text-gray-400 mb-6\">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>\n          <div className=\"border-t border-gray-800 pt-6\">\n            <p className=\"text-gray-500 text-sm\">\n              2024 Bean & Brew. All rights reserved.\n            </p>\n            <p className=\"text-gray-600 text-xs mt-2\">Built with Faibric</p>\n          </div>\n        </div>\n      </div>\n    </footer>\n  );\n};\n\n\n// Main App Component\nfunction App() {\n  const [currentView, setCurrentView] = React.useState(\"hero\");\n\n  const handleNavigate = (viewId) => {\n    setCurrentView(viewId);\n    window.scrollTo({ top: 0, behavior: \"smooth\" });\n  };\n\n  return (\n    <div className=\"min-h-screen bg-white\">\n      <Navigation currentView={currentView} onNavigate={handleNavigate} />\n\n      <main>\n        \n        {currentView === \"hero\" && <HeroSection onNavigate={handleNavigate} />}\n      </main>\n\n      <FooterSection />\n    </div>\n  );\n}\n\nexport default App;\n","events":[{"id":"79623540-142d-4929-940b-c94eaff2f0a2","event_type":"build_progress","event_data":{"message":"Building... (45s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:47:06.116522Z"},{"id":"d117483c-99f0-413d-9c80-0c5d5c324252","event_type":"build_progress","event_data":{"message":"Building... (30s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:51.016941Z"},{"id":"95cea1c8-ec89-4329-af22-1320938413ce","event_type":"build_progress","event_data":{"message":"Building... (15s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:35.922693Z"},{"id":"19e1710e-0251-41ff-a5dd-b51f168ccf8c","event_type":"build_progress","event_data":{"message":"Building... (0s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.828946Z"},{"id":"6d162634-26f3-4cfc-832a-57158e58b7cd","event_type":"build_progress","event_data":{"message":"Build queued: https://app-229-a-cozy-artisan-coffe.onrender.com - waiting for render...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.712661Z"},{"id":"994177e3-8d03-4ef8-99e6-90529a427d1b","event_type":"build_progress","event_data":{"message":"Code validated - deploying...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.945194Z"},{"id":"4fcb1688-ae76-4c9b-9d17-f813bbae2d69","event_type":"build_progress","event_data":{"message":"Preview warning - attempting deployment...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.932212Z"},{"id":"8ad8f447-6564-4a89-9c85-a1599daf3355","event_type":"build_progress","event_data":{"message":"Verifying code locally...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.700755Z"},{"id":"31b33ccb-cf36-46ca-b121-b8c2a884a6ac","event_type":"build_progress","event_data":{"message":"Provisioning database...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.686780Z"},{"id":"d1ae0f2a-a87c-4796-a678-d73c7e9beb88","event_type":"build_progress","event_data":{"message":"Finalizing code...","progress":95},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.684574Z"}]}
+---
+Poll #2 [2026-02-12T00:47:35Z] HTTP=200
+{"status":"deployed","email":"dev@faibric.local","is_converted":true,"project_id":"229","deployment_url":"https://app-229-a-cozy-artisan-coffe.onrender.com","build_progress":100,"generated_code":"// LIBRARY COMPONENTS - Golden Templates (pre-validated, do not transform)\n\nconst Navigation = ({ currentView, onNavigate }) => {\n  const [isOpen, setIsOpen] = React.useState(false);\n  const navItems = [{\"id\": \"menu\", \"label\": \"Our Menu\"}, {\"id\": \"about\", \"label\": \"Our Story\"}, {\"id\": \"brunch\", \"label\": \"Brunch\"}, {\"id\": \"visit\", \"label\": \"Visit Us\"}];\n\n  return (\n    <nav className=\"bg-white shadow-md sticky top-0 z-50\">\n      <div className=\"max-w-7xl mx-auto px-4\">\n        <div className=\"flex justify-between items-center h-16\">\n          <span className=\"text-xl font-bold text-gray-900\">Bean & Brew</span>\n\n          <div className=\"hidden md:flex items-center gap-8\">\n            {(navItems || []).map(item => (\n              <button\n                key={item.id}\n                onClick={() => onNavigate(item.id)}\n                className={`text-sm font-medium transition-colors ${\n                  currentView === item.id\n                    ? \"text-indigo-600\"\n                    : \"text-gray-600 hover:text-indigo-600\"\n                }`}\n              >\n                {item.label}\n              </button>\n            ))}\n          </div>\n\n          <button\n            className=\"md:hidden p-2\"\n            onClick={() => setIsOpen(!isOpen)}\n          >\n            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n              {isOpen\n                ? <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\n                : <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 6h16M4 12h16M4 18h16\" />\n              }\n            </svg>\n          </button>\n        </div>\n\n        {isOpen && (\n          <div className=\"md:hidden pb-4\">\n            {(navItems || []).map(item => (\n              <button\n                key={item.id}\n                onClick={() => { onNavigate(item.id); setIsOpen(false); }}\n                className={`block w-full text-left py-2 px-4 ${\n                  currentView === item.id ? \"text-indigo-600 bg-indigo-50\" : \"text-gray-600\"\n                }`}\n              >\n                {item.label}\n              </button>\n            ))}\n          </div>\n        )}\n      </div>\n    </nav>\n  );\n};\n\nconst HeroSection = ({ onNavigate }) => {\n  const cards = [{\"title\": \"Specialty Espresso\", \"description\": \"Single-origin beans roasted in small batches and pulled to perfection by our skilled baristas. From velvety lattes to bold ristrettos, every sip is an experience.\", \"cta\": \"Explore Our Coffees\"}, {\"title\": \"Artisan Pastries\", \"description\": \"Baked fresh each morning using locally sourced ingredients. Enjoy buttery croissants, almond tarts, and seasonal creations that pair beautifully with your favorite brew.\", \"cta\": \"See the Pastry Case\"}, {\"title\": \"Light Brunch\", \"description\": \"Savor wholesome brunch plates designed to complement your coffee ritual. From avocado toast to eggs Benedict, our kitchen serves comfort with every plate.\", \"cta\": \"View Brunch Menu\"}, {\"title\": \"A Warm Welcome\", \"description\": \"Settle into our inviting atmosphere with exposed wood, soft lighting, and the rich aroma of freshly ground coffee. Bean & Brew is your home away from home.\", \"cta\": \"Plan Your Visit\"}];\n  return (\n    <section className=\"min-h-screen bg-gradient-to-b from-gray-50 to-white py-20\">\n      <div className=\"max-w-7xl mx-auto px-6\">\n        <div className=\"text-center mb-16\">\n          <h1 className=\"text-5xl md:text-6xl font-bold text-gray-900 mb-6\">\n            Where Every Cup Tells a Story\n          </h1>\n          <p className=\"text-xl text-gray-600 max-w-2xl mx-auto\">\n            Handcrafted espresso, freshly baked pastries, and a warm brunch experience crafted with care in our cozy corner of the neighborhood.\n          </p>\n        </div>\n        <div className=\"grid md:grid-cols-3 gap-8\">\n          {(cards || []).map((card, index) => (\n            <div\n              key={index}\n              className=\"bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2\"\n            >\n              <div className=\"w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform\">\n                <span className=\"text-2xl font-bold text-white\">{index + 1}</span>\n              </div>\n              <h3 className=\"text-2xl font-bold text-gray-900 mb-3\">{card.title}</h3>\n              <p className=\"text-gray-600 mb-6\">{card.description}</p>\n              <button\n                onClick={() => onNavigate && onNavigate(\"contact\")}\n                className=\"text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center\"\n              >\n                {card.cta || \"Learn more\"} →\n              </button>\n            </div>\n          ))}\n        </div>\n      </div>\n    </section>\n  );\n};\n\nconst FooterSection = () => {\n  return (\n    <footer className=\"bg-gray-900 text-white py-12\">\n      <div className=\"max-w-6xl mx-auto px-4\">\n        <div className=\"text-center\">\n          <h3 className=\"text-2xl font-bold mb-2\">Bean & Brew</h3>\n          <p className=\"text-gray-400 mb-6\">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>\n          <div className=\"border-t border-gray-800 pt-6\">\n            <p className=\"text-gray-500 text-sm\">\n              2024 Bean & Brew. All rights reserved.\n            </p>\n            <p className=\"text-gray-600 text-xs mt-2\">Built with Faibric</p>\n          </div>\n        </div>\n      </div>\n    </footer>\n  );\n};\n\n\n// Main App Component\nfunction App() {\n  const [currentView, setCurrentView] = React.useState(\"hero\");\n\n  const handleNavigate = (viewId) => {\n    setCurrentView(viewId);\n    window.scrollTo({ top: 0, behavior: \"smooth\" });\n  };\n\n  return (\n    <div className=\"min-h-screen bg-white\">\n      <Navigation currentView={currentView} onNavigate={handleNavigate} />\n\n      <main>\n        \n        {currentView === \"hero\" && <HeroSection onNavigate={handleNavigate} />}\n      </main>\n\n      <FooterSection />\n    </div>\n  );\n}\n\nexport default App;\n","events":[{"id":"28c18b63-b958-4f1a-95c8-7a6c04211291","event_type":"build_progress","event_data":{"message":"Your app is live: https://app-229-a-cozy-artisan-coffe.onrender.com","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:47:21.448696Z"},{"id":"79623540-142d-4929-940b-c94eaff2f0a2","event_type":"build_progress","event_data":{"message":"Building... (45s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:47:06.116522Z"},{"id":"d117483c-99f0-413d-9c80-0c5d5c324252","event_type":"build_progress","event_data":{"message":"Building... (30s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:51.016941Z"},{"id":"95cea1c8-ec89-4329-af22-1320938413ce","event_type":"build_progress","event_data":{"message":"Building... (15s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:35.922693Z"},{"id":"19e1710e-0251-41ff-a5dd-b51f168ccf8c","event_type":"build_progress","event_data":{"message":"Building... (0s) - waiting for site","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.828946Z"},{"id":"6d162634-26f3-4cfc-832a-57158e58b7cd","event_type":"build_progress","event_data":{"message":"Build queued: https://app-229-a-cozy-artisan-coffe.onrender.com - waiting for render...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:46:20.712661Z"},{"id":"994177e3-8d03-4ef8-99e6-90529a427d1b","event_type":"build_progress","event_data":{"message":"Code validated - deploying...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.945194Z"},{"id":"4fcb1688-ae76-4c9b-9d17-f813bbae2d69","event_type":"build_progress","event_data":{"message":"Preview warning - attempting deployment...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:37.932212Z"},{"id":"8ad8f447-6564-4a89-9c85-a1599daf3355","event_type":"build_progress","event_data":{"message":"Verifying code locally...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.700755Z"},{"id":"31b33ccb-cf36-46ca-b121-b8c2a884a6ac","event_type":"build_progress","event_data":{"message":"Provisioning database...","progress":0},"old_email":"","new_email":"","error_message":"","timestamp":"2026-02-12T00:45:18.686780Z"}]}
+---

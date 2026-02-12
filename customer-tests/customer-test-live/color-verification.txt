@@ -1,0 +1,39 @@
+=== COLOR VERIFICATION (Rendered DOM) ===
+URL: https://app-229-a-cozy-artisan-coffe.onrender.com
+Timestamp: 2026-02-12T01:09:23.564Z
+
+--- All color classes ---
+  10 text-gray-600
+  9 text-2xl
+  6 bg-white
+  6 text-gray-900
+  5 text-sm
+  5 text-white
+  4 border-gray-100
+  4 bg-gradient-to-br
+  4 from-violet-500
+  4 to-purple-600
+  4 text-violet-600
+  2 text-xl
+  2 text-center
+  1 bg-gradient-to-b
+  1 from-gray-50
+  1 to-white
+  1 text-5xl
+  1 bg-gray-900
+  1 text-gray-400
+  1 border-t
+  1 border-gray-800
+  1 text-gray-500
+  1 text-xs
+
+--- Summary ---
+Amber classes: 0
+Stone classes: 0
+Brown/warm classes: 0
+Gray classes: 25
+Violet/Purple classes: 12
+
+VERDICT: NEEDS ATTENTION
+WARNING: No warm amber/stone/brown colors found
+WARNING: Violet/purple colors still present
